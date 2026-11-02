@@ -1,4 +1,5 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}.lgbg{position:fixed;inset:0;z-index:200;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;padding:16px}.lgbox{background:#fff;color:#1f2937;border-radius:14px;width:min(380px,100%);padding:20px;box-shadow:0 20px 50px rgba(0,0,0,.3);font-family:inherit}.lgbox h3{margin:0 0 4px;font-size:18px}.lgbox p{margin:0 0 12px;font-size:13px;color:#64748b}.lgbox label{display:block;font-size:12px;font-weight:600;margin:10px 0 4px}.lgbox input{width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px}.lgerr{color:#b91c1c;font-size:13px;min-height:18px;margin-top:8px}.lgact{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}.lgact button{padding:8px 14px;border-radius:8px;border:1px solid #cbd5e1;background:#fff;cursor:pointer;font-size:14px}.lgact button.ok{background:#183153;color:#fff;border-color:#183153;font-weight:600}
+</style></head><body>
 <meta charset="utf-8">
 <title>Outstanding NP</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -512,12 +513,9 @@ th,.dscroll th,.fu th,.ct th,.dtb>table>thead>tr>th,.pgt thead th{font-family:va
     <div class="dp-drop" id="dpdrop"><button class="btn" type="button" id="dppick">Pilih file…</button><span>atau tarik file Excel ke sini</span><input type="file" id="fileAll" accept=".xlsx,.xls" multiple hidden></div>
     <div id="dpstage" class="dp-stage"></div>
     <div class="dp-act"><button class="btn gen" type="button" id="dpgen" disabled>Generate dashboard</button><button class="btn ghost" type="button" id="dpclear" hidden>Kosongkan pilihan</button><span id="dpmsg" role="status"></span></div>
-    <div class="dp-share"><h3>Simpan data online</h3>
+    <div class="dp-share"><h3>Data online</h3>
   <div class="sharedbar" id="sharedbar" aria-label="Simpan data online">
-    <div class="fld"><label for="shemail">Login untuk upload (khusus akun yang punya akses)</label><input type="email" id="shemail" autocomplete="username" placeholder="Email"></div>
-    <div class="fld"><label for="shkey">Password</label><input type="password" id="shkey" autocomplete="current-password" placeholder="Password"></div>
-    <button class="btn" id="shsave" type="button">Simpan data</button>
-    <button class="btn ghost" id="shload" type="button">Ambil data terbaru</button>
+        <button class="btn ghost" id="shload" type="button">Ambil data terbaru</button>
     <span id="shst" role="status">Data terbaru belum diperiksa.</span>
   </div>
     </div>
@@ -1760,14 +1758,14 @@ function dsGenerate(){
   var n=ok.length,names=ok.map(function(x){return DS_KIND[x.kind]}).join(', ');
   STAGE=[];dsStageRender();
   $('#msg').className='';$('#msg').textContent='Dashboard diperbarui: '+names+'.';
-  m.className='';m.textContent='Selesai: '+names+' diperbarui. Klik “Simpan data” (login akun upload) agar pengguna lain ikut melihat.';
+  m.className='';m.textContent='Selesai: '+names+' diperbarui. Data otomatis disimpan untuk semua pengguna.';
   dsStatus();
 }
 $('#updbtn').addEventListener('click',function(){dsOpen($('#datapanel').hidden)});
 $('#dpclose').addEventListener('click',function(){dsOpen(false)});
 $('#dppick').addEventListener('click',function(){$('#fileAll').click()});
 $('#fileAll').addEventListener('change',function(e){var fl=e.target.files;dsRead(fl);setTimeout(function(){e.target.value=''},0)});
-$('#dpgen').addEventListener('click',dsGenerate);
+$('#dpgen').addEventListener('click',function(){sbAsk(function(){dsGenerate();shSave()})});
 $('#dpclear').addEventListener('click',function(){STAGE=[];$('#dpmsg').textContent='';dsStageRender()});
 $('#datastat').addEventListener('click',function(e){if(e.target.closest('[data-dsopen]'))dsOpen(true)});
 (function(){var dz=$('#dpdrop');['dragenter','dragover'].forEach(function(ev){dz.addEventListener(ev,function(e){e.preventDefault();dz.classList.add('over')})});['dragleave','drop'].forEach(function(ev){dz.addEventListener(ev,function(e){e.preventDefault();dz.classList.remove('over')})});dz.addEventListener('drop',function(e){dsRead(e.dataTransfer&&e.dataTransfer.files)})})();
@@ -1875,7 +1873,18 @@ function loadSeed(){seedDocs();var s=JSON.parse($('#seed').textContent);load(s.r
 
 /* ===== Data online (Supabase) ===== */
 const SB_URL='https://igkdetuufvcczmiluvqd.supabase.co',SB_KEY='sb_publishable_RUgz--hm3bwPBx75hzfrzA_C13Vm34h';
-async function sbLogin(email,pw){const r=await fetch(SB_URL+'/auth/v1/token?grant_type=password',{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({email:email,password:pw})});const j=await r.json().catch(()=>({}));if(!r.ok||!j.access_token)throw new Error('Email atau password salah.');return j.access_token}
+let _tok=null,_tokExp=0;
+function sbOk(){return !!_tok&&Date.now()<_tokExp-60000}
+async function sbLogin(email,pw){const r=await fetch(SB_URL+'/auth/v1/token?grant_type=password',{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({email:email,password:pw})});const j=await r.json().catch(()=>({}));if(!r.ok||!j.access_token)throw new Error('Email atau password salah.');_tok=j.access_token;_tokExp=Date.now()+(j.expires_in||3600)*1000;return _tok}
+function sbAsk(cb){
+  if(sbOk()){cb(_tok);return}
+  const old=document.getElementById('lgdlg');if(old)old.remove();
+  document.body.insertAdjacentHTML('beforeend','<div class="lgbg" id="lgdlg" role="dialog" aria-modal="true" aria-label="Login admin/editor"><form class="lgbox" id="lgform"><h3>Login Admin / Editor</h3><p>Hanya admin atau editor yang boleh memperbarui data. Setelah login, data otomatis tersimpan untuk semua pengguna.</p><label for="lgem">Email</label><input id="lgem" type="email" autocomplete="username" required><label for="lgpw">Password</label><input id="lgpw" type="password" autocomplete="current-password" required><div class="lgerr" id="lgerr" role="alert"></div><div class="lgact"><button type="button" id="lgx">Batal</button><button type="submit" class="ok" id="lgok">Masuk</button></div></form></div>');
+  const d=document.getElementById('lgdlg'),f=document.getElementById('lgform'),er=document.getElementById('lgerr');
+  document.getElementById('lgem').focus();
+  document.getElementById('lgx').addEventListener('click',()=>d.remove());
+  f.addEventListener('submit',async e=>{e.preventDefault();const b=document.getElementById('lgok');b.disabled=true;er.textContent='Masuk...';try{await sbLogin(document.getElementById('lgem').value.trim(),document.getElementById('lgpw').value);d.remove();cb(_tok)}catch(x){er.textContent=x.message||'Login gagal.';b.disabled=false}});
+}
 function shMsg(t,err){var e=$('#shst');e.textContent=t;e.className=err?'err':''}
 function shStamp(iso){try{return new Intl.DateTimeFormat('id-ID',{dateStyle:'long',timeStyle:'medium',timeZone:'Asia/Jakarta'}).format(new Date(iso))+' WIB'}catch(x){return iso}}
 function shApply(sh,force){
@@ -1908,24 +1917,22 @@ function shLoad(force){
   }).catch(function(e){shMsg((e&&e.message)||'Data online belum tersedia.',true)});
 }
 function shSave(){
-  var key=$('#shkey').value,em=$('#shemail').value.trim(),btn=$('#shsave');
-  if(location.protocol==='file:'){shMsg('Buka dashboard dari alamat websitenya untuk menyimpan data.',true);return}
-  if(!em||!key){shMsg('Isi email dan password akun upload terlebih dahulu.',true);(em?$('#shkey'):$('#shemail')).focus();return}
+  if(location.protocol==='file:'){shMsg('Buka dashboard dari alamat websitenya agar data tersimpan untuk semua orang.',true);return}
   var payload={};
   if(SH.main&&SH.main.raw&&SH.main.raw.length)payload.main=SH.main;
   if(SH.docs&&(SH.docs.po||SH.docs.tr||SH.docs.sys||SH.docs.wh||SH.docs.prev))payload.docs=SH.docs;
-  if(!payload.main&&!payload.docs){shMsg('Belum ada file yang diunggah untuk disimpan. Upload file dulu.',true);return}
+  if(!payload.main&&!payload.docs){shMsg('Belum ada file yang diunggah untuk disimpan.',true);return}
   if(typeof CompressionStream==='undefined'){shMsg('Browser ini belum mendukung simpan data online. Gunakan Chrome atau Edge terbaru.',true);return}
-  btn.disabled=true;shMsg('Login…');
+  shMsg('Menyimpan data untuk semua pengguna…');
   var stream=new Blob([JSON.stringify(payload)]).stream().pipeThrough(new CompressionStream('gzip'));
-  sbLogin(em,key).then(function(token){shMsg('Menyimpan data…');return new Response(stream).arrayBuffer().then(function(body){
-    return fetch(SHURL,{method:'PUT',headers:{'Content-Type':'application/gzip','Authorization':'Bearer '+token},body:body})
-  })}).then(function(r){return r.json().catch(function(){return {}}).then(function(j){
+  new Response(stream).arrayBuffer().then(function(body){
+    return fetch(SHURL,{method:'PUT',headers:{'Content-Type':'application/gzip','Authorization':'Bearer '+_tok},body:body})
+  }).then(function(r){return r.json().catch(function(){return {}}).then(function(j){
     if(!r.ok)throw new Error(j.error||('Simpan gagal ('+r.status+').'));
-    shMsg('Data tersimpan ('+shStamp(j.savedAt)+'). Pengguna lain akan melihat data ini.');
-  })}).catch(function(e){shMsg((e&&e.message)||'Data gagal disimpan.',true)}).then(function(){btn.disabled=false});
+    shMsg('Data otomatis tersimpan ('+shStamp(j.savedAt)+'). Semua pengguna melihat data ini.');
+  })}).catch(function(e){shMsg((e&&e.message)||'Data gagal disimpan.',true)});
 }
-$('#shsave').addEventListener('click',shSave);
+
 $('#shload').addEventListener('click',function(){shLoad(true)});
 shLoad(false);
 })();
