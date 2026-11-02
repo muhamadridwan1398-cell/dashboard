@@ -512,12 +512,13 @@ th,.dscroll th,.fu th,.ct th,.dtb>table>thead>tr>th,.pgt thead th{font-family:va
     <div class="dp-drop" id="dpdrop"><button class="btn" type="button" id="dppick">Pilih file…</button><span>atau tarik file Excel ke sini</span><input type="file" id="fileAll" accept=".xlsx,.xls" multiple hidden></div>
     <div id="dpstage" class="dp-stage"></div>
     <div class="dp-act"><button class="btn gen" type="button" id="dpgen" disabled>Generate dashboard</button><button class="btn ghost" type="button" id="dpclear" hidden>Kosongkan pilihan</button><span id="dpmsg" role="status"></span></div>
-    <div class="dp-share"><h3>Bagikan ke pengguna lain</h3>
-  <div class="sharedbar" id="sharedbar" aria-label="Data bersama">
-    <div class="fld"><label for="shkey">Kunci admin untuk simpan data bersama</label><input type="password" id="shkey" autocomplete="current-password" placeholder="Masukkan kunci admin"></div>
-    <button class="btn" id="shsave" type="button">Simpan data bersama</button>
+    <div class="dp-share"><h3>Simpan data online</h3>
+  <div class="sharedbar" id="sharedbar" aria-label="Simpan data online">
+    <div class="fld"><label for="shemail">Login untuk upload (khusus akun yang punya akses)</label><input type="email" id="shemail" autocomplete="username" placeholder="Email"></div>
+    <div class="fld"><label for="shkey">Password</label><input type="password" id="shkey" autocomplete="current-password" placeholder="Password"></div>
+    <button class="btn" id="shsave" type="button">Simpan data</button>
     <button class="btn ghost" id="shload" type="button">Ambil data terbaru</button>
-    <span id="shst" role="status">Data bersama belum diperiksa.</span>
+    <span id="shst" role="status">Data terbaru belum diperiksa.</span>
   </div>
     </div>
   </section>
@@ -1759,7 +1760,7 @@ function dsGenerate(){
   var n=ok.length,names=ok.map(function(x){return DS_KIND[x.kind]}).join(', ');
   STAGE=[];dsStageRender();
   $('#msg').className='';$('#msg').textContent='Dashboard diperbarui: '+names+'.';
-  m.className='';m.textContent='Selesai: '+names+' diperbarui. Klik “Simpan data bersama” agar pengguna lain ikut melihat.';
+  m.className='';m.textContent='Selesai: '+names+' diperbarui. Klik “Simpan data” (login akun upload) agar pengguna lain ikut melihat.';
   dsStatus();
 }
 $('#updbtn').addEventListener('click',function(){dsOpen($('#datapanel').hidden)});
@@ -1872,7 +1873,9 @@ function loadSeed(){seedDocs();var s=JSON.parse($('#seed').textContent);load(s.r
   if(!used)load(seed.rows,seed.report,seed.store,false);
 })();
 
-/* ===== Data bersama (Netlify Function + Blobs) ===== */
+/* ===== Data online (Supabase) ===== */
+const SB_URL='https://igkdetuufvcczmiluvqd.supabase.co',SB_KEY='sb_publishable_RUgz--hm3bwPBx75hzfrzA_C13Vm34h';
+async function sbLogin(email,pw){const r=await fetch(SB_URL+'/auth/v1/token?grant_type=password',{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({email:email,password:pw})});const j=await r.json().catch(()=>({}));if(!r.ok||!j.access_token)throw new Error('Email atau password salah.');return j.access_token}
 function shMsg(t,err){var e=$('#shst');e.textContent=t;e.className=err?'err':''}
 function shStamp(iso){try{return new Intl.DateTimeFormat('id-ID',{dateStyle:'long',timeStyle:'medium',timeZone:'Asia/Jakarta'}).format(new Date(iso))+' WIB'}catch(x){return iso}}
 function shApply(sh,force){
@@ -1892,35 +1895,35 @@ function shApply(sh,force){
   return note;
 }
 function shLoad(force){
-  if(location.protocol==='file:'){shMsg('Penyimpanan bersama aktif setelah dashboard dipasang di Netlify.');return Promise.resolve()}
-  shMsg('Memeriksa data bersama…');
+  if(location.protocol==='file:'){shMsg('Data online aktif setelah dashboard dibuka dari alamat websitenya.');return Promise.resolve()}
+  shMsg('Memeriksa data terbaru…');
   return fetch(SHURL,{cache:'no-store'}).then(function(r){
-    if(r.status===404){shMsg('Belum ada data bersama tersimpan.');return}
-    if(!r.ok)throw new Error('Data bersama tidak dapat dimuat ('+r.status+').');
+    if(r.status===404){shMsg('Belum ada data tersimpan.');return}
+    if(!r.ok)throw new Error('Data tidak dapat dimuat ('+r.status+').');
     return r.json().then(function(sh){
       if(force){try{localStorage.removeItem(KEY);localStorage.removeItem(DKEY)}catch(x){}}
       var note=shApply(sh,!!force);
-      shMsg('Data bersama terakhir disimpan: '+shStamp(sh.savedAt)+'.'+(note.length?' Dimuat: '+note.join(', ')+'.':''));
+      shMsg('Data terakhir disimpan: '+shStamp(sh.savedAt)+'.'+(note.length?' Dimuat: '+note.join(', ')+'.':''));
     });
-  }).catch(function(e){shMsg((e&&e.message)||'Data bersama belum tersedia.',true)});
+  }).catch(function(e){shMsg((e&&e.message)||'Data online belum tersedia.',true)});
 }
 function shSave(){
-  var key=$('#shkey').value.trim(),btn=$('#shsave');
-  if(location.protocol==='file:'){shMsg('Buka dashboard dari alamat Netlify untuk menyimpan bersama.',true);return}
-  if(!key){shMsg('Masukkan kunci admin terlebih dahulu.',true);$('#shkey').focus();return}
+  var key=$('#shkey').value,em=$('#shemail').value.trim(),btn=$('#shsave');
+  if(location.protocol==='file:'){shMsg('Buka dashboard dari alamat websitenya untuk menyimpan data.',true);return}
+  if(!em||!key){shMsg('Isi email dan password akun upload terlebih dahulu.',true);(em?$('#shkey'):$('#shemail')).focus();return}
   var payload={};
   if(SH.main&&SH.main.raw&&SH.main.raw.length)payload.main=SH.main;
   if(SH.docs&&(SH.docs.po||SH.docs.tr||SH.docs.sys||SH.docs.wh||SH.docs.prev))payload.docs=SH.docs;
   if(!payload.main&&!payload.docs){shMsg('Belum ada file yang diunggah untuk disimpan. Upload file dulu.',true);return}
-  if(typeof CompressionStream==='undefined'){shMsg('Browser ini belum mendukung penyimpanan bersama. Gunakan Chrome atau Edge terbaru.',true);return}
-  btn.disabled=true;shMsg('Menyimpan data bersama…');
+  if(typeof CompressionStream==='undefined'){shMsg('Browser ini belum mendukung simpan data online. Gunakan Chrome atau Edge terbaru.',true);return}
+  btn.disabled=true;shMsg('Login…');
   var stream=new Blob([JSON.stringify(payload)]).stream().pipeThrough(new CompressionStream('gzip'));
-  new Response(stream).arrayBuffer().then(function(body){
-    return fetch(SHURL,{method:'PUT',headers:{'Content-Type':'application/gzip','x-upload-key':key},body:body})
-  }).then(function(r){return r.json().catch(function(){return {}}).then(function(j){
+  sbLogin(em,key).then(function(token){shMsg('Menyimpan data…');return new Response(stream).arrayBuffer().then(function(body){
+    return fetch(SHURL,{method:'PUT',headers:{'Content-Type':'application/gzip','Authorization':'Bearer '+token},body:body})
+  })}).then(function(r){return r.json().catch(function(){return {}}).then(function(j){
     if(!r.ok)throw new Error(j.error||('Simpan gagal ('+r.status+').'));
-    shMsg('Data tersimpan ('+shStamp(j.savedAt)+'). Pengguna lain dapat memilih “Ambil data terbaru”.');
-  })}).catch(function(e){shMsg((e&&e.message)||'Data bersama gagal disimpan.',true)}).then(function(){btn.disabled=false});
+    shMsg('Data tersimpan ('+shStamp(j.savedAt)+'). Pengguna lain akan melihat data ini.');
+  })}).catch(function(e){shMsg((e&&e.message)||'Data gagal disimpan.',true)}).then(function(){btn.disabled=false});
 }
 $('#shsave').addEventListener('click',shSave);
 $('#shload').addEventListener('click',function(){shLoad(true)});
