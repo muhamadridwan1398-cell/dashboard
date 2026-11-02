@@ -626,18 +626,24 @@ function applyDocs(){
   var keysOf=function(a,xi){var o=[];if(a[1])o.push([a[1],0]);(a[xi]||[]).forEach(function(n){if(n!==a[1])o.push([n,1])});return o};
   S.po.forEach(function(a){keysOf(a,9).forEach(function(kk){var k=kk[0]+'|'+a[2],l=pm.get(k);if(!l){l=[];pm.set(k,l)}l.push([a,kk[1]])})});
   S.tr.forEach(function(a){keysOf(a,11).forEach(function(kk){var k=kk[0]+'|'+a[2],l=tm.get(k);if(!l){l=[];tm.set(k,l)}l.push([a,kk[1]])})});
+  var poAll=new Set(),trAll=new Set();S.po.forEach(function(a){poAll.add(a[0])});S.tr.forEach(function(a){trAll.add(a[0])});
   S.rows.forEach(function(r){
     var k=r.np+'|'+r.ino;
     (pm.get(k)||[]).forEach(function(e){
       var a=e[0],p=r.pos.filter(function(x){return x.pon===a[0]})[0];
       if(!p){p={pon:a[0],vn:a[3],poo:0};r.pos.push(p)}
+      p.ok=true;
       p.vn=a[3]||p.vn;p.st=a[4];p.ord=+a[5];p.poo=+a[6];p.rec=+a[7];p.rd=a[8];if(e[1]&&!p.viaC&&!r.pos.some(function(x){return x!==p&&x.pon===a[0]}))p.viaC=true;
     });
     (tm.get(k)||[]).forEach(function(e){
       var a=e[0],t=r.trs.filter(function(x){return x.trn===a[0]})[0];
       if(!t){t={trn:a[0],tfrom:'',tro:0};r.trs.push(t)}
+      t.ok=true;
       t.tfrom=a[4]||a[3]||t.tfrom;t.st=a[5];t.trq=+a[6];t.toq=+a[7];t.tiq=+a[8];t.tro=+a[9];t.rdd=a[10];if(e[1]&&!t.viaC)t.viaC=true;
     });
+    /* Acuan tetap No NP (MS), tetapi PO/TR hanya dipakai bila laporan PO/TR memuat kode item ini. PO/TR yang ada di laporan tetapi tidak memuat item ini dianggap salah kaitan dan dibuang. */
+    r.pos=r.pos.filter(function(p){return p.ok||!poAll.has(p.pon)});
+    r.trs=r.trs.filter(function(t){return t.ok||!trAll.has(t.trn)});
     r.poo=r.pos.reduce(function(x,p){return x+(p.poo||0)},0);
     r.tro=r.trs.reduce(function(x,t){return x+(t.tro||0)},0);
     r.pasok=r.poo>0||r.tro>0;
