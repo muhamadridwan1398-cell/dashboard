@@ -1061,7 +1061,8 @@ function waVendors(){
 }
 var WAI='<svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.2 14.2c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.2-4.600-4-4.700-4.200-.1-.2-1.100-1.500-1.100-2.800s.7-2 1-2.300c.2-.3.5-.3.700-.3h.5c.2 0 .4 0 .6.500.2.600.8 2 .9 2.100.1.100.1.300 0 .500-.1.200-.2.300-.3.500l-.4.500c-.1.100-.3.300-.1.600.2.300.8 1.300 1.700 2.100 1.200 1 2.100 1.300 2.400 1.500.3.100.5.100.6-.1l.9-1.100c.2-.3.4-.2.600-.1l1.900.9c.3.100.5.200.5.300.1.200.1.800-.1 1.400z"/></svg>';
 function waCopy(vn,pn,btn){var t=waMsg(vn,pn,true),ok=function(){btn.textContent='Tersalin';setTimeout(function(){btn.textContent='Salin'},1500)};if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(ok,function(){});else{var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy');ok()}catch(e){}a.remove()}}
-function waOpen(num,vn,pn){window.open('https://wa.me/'+num+'?text='+encodeURIComponent(waMsg(vn,pn)),'_blank','noopener')}
+function waMobile(){return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)||(navigator.maxTouchPoints>1&&/Macintosh/.test(navigator.userAgent))}
+function waOpen(num,vn,pn){var t=encodeURIComponent(waMsg(vn,pn));window.open(waMobile()?'https://wa.me/'+num+'?text='+t:'https://web.whatsapp.com/send?phone='+num+'&text='+t,'_blank','noopener')}
 function waLn(x){
   var a=fuLn(x,'vn');return a.map(function(t){if(t==='')return '–';var m=picFind(t);return esc(t)+(m?' <button type="button" class="wab'+(m.fz?' fz':'')+'" data-wa="'+esc(t)+'" title="WhatsApp PIC '+esc(t)+(m.fz?' (cocok perkiraan, cek dulu)':'')+'" aria-label="WhatsApp PIC '+esc(t)+'">'+WAI+'</button>':'')}).join('<br>')
 }
