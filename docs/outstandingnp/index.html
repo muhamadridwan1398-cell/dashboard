@@ -1051,7 +1051,7 @@ function waItems(vn){
 function waCall(pn){var w=String(pn||'').replace(/\(.*?\)/g,' ').trim().split(/[\s,\/]+/).filter(Boolean),t=w[0]?w[0].toUpperCase().replace(/\./g,''):'',pre='Bapak/Ibu';if(/^(PAK|BAPAK|BPK|BP)$/.test(t)){pre='Bapak';w.shift()}else if(/^(BU|IBU)$/.test(t)){pre='Ibu';w.shift()}var n=w[0]?w[0].charAt(0).toUpperCase()+w[0].slice(1).toLowerCase():'';return n?pre+' '+n:''}
 function waMsg(vn,pn,full){
   var it=waItems(vn),nm=waCall(pn),lines=[],hd=waGreet()+(nm?' '+nm:'')+',\nKami dari MITRA10 Q-BIG (store 10038). Mohon update status pengiriman item berikut dari '+vn+':\n',cap=full?1e9:2200,len=hd.length,more=0;
-  it.forEach(function(o,i){var r=o.r,z=o.z,l=(i+1)+'. '+z.no+' | '+(r.inm||'')+' ('+(r.ino||'')+') | Qty PO '+(z.q!=null?fmt(z.q):'-')+(r.pdD!=null?' | PDD '+dstr(r.pdD):'');
+  it.forEach(function(o,i){var r=o.r,z=o.z,l=(i+1)+'. '+z.no+' | '+(r.inm||'')+' ('+(r.ino||'')+') | Qty '+(z.tr?'TR':'PO')+' '+(z.q!=null?fmt(z.q):'-')+(r.pdD!=null?' | PDD '+dstr(r.pdD):'');
     if(len+l.length+1>cap){more++;return}lines.push(l);len+=l.length+1});
   return hd+'\n'+lines.join('\n')+(more?'\n(+'+more+' item lainnya, kami kirim lewat Excel)':'')+'\n\nMohon info tanggal kirim / estimasi tiba. Terima kasih.';
 }
@@ -1089,7 +1089,7 @@ function fuLines(rows){
   rows.forEach(function(r){
     var ds=[];
     r.pos.forEach(function(p){ds.push({v:p.pon+(nmOnly(p.vn)?' · '+nmOnly(p.vn):''),no:p.pon,vn:nmOnly(p.vn)||'',q:p.ord,rv:p.rec,st:p.st||''})});
-    r.trs.forEach(function(t){ds.push({v:t.trn+(nmOnly(t.tfrom)?' · '+nmOnly(t.tfrom):''),no:t.trn,vn:nmOnly(t.tfrom)||'',q:t.trq,rv:t.tiq,st:t.st||''})});
+    r.trs.forEach(function(t){ds.push({v:t.trn+(nmOnly(t.tfrom)?' · '+nmOnly(t.tfrom):''),no:t.trn,tr:1,vn:nmOnly(t.tfrom)||'',q:t.trq,rv:t.tiq,st:t.st||''})});
     var d=null;
     if(ds.length){
       var act=ds.filter(function(z){return !deadDoc(z.st)});
