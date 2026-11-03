@@ -1884,12 +1884,25 @@ function loadSeed(){seedDocs();var s=JSON.parse($('#seed').textContent);load(s.r
 
 /* ===== Data online (Supabase) ===== */
 const SB_URL='https://igkdetuufvcczmiluvqd.supabase.co',SB_KEY='sb_publishable_RUgz--hm3bwPBx75hzfrzA_C13Vm34h';
-let _tok=null,_tokExp=0;
+let _tok=null,_tokExp=0,_who='';
+const SB_LS='qbig_sb_session';
 function sbOk(){return !!_tok&&Date.now()<_tokExp-60000}
 function sbUser(u){u=String(u||'').trim().toLowerCase();return u.indexOf('@')>-1?u:u+'@qbig.example.com'}
-async function sbLogin(email,pw){email=sbUser(email);const r=await fetch(SB_URL+'/auth/v1/token?grant_type=password',{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({email:email,password:pw})});const j=await r.json().catch(()=>({}));if(!r.ok||!j.access_token)throw new Error('Email atau password salah.');_tok=j.access_token;_tokExp=Date.now()+(j.expires_in||3600)*1000;return _tok}
+function sbSet(j,email){_tok=j.access_token;_tokExp=Date.now()+(j.expires_in||3600)*1000;_who=email||_who;try{localStorage.setItem(SB_LS,JSON.stringify({rt:j.refresh_token,em:_who}))}catch(e){}sbPill()}
+async function sbLogin(email,pw){email=sbUser(email);const r=await fetch(SB_URL+'/auth/v1/token?grant_type=password',{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({email:email,password:pw})});const j=await r.json().catch(()=>({}));if(!r.ok||!j.access_token)throw new Error('Email atau password salah.');sbSet(j,email);return _tok}
+async function sbRefresh(){let s=null;try{s=JSON.parse(localStorage.getItem(SB_LS)||'null')}catch(e){}if(!s||!s.rt)return false;try{const r=await fetch(SB_URL+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:s.rt})});const j=await r.json().catch(()=>({}));if(!r.ok||!j.access_token){if(r.status>=400&&r.status<500){try{localStorage.removeItem(SB_LS)}catch(e){}}return false}sbSet(j,s.em||'');return true}catch(e){return false}}
+function sbOut(){_tok=null;_tokExp=0;_who='';try{localStorage.removeItem(SB_LS)}catch(e){}sbPill()}
+function sbPill(){let p=document.getElementById('sbpill');if(!p){if(!document.getElementById('sbpillcss')){const st=document.createElement('style');st.id='sbpillcss';st.textContent='#sbpill{position:fixed;top:10px;right:12px;z-index:900;display:flex;align-items:center;gap:6px;font:600 12px/1 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#fff;color:#1f2d4d;border:1px solid #d5deee;border-radius:999px;padding:6px 6px 6px 11px;box-shadow:0 2px 8px rgba(20,40,80,.1)}#sbpill button{font:inherit;border:0;border-radius:999px;padding:5px 10px;cursor:pointer;background:#eef3ff;color:#1f4aa8}#sbpill button:hover{background:#dfe8ff}#sbpill i{width:7px;height:7px;border-radius:50%;background:#16a34a;display:inline-block}@media print{#sbpill{display:none}}';document.head.appendChild(st)}p=document.createElement('div');p.id='sbpill';document.body.appendChild(p);p.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.a==='out')sbOut();else sbAsk(()=>{})})}
+  const logged=sbOk()||(()=>{try{return !!JSON.parse(localStorage.getItem(SB_LS)||'null')}catch(e){return false}})();
+  const nm=String(_who||'').split('@')[0];
+  p.innerHTML=logged?'<i></i><span>Editor'+(nm?' · '+nm.replace(/[<>&"]/g,''):'')+'</span><button type="button" data-a="out">Keluar</button>':'<button type="button" data-a="in">Login Editor</button>';
+  if(!logged)p.style.paddingLeft='6px'; else p.style.paddingLeft='11px'}
 function sbAsk(cb){
   if(sbOk()){cb(_tok);return}
+  sbRefresh().then(ok=>{if(ok){cb(_tok);return}sbDlg(cb)})
+}
+sbPill();sbRefresh();
+function sbDlg(cb){
   const old=document.getElementById('lgdlg');if(old)old.remove();
   document.body.insertAdjacentHTML('beforeend','<div class="lgbg" id="lgdlg" role="dialog" aria-modal="true" aria-label="Login admin/editor"><form class="lgbox" id="lgform"><h3>Login Admin / Editor</h3><p>Hanya admin atau editor yang boleh memperbarui data. Setelah login, data otomatis tersimpan untuk semua pengguna.</p><label for="lgem">Username</label><input id="lgem" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required><label for="lgpw">Password</label><input id="lgpw" type="password" autocomplete="current-password" required><div class="lgerr" id="lgerr" role="alert"></div><div class="lgact"><button type="button" id="lgx">Batal</button><button type="submit" class="ok" id="lgok">Masuk</button></div></form></div>');
   const d=document.getElementById('lgdlg'),f=document.getElementById('lgform'),er=document.getElementById('lgerr');
