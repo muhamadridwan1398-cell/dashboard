@@ -1304,7 +1304,7 @@ function followup(rows){
   var ak='<div class="fupdd" role="group" aria-label="Filter Amsen / Kirim">'+['Amsen','Kirim'].map(function(v){return '<button type="button" class="pdb'+(f.ak.indexOf(v)>-1?' on':'')+'" data-ak="'+v+'" title="Hanya Delivery via Gudang. Dibaca dari komentar NP">'+v+' <span class="num">'+fmt(akCnt[v])+'</span></button>'}).join('')+'</div>';
   var chips=FQ.filter(function(q){return f[q[0]].length||S.fopen==='q:'+q[0]}).map(fqBtn).join('')+(((S.fcol.mon||[]).length||S.fopen==='mon')?monthMulti():'');
   var addBtn='<button type="button" class="msb msbtop addf" data-ms="q:add" aria-haspopup="true" aria-expanded="'+(S.fopen==='q:add')+'"><span>+ Filter</span></button>';
-  h+='<div class="futool"><div class="fuf">'+pdd+'<span class="fuvr"></span>'+ak+'<span class="fuvr"></span>'+chips+addBtn+fhMenu()+'</div><div class="fusum"><span class="num">'+fmt(itemsN)+' item · '+fmt(L.length)+' baris</span><button class="btn" type="button" data-fxl="1" title="Unduh seluruh hasil filter ke Excel">Unduh Excel</button><button class="btn" type="button" data-fxl="2" title="Unduh Excel dengan satu baris per PO/TR (tidak digabung)">Excel pisah PO/TR</button><button class="btn wabtn" type="button" data-wadlg="1" title="WhatsApp ke PIC supplier, rekap item sesuai filter">'+WAI+' WhatsApp Vendor</button>'+((anyF||S.fall)?'<button class="btn ghost" type="button" data-fclear="1">Reset filter</button>':'')+'</div></div>';
+  h+='<div class="futool"><div class="fuf">'+pdd+'<span class="fuvr"></span>'+ak+'<span class="fuvr"></span>'+chips+addBtn+fhMenu('fu')+'</div><div class="fusum"><span class="num">'+fmt(itemsN)+' item · '+fmt(L.length)+' baris</span><button class="btn" type="button" data-fxl="1" title="Unduh seluruh hasil filter ke Excel">Unduh Excel</button><button class="btn" type="button" data-fxl="2" title="Unduh Excel dengan satu baris per PO/TR (tidak digabung)">Excel pisah PO/TR</button><button class="btn wabtn" type="button" data-wadlg="1" title="WhatsApp ke PIC supplier, rekap item sesuai filter">'+WAI+' WhatsApp Vendor</button>'+((anyF||S.fall)?'<button class="btn ghost" type="button" data-fclear="1">Reset filter</button>':'')+'</div></div>';
   h+=stkNote();
   h+='<div class="dscroll fu" data-sec="fu"><table><thead><tr>'+FUC.map(function(c){var cv=S.fcol[c[0]]||(FSEL[c[0]]?[]:''),ctl;
     if(FSEL[c[0]]){var nsel=cv.length;ctl='<button type="button" class="msb'+(nsel?' on':'')+'" data-ms="'+c[0]+'" aria-haspopup="true" aria-expanded="'+(S.fopen===c[0])+'" aria-label="Filter '+c[1]+'"><span>'+(nsel===0?'Semua':(nsel===1?(cv[0]==='__blank__'?'(kosong)':esc(cv[0])):nsel+' dipilih'))+'</span><i>▾</i></button>'}
@@ -1366,19 +1366,23 @@ function dtRows(rows,skip){
 }
 function dtLabs(g){var o={};g.rows.forEach(function(r){o[dtKey(r)]=1});return DTQ.filter(function(q){return o[q[0]]}).map(function(q){return DTL[q[0]]})}
 function lateTxt(l){return l==null?'':(l>0?'+'+l+' hari':(l===0?'hari ini':'-'+(-l)+' hari'))}
-var FHK='qbig_fu_hide';
-function fhGet(){try{var v=JSON.parse(localStorage.getItem(FHK)||'[]');return Array.isArray(v)?v:[]}catch(e){return []}}
-function fhSet(a){try{localStorage.setItem(FHK,JSON.stringify(a))}catch(e){}fhApply()}
+var FHK={fu:'qbig_fu_hide',dt:'qbig_dt_hide'};
+function fhCols(t){return t==='dt'?DTC:FUC}
+function fhGet(t){try{var v=JSON.parse(localStorage.getItem(FHK[t])||'[]');return Array.isArray(v)?v:[]}catch(e){return []}}
+function fhSet(t,a){try{localStorage.setItem(FHK[t],JSON.stringify(a))}catch(e){}fhApply()}
 function fhApply(){
-  var hid=fhGet(),css=FUC.map(function(c,i){return hid.indexOf(c[0])>-1?'.fu th:nth-child('+(i+1)+'),.fu td:not([colspan]):nth-child('+(i+1)+')':''}).filter(Boolean).join(',');
-  var st=document.getElementById('fhst');if(!st){st=document.createElement('style');st.id='fhst';document.head.appendChild(st)}
-  st.textContent=css?css+'{display:none!important}':'';
+  [['fu','.fu th:nth-child(#),.fu td:not([colspan]):nth-child(#)'],['dt','.dtb>table>thead>tr>th:nth-child(#),.dtb>table>tbody>tr>td:not([colspan]):nth-child(#)']].forEach(function(z){
+    var hid=fhGet(z[0]),css=fhCols(z[0]).map(function(c,i){return hid.indexOf(c[0])>-1?z[1].split('#').join(i+1):''}).filter(Boolean).join(',');
+    var id='fhst'+z[0],st=document.getElementById(id);if(!st){st=document.createElement('style');st.id=id;document.head.appendChild(st)}
+    st.textContent=css?css+'{display:none!important}':'';
+  });
 }
-function fhMenu(){
-  var hid=fhGet();
-  return '<details class="fhm"'+(S.fhOpen?' open':'')+'><summary class="btn ghost">Kolom'+(hid.length?' <b>('+hid.length+' disembunyikan)</b>':'')+'</summary><div class="fhp"><div class="fhn">Pilihan ini hanya berlaku di browser kamu.</div>'+
-    FUC.map(function(c){return '<label><input type="checkbox" data-fh="'+c[0]+'"'+(hid.indexOf(c[0])>-1?'':' checked')+'><span>'+esc(c[1])+'</span></label>'}).join('')+
-    '<div class="fhf"><button type="button" class="btn ghost" data-fhall="1">Tampilkan semua</button></div></div></details>';
+function fhLab(a){return 'Kolom'+(a.length?' <b>('+a.length+' disembunyikan)</b>':'')}
+function fhMenu(t){
+  var hid=fhGet(t);
+  return '<details class="fhm" data-fht="'+t+'"'+(S.fhOpen===t?' open':'')+'><summary class="btn ghost">'+fhLab(hid)+'</summary><div class="fhp"><div class="fhn">Pilihan ini hanya berlaku di browser kamu.</div>'+
+    fhCols(t).map(function(c){return '<label><input type="checkbox" data-fh="'+c[0]+'" data-fht="'+t+'"'+(hid.indexOf(c[0])>-1?'':' checked')+'><span>'+esc(c[1])+'</span></label>'}).join('')+
+    '<div class="fhf"><button type="button" class="btn ghost" data-fhall="'+t+'">Tampilkan semua</button></div></div></details>';
 }
 function fuSum(){
   var n=0,f=0,M={};
@@ -1492,7 +1496,7 @@ function detailAll(rows){
   var h='<section class="panel"><div class="mph"><div><h2>Detail Delivery</h2><p class="sub" style="margin:2px 0 0">Semua NP outstanding dalam satu daftar. Klik baris untuk melihat item, klik judul kolom untuk mengurutkan. Setiap filter bisa dipilih lebih dari satu.</p></div></div>';
   h+='<div class="mk"><span><b>'+fmt(st.n)+'</b> NP OTS</span>'+DTQ.filter(function(q){return per[q[0]]}).map(function(q){return '<span>'+DTL[q[0]]+' <b>'+fmt(per[q[0]].size)+'</b></span>'}).join('')+'<span>punya nomor WA <b>'+fmt(G.filter(function(g){return g.wph||(FN['NP:'+g.np]||{}).k}).length)+'</b> NP</span><span>qty <b>'+fmt(st.q)+'</b></span><span>lewat PDD <b>'+fmt(st.late)+'</b> NP</span><span>telat &gt;14 hari <b>'+fmt(st.l14)+'</b> NP</span></div>';
   h+='<div class="dh"><h3>Detail no. NP</h3></div>';
-  h+='<div class="futool"><div class="fuf">'+TQ.map(tqBtn).join('')+'</div><div class="fusum"><span class="num">'+fmt(G.length)+' NP</span><button class="btn" type="button" data-dtx="1" title="Unduh daftar NP sesuai filter dan urutan yang sedang tampil">Unduh Excel</button>'+(anyF?'<button class="btn ghost" type="button" data-dtclear="1">Reset filter</button>':'')+'</div></div>';
+  h+='<div class="futool"><div class="fuf">'+TQ.map(tqBtn).join('')+'</div><div class="fusum"><span class="num">'+fmt(G.length)+' NP</span>'+fhMenu('dt')+'<button class="btn" type="button" data-dtx="1" title="Unduh daftar NP sesuai filter dan urutan yang sedang tampil">Unduh Excel</button>'+(anyF?'<button class="btn ghost" type="button" data-dtclear="1">Reset filter</button>':'')+'</div></div>';
   S.dtX=G;
   var lim=S.shown.dt||100,vis=G.slice(0,lim);
   h+='<div class="dscroll dtb" data-sec="dt"><table><thead><tr>'+DTC.map(function(c){
@@ -1677,10 +1681,10 @@ function render(){
 }
 
 /* ---------- interaksi ---------- */
-document.addEventListener('toggle',function(e){if(e.target.classList&&e.target.classList.contains('fhm'))S.fhOpen=e.target.open},true);
-document.addEventListener('change',function(e){var t=e.target;if(t.dataset&&t.dataset.fh){var a=fhGet().filter(function(k){return k!==t.dataset.fh});if(!t.checked)a.push(t.dataset.fh);fhSet(a);var b=document.querySelector('.fhm summary b'),sm=document.querySelector('.fhm summary');if(sm)sm.innerHTML='Kolom'+(a.length?' <b>('+a.length+' disembunyikan)</b>':'')}});
-document.addEventListener('click',function(e){var q=e.target.closest&&e.target.closest('[data-fhall]');if(q){fhSet([]);document.querySelectorAll('.fhm input[data-fh]').forEach(function(i){i.checked=true});var sm=document.querySelector('.fhm summary');if(sm)sm.textContent='Kolom';return}
-  if(e.target.closest&&e.target.closest('.fhm'))return;if(S.fhOpen){S.fhOpen=false;var fd=document.querySelector('.fhm');if(fd)fd.open=false}
+document.addEventListener('toggle',function(e){if(e.target.classList&&e.target.classList.contains('fhm'))S.fhOpen=e.target.open?e.target.dataset.fht:''},true);
+document.addEventListener('change',function(e){var t=e.target;if(t.dataset&&t.dataset.fh){var tb=t.dataset.fht,a=fhGet(tb).filter(function(k){return k!==t.dataset.fh});if(!t.checked)a.push(t.dataset.fh);fhSet(tb,a);var sm=document.querySelector('.fhm[data-fht="'+tb+'"] summary');if(sm)sm.innerHTML=fhLab(a)}});
+document.addEventListener('click',function(e){var q=e.target.closest&&e.target.closest('[data-fhall]');if(q){var tb=q.dataset.fhall;fhSet(tb,[]);document.querySelectorAll('.fhm[data-fht="'+tb+'"] input[data-fh]').forEach(function(i){i.checked=true});var sm=document.querySelector('.fhm[data-fht="'+tb+'"] summary');if(sm)sm.textContent='Kolom';return}
+  if(e.target.closest&&e.target.closest('.fhm'))return;if(S.fhOpen){S.fhOpen='';var fd=document.querySelector('.fhm');if(fd)fd.open=false}
   if(S.fopen&&!e.target.closest('.mpop')&&!e.target.closest('.msb')){S.fopen='';S.fmq='';render()}
   var mb=e.target.closest('.msb');
   if(mb){var mk0=mb.dataset.ms;if(S.fopen===mk0){S.fopen='';S.fmq=''}else{var rc=mb.getBoundingClientRect();S.fopen=mk0;S.fmq='';S.fot=Date.now();S.fpos={x:rc.left,y:rc.bottom+4}}render();return}
