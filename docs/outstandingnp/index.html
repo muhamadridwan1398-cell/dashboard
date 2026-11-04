@@ -1328,7 +1328,7 @@ function followup(rows){
 /* ---------- Detail Delivery (gabungan Gudang + Supplier + Another Site/DC) ---------- */
 var DTL={ga:'Gudang · Amsen',gk:'Gudang · Kirim',vs:'Supplier',vd:'Another Site/DC'};
 var DTQ=[['ga','Delivery via Gudang · Amsen'],['gk','Delivery via Gudang · Kirim'],['vs','Delivery via Supplier'],['vd','Delivery via Another Site/DC']];
-var DTC=[['pd','PDD'],['late','Telat'],['np','No. NP'],['cu','Customer Name'],['sp','Salesperson'],['n','Item',1],['qty','Qty OTS',1],['cons','Consi',1],['ret','Retail',1],['flags','Perlu perhatian'],['ty','Tipe NP'],['dv','Delivery']];
+var DTC=[['pd','PDD'],['late','Telat'],['np','No. NP'],['cu','Customer Name'],['sp','Salesperson'],['ty','Tipe NP'],['dv','Delivery'],['n','Item',1],['qty','Qty OTS',1],['cons','Consi',1],['ret','Retail',1],['flags','Perlu perhatian']];
 var DTW={pd:92,late:100,np:172,cu:186,sp:172,dv:134,n:66,qty:82,cons:72,ret:72,flags:214,ty:250};
 var DTNUM={pd:1,late:-1,n:1,qty:1,cons:1,ret:1};
 function dtKey(r){var s=segOf(r);return s==='gd'?(catOf(r)==='Amsen'?'ga':'gk'):s}
@@ -1419,7 +1419,7 @@ function detailAll(rows){
   vis.forEach(function(g,gi){
     var fl=Object.keys(g.flags).map(function(x){return '<span class="flag'+(x==='Tidak ada di NAV'||x==='Cek komentar'||x.indexOf('Belum ada')===0?' warn':'')+'">'+x+'</span>'}).join('');
     var W=function(c){return ' style="min-width:'+DTW[c]+'px;max-width:'+DTW[c]+'px"'};
-    h+='<tr class="nota'+(gi%2?' alt':'')+'" data-np="'+esc(g.np)+'"><td class="c num"'+W('pd')+'>'+dstr(g.pd)+'</td><td class="c"'+W('late')+'>'+latePill(g.late)+'</td><td class="c num id"'+W('np')+'>'+esc(g.np)+'</td><td class="c" title="'+esc(g.cu)+'"'+W('cu')+'>'+esc(g.cu)+'</td><td class="c" title="'+esc(g.sp)+'"'+W('sp')+'>'+esc(g.sp)+'</td><td class="c num r"'+W('n')+'>'+g.rows.length+'</td><td class="c num r"'+W('qty')+'>'+fmt(g.qty)+'</td><td class="c num r"'+W('cons')+'>'+(g.cons?g.cons:'–')+'</td><td class="c num r"'+W('ret')+'>'+(g.ret?g.ret:'–')+'</td><td class="c" title="'+esc(Object.keys(g.flags).join(', '))+'"'+W('flags')+'>'+fl+'</td><td class="c" title="'+esc(g.ty)+'"'+W('ty')+'>'+esc(g.ty)+'</td><td class="c" title="'+esc(g.dv)+'"'+W('dv')+'>'+esc(g.dv)+'</td></tr>';
+    h+='<tr class="nota'+(gi%2?' alt':'')+'" data-np="'+esc(g.np)+'"><td class="c num"'+W('pd')+'>'+dstr(g.pd)+'</td><td class="c"'+W('late')+'>'+latePill(g.late)+'</td><td class="c num id"'+W('np')+'>'+esc(g.np)+'</td><td class="c" title="'+esc(g.cu)+'"'+W('cu')+'>'+esc(g.cu)+'</td><td class="c" title="'+esc(g.sp)+'"'+W('sp')+'>'+esc(g.sp)+'</td><td class="c" title="'+esc(g.ty)+'"'+W('ty')+'>'+esc(g.ty)+'</td><td class="c" title="'+esc(g.dv)+'"'+W('dv')+'>'+esc(g.dv)+'</td><td class="c num r"'+W('n')+'>'+g.rows.length+'</td><td class="c num r"'+W('qty')+'>'+fmt(g.qty)+'</td><td class="c num r"'+W('cons')+'>'+(g.cons?g.cons:'–')+'</td><td class="c num r"'+W('ret')+'>'+(g.ret?g.ret:'–')+'</td><td class="c" title="'+esc(Object.keys(g.flags).join(', '))+'"'+W('flags')+'>'+fl+'</td></tr>';
     if(S.open[g.np])h+=dtNpItems(g,DTC.length);
   });
   if(!vis.length)h+='<tr><td colspan="'+DTC.length+'" class="empty">Tidak ada NP.</td></tr>';
