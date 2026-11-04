@@ -1058,7 +1058,7 @@ function fnLoad(){
   }).catch(function(){});
 }
 document.addEventListener('visibilitychange',function(){if(!document.hidden)fnLoad()});
-setInterval(function(){if(!document.hidden)fnLoad()},90000);
+setInterval(function(){if(!document.hidden)fnLoad()},15000);window.addEventListener('focus',fnLoad);window.addEventListener('pageshow',fnLoad);
 function FUCM_L(k){if(k==='mon')return 'Bulan PDD';for(var i=0;i<FUC.length;i++)if(FUC[i][0]===k)return FUC[i][1];return k}
 function umurTxt(u){return u==null?'':(u===0?'Hari ini':(u===-1?'Besok':(u<0?(-u)+' hari lagi':u+' hari')))}
 var FUC=[['ca','Category Name'],['age','Umur',1],['od','Order Date'],['pd','PDD'],['hk','Leadtime',1],['sp','Sales Person Name'],['np','NPno'],['cu','Cust Name'],['ty','NPType'],['ino','Item No'],['inm','Item Name'],['mb','Master Brand'],['jn','Jenis'],['um','UOM'],['vn','Vendor'],['dv','No PO/TR'],['dq','Qty PO/TR',1],['dr','Rcv Qty PO/TR',1],['ds','Status PO&TR'],['kb','Keterangan Barang'],['fup','Follow up'],['ket','Stok supplier'],['eta','Est. datang'],['o','OTS Qty',1],['stS','Stock NAV',1],['stF','Stock WMS',1],['stat','Status Stok'],['chk','Cek Silang']];
