@@ -1172,7 +1172,7 @@ function waItems(vn){
 }
 function waCall(pn){var w=String(pn||'').replace(/\(.*?\)/g,' ').trim().split(/[\s,\/]+/).filter(Boolean),t=w[0]?w[0].toUpperCase().replace(/\./g,''):'',pre='Bapak/Ibu';if(/^(PAK|BAPAK|BPK|BP)$/.test(t)){pre='Bapak';w.shift()}else if(/^(BU|IBU)$/.test(t)){pre='Ibu';w.shift()}var n=w[0]?w[0].charAt(0).toUpperCase()+w[0].slice(1).toLowerCase():'';return n?pre+' '+n:''}
 function waMsg(vn,pn,full){
-  var it=waItems(vn),nm=waCall(pn),lines=[],hd=waGreet()+(nm?' '+nm:'')+',\nKami dari MITRA10 Q-BIG (store 10038). Mohon update status pengiriman item berikut dari '+vn+':\n',cap=full?1e9:2200,len=hd.length,more=0;
+  var it=waItems(vn),nm=waCall(pn),lines=[],hd=waGreet()+(nm?' '+nm:'')+',\nKami dari MITRA10 Q-BIG. Mohon update status pengiriman item berikut dari '+vn+':\n',cap=full?1e9:2200,len=hd.length,more=0;
   it.forEach(function(o,i){var r=o.r,z=o.z,l=(i+1)+'. '+z.no+' | '+(r.inm||'')+' ('+(r.ino||'')+') | Qty '+(z.tr?'TR':'PO')+' '+(z.q!=null?fmt(z.q):'-')+(r.pdD!=null?' | PDD '+dstr(r.pdD):'');
     if(len+l.length+1>cap){more++;return}lines.push(l);len+=l.length+1});
   return hd+'\n'+lines.join('\n')+(more?'\n(+'+more+' item lainnya, kami kirim lewat Excel)':'')+'\n\nMohon info tanggal kirim / estimasi tiba. Terima kasih.';
@@ -1488,7 +1488,7 @@ function dnWa(np,edit){
   }
   var g=(S.dtG||[]).filter(function(x){return x.np===np})[0];if(!g)return;
   var eta=n.e?isoDisp(n.e):'',its=g.rows.slice(0,6).map(function(r,i){return (i+1)+'. '+(r.inm||'')+' (qty '+fmt(r.o)+')'}).join('\n')+(g.rows.length>6?'\n(+'+(g.rows.length-6)+' item lainnya)':'');
-  var t=waGreet()+' Bapak/Ibu '+(g.cu||'')+',\nKami dari MITRA10 Q-BIG (store 10038). Terkait pesanan '+g.np+':\n'+its+'\n\n'+(eta?'Estimasi pengiriman: '+eta+'.\n':'')+'Mohon konfirmasi alamat dan kesiapan penerimaan barang agar pengiriman bisa kami jadwalkan. Terima kasih.';
+  var t=waGreet()+' Bapak/Ibu '+(g.cu||'')+',\nKami dari MITRA10 Q-BIG. Terkait pesanan '+g.np+':\n'+its+'\n\n'+(eta?'Estimasi pengiriman: '+eta+'.\n':'')+'Mohon konfirmasi alamat dan kesiapan penerimaan barang agar pengiriman bisa kami jadwalkan. Terima kasih.';
   var q=encodeURIComponent(t);waGo(waMobile()?'https://wa.me/'+ph+'?text='+q:'https://web.whatsapp.com/send?phone='+ph+'&text='+q);
 }
 function dtVals(g,k){
