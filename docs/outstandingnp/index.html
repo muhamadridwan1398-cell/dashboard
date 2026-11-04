@@ -1142,7 +1142,22 @@ var WAI='<svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" ari
 function waCopy(vn,pn,btn){var t=waMsg(vn,pn,true),ok=function(){btn.textContent='Tersalin';setTimeout(function(){btn.textContent='Salin'},1500)};if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(ok,function(){});else{var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy');ok()}catch(e){}a.remove()}}
 function waMobile(){return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)||(navigator.maxTouchPoints>1&&/Macintosh/.test(navigator.userAgent))}
 function waOpen(num,vn,pn){var t=encodeURIComponent(waMsg(vn,pn));waGo(waMobile()?'https://wa.me/'+num+'?text='+t:'https://web.whatsapp.com/send?phone='+num+'&text='+t)}
-function waGo(u){if(waMobile()){window.open(u,'_blank','noopener');return}window.open(u,'qbig_wa')}
+function waMode(){try{return localStorage.getItem('qbig_wa_mode')==='app'?'app':'web'}catch(e){return 'web'}}
+function waGo(u){
+  if(waMobile()){window.open(u,'_blank','noopener');return}
+  if(waMode()==='app'){var m=/[?&]phone=(\d+)&text=(.*)$/.exec(u);if(m){location.href='whatsapp://send?phone='+m[1]+'&text='+m[2];return}}
+  window.open(u,'qbig_wa');
+}
+function waModeBtn(){
+  if(waMobile())return;
+  var b=document.getElementById('wamode');
+  if(!b){
+    if(!document.getElementById('wamodecss')){var st=document.createElement('style');st.id='wamodecss';st.textContent='#wamode{position:fixed;left:12px;bottom:12px;z-index:60;border:1px solid #cbd5e1;background:#fff;color:#334155;border-radius:999px;padding:5px 12px;font:600 12px/1 inherit;font-family:inherit;cursor:pointer;box-shadow:0 2px 8px rgba(15,23,42,.14)}#wamode:hover{background:#f1f5f9}';document.head.appendChild(st)}
+    b=document.createElement('button');b.type='button';b.id='wamode';b.addEventListener('click',function(){try{localStorage.setItem('qbig_wa_mode',waMode()==='app'?'web':'app')}catch(e){}waModeBtn()});document.body.appendChild(b);
+  }
+  var m=waMode();b.textContent='WA: '+(m==='app'?'Aplikasi Desktop':'WhatsApp Web');
+  b.title=m==='app'?'Klik WA membuka aplikasi WhatsApp Desktop di komputer (harus terpasang). Klik untuk ganti ke WhatsApp Web.':'Klik WA membuka WhatsApp Web di tab browser. Klik untuk ganti ke aplikasi WhatsApp Desktop.';
+}
 function waLn(x){
   var a=fuLn(x,'vn');return a.map(function(t){if(t==='')return '–';var m=picFind(t);return esc(t)+(m?' <button type="button" class="wab'+(m.fz?' fz':'')+'" data-wa="'+esc(t)+'" title="WhatsApp PIC '+esc(t)+(m.fz?' (cocok perkiraan, cek dulu)':'')+'" aria-label="WhatsApp PIC '+esc(t)+'">'+WAI+'</button>':'')}).join('<br>')
 }
@@ -1639,6 +1654,7 @@ function exportDelivery(){
 function fixPop(){if(!S.fopen)return;var pp=document.querySelector('.mpop'),bt=document.querySelector('.msb[data-ms="'+S.fopen+'"]');if(!pp||!bt)return;var rc=bt.getBoundingClientRect();S.fpos={x:rc.left,y:rc.bottom+4};var vh=window.innerHeight,ml=pp.querySelector('.mlist');if(ml)ml.style.maxHeight=Math.max(110,Math.min(260,vh-170))+'px';var h=pp.offsetHeight,top=rc.bottom+4;if(top+h>vh-8){top=rc.top-h-4;if(top<8)top=Math.max(8,vh-h-8)}pp.style.left=Math.max(8,Math.min(rc.left,window.innerWidth-280))+'px';pp.style.top=top+'px'}
 function render(){
   fhApply();
+  waModeBtn();
   var ml0=document.querySelector('.mlist'),mlt=ml0?ml0.scrollTop:0;
   var keep={};document.querySelectorAll('.dscroll').forEach(function(e){keep[e.dataset.sec]={t:e.scrollTop,l:e.scrollLeft}});
   var rows=S.rows.filter(match);
