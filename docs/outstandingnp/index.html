@@ -1477,7 +1477,8 @@ function detailAll(rows){
   var h='<section class="panel"><div class="mph"><div><h2>Detail Delivery</h2><p class="sub" style="margin:2px 0 0">Semua NP outstanding dalam satu daftar. Klik baris untuk melihat item, klik judul kolom untuk mengurutkan. Setiap filter bisa dipilih lebih dari satu.</p></div></div>';
   h+='<div class="mk"><span><b>'+fmt(st.n)+'</b> NP OTS</span>'+DTQ.filter(function(q){return per[q[0]]}).map(function(q){return '<span>'+DTL[q[0]]+' <b>'+fmt(per[q[0]].size)+'</b></span>'}).join('')+'<span>punya nomor WA <b>'+fmt(G.filter(function(g){return g.wph||(FN['NP:'+g.np]||{}).k}).length)+'</b> NP</span><span>qty <b>'+fmt(st.q)+'</b></span><span>lewat PDD <b>'+fmt(st.late)+'</b> NP</span><span>telat &gt;14 hari <b>'+fmt(st.l14)+'</b> NP</span></div>';
   h+='<div class="dh"><h3>Detail no. NP</h3></div>';
-  h+='<div class="futool"><div class="fuf">'+TQ.map(tqBtn).join('')+'</div><div class="fusum"><span class="num">'+fmt(G.length)+' NP</span>'+(anyF?'<button class="btn ghost" type="button" data-dtclear="1">Reset filter</button>':'')+'</div></div>';
+  h+='<div class="futool"><div class="fuf">'+TQ.map(tqBtn).join('')+'</div><div class="fusum"><span class="num">'+fmt(G.length)+' NP</span><button class="btn" type="button" data-dtx="1" title="Unduh daftar NP sesuai filter dan urutan yang sedang tampil">Unduh Excel</button>'+(anyF?'<button class="btn ghost" type="button" data-dtclear="1">Reset filter</button>':'')+'</div></div>';
+  S.dtX=G;
   var lim=S.shown.dt||100,vis=G.slice(0,lim);
   h+='<div class="dscroll dtb" data-sec="dt"><table><thead><tr>'+DTC.map(function(c){
     var sel=S.dcol[c[0]]||[],n=sel.length;
@@ -1582,6 +1583,38 @@ function exportFollowup(split){
   catch(err){msg.className='err';msg.textContent='Gagal membuat file Excel: '+err.message}
 }
 
+function exportDelivery(){
+  var msg=$('#msg');
+  if(typeof XLSX==='undefined'){msg.className='err';msg.textContent='Pembaca Excel belum termuat. Periksa koneksi internet lalu muat ulang halaman.';return}
+  var G=S.dtX||[];
+  if(!G.length){msg.className='err';msg.textContent='Tidak ada NP untuk diunduh.';return}
+  var dt=function(day){return day==null?'':day+25569},iso=function(v){return v?dt(Math.round(Date.parse(v+'T00:00:00Z')/864e5)):''};
+  var head=['PDD','Telat (hari)','No. NP','Customer Name','Salesperson','Tipe NP','Delivery','No. WA customer','Stok inventory','Status follow up','Tanggal follow up','Keterangan follow up','Estimasi pengiriman','Diisi oleh','Perlu perhatian','Jumlah item','Qty OTS'];
+  var rowsX=G.map(function(g){
+    var n=FN['NP:'+g.np]||{},ph=n.k||g.wph||'';
+    return [dt(g.pd),g.late==null?'':g.late,g.np,g.cu,g.sp,g.ty,g.dv,ph?'+'+ph:'',g.stk||'',n.f?'Sudah':'Belum',iso(n.f),dnDst(g),iso(n.e),n.by||'',Object.keys(g.flags).join('; '),g.rows.length,g.qty]
+  });
+  var aoa=[head].concat(rowsX),ws=XLSX.utils.aoa_to_sheet(aoa);
+  [0,10,12].forEach(function(ci){for(var ri=1;ri<aoa.length;ri++){var c=ws[XLSX.utils.encode_cell({r:ri,c:ci})];if(c&&c.t==='n')c.z='dd-mmm-yy'}});
+  ws['!cols']=[11,10,20,28,24,34,18,16,14,14,14,20,16,14,36,10,10].map(function(w){return {wch:w}});
+  ws['!autofilter']={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:aoa.length-1,c:head.length-1}})};
+  var ih=['No. NP','Customer Name','Item No','Nama barang','Jenis','Qty OTS','UOM'],ix=[ih];
+  G.forEach(function(g){g.rows.forEach(function(r){ix.push([g.np,g.cu,r.ino||'',r.inm||'',r.cons?'Consi':'Retail',r.o,r.um||''])})});
+  var wi=XLSX.utils.aoa_to_sheet(ix);wi['!cols']=[20,28,14,44,9,9,8].map(function(w){return {wch:w}});wi['!autofilter']={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:ix.length-1,c:ih.length-1}})};
+  var f=S.dt,fd=[];
+  if(f.seg.length)fd.push('Tipe delivery: '+f.seg.map(function(v){return DTL[v]||v}).join(', '));
+  if(f.doc.length)fd.push('Status PO/TR: '+f.doc.join(', '));
+  if(f.jns.length)fd.push('Jenis item: '+f.jns.join(', '));
+  if(f.mon.length)fd.push('Bulan PDD: '+f.mon.map(function(m){return monLab(+m)}).join(', '));
+  Object.keys(S.dcol).forEach(function(q){var v=S.dcol[q];if(v&&v.length){var c=DTC.filter(function(z){return z[0]===q})[0];fd.push((c?c[1]:q)+': '+v.map(function(z){return z==='__blank__'?'(kosong)':z}).join(', '))}});
+  var info=[['Detail Delivery'],['Toko',S.store||''],['Laporan ditarik',S.reportLabel],['Jumlah NP',G.length],['Filter aktif',fd.length?fd[0]:'Tidak ada (semua data)']].concat(fd.slice(1).map(function(t){return ['',t]}));
+  var wn=XLSX.utils.aoa_to_sheet(info);wn['!cols']=[{wch:20},{wch:80}];
+  var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Detail Delivery');XLSX.utils.book_append_sheet(wb,wi,'Item per NP');XLSX.utils.book_append_sheet(wb,wn,'Info');
+  var name='Detail-Delivery_'+new Date(S.reportDay*864e5).toISOString().slice(0,10)+'.xlsx';
+  try{XLSX.writeFile(wb,name,{compression:true});msg.className='';msg.textContent=name+': '+fmt(G.length)+' NP diunduh.'}
+  catch(err){msg.className='err';msg.textContent='Gagal membuat file Excel: '+err.message}
+}
+
 /* ---------- render ---------- */
 function fixPop(){if(!S.fopen)return;var pp=document.querySelector('.mpop'),bt=document.querySelector('.msb[data-ms="'+S.fopen+'"]');if(!pp||!bt)return;var rc=bt.getBoundingClientRect();S.fpos={x:rc.left,y:rc.bottom+4};var vh=window.innerHeight,ml=pp.querySelector('.mlist');if(ml)ml.style.maxHeight=Math.max(110,Math.min(260,vh-170))+'px';var h=pp.offsetHeight,top=rc.bottom+4;if(top+h>vh-8){top=rc.top-h-4;if(top<8)top=Math.max(8,vh-h-8)}pp.style.left=Math.max(8,Math.min(rc.left,window.innerWidth-280))+'px';pp.style.top=top+'px'}
 function render(){
@@ -1653,6 +1686,7 @@ document.addEventListener('click',function(e){
   if(t.dataset.wacopy){waCopy(t.dataset.wav,t.dataset.wan,t);return}
   if(t.dataset.wax){var wd=document.getElementById('wadlg');if(wd)wd.remove();return}
   if(t.dataset.fxl){exportFollowup(t.dataset.fxl==='2');return}
+  if(t.dataset.dtx){exportDelivery();return}
   if(t.dataset.ak!==undefined){var av=t.dataset.ak,ai=S.fu.ak.indexOf(av);if(ai>-1)S.fu.ak.splice(ai,1);else S.fu.ak.push(av);S.shown.fu=100;S.fopen='';render();return}
   if(t.dataset.hd!==undefined){var hn=+t.dataset.hd;if(!hn){S.fu.hd=[];S.fall=true}else{var hi=S.fu.hd.indexOf(hn);if(hi>-1)S.fu.hd.splice(hi,1);else S.fu.hd.push(hn)}S.shown.fu=100;S.fopen='';render();return}
   if(t.dataset.fall){S.fall=true;S.shown.fu=100;render();return}
