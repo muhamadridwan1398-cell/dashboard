@@ -1402,11 +1402,14 @@ function fhMenu(t){
 }
 function fuSum(){
   var n=0,f=0,M={};
-  (S.fuL||[]).forEach(function(x){if(!x.d)return;x.d.ds.forEach(function(z){if(!z.vn||deadDoc(z.st))return;n++;var q=fnGet(x.r,z.no),y=q&&q.f?1:0;f+=y;var o=M[x.r.np]||(M[x.r.np]={a:0,b:0});if(y)o.a++;else o.b++})});
+  (S.fuL||[]).forEach(function(x){
+    var us=(x.d&&x.d.ds.length)?x.d.ds.filter(function(z){return !deadDoc(z.st)}).map(function(z){return z.no}):(x.d?[]:['']);
+    us.forEach(function(no){n++;var q=fnGet(x.r,no),y=q&&q.f?1:0;f+=y;var o=M[x.r.np]||(M[x.r.np]={a:0,b:0});if(y)o.a++;else o.b++})
+  });
   if(!n)return '';
   var ms=Object.keys(M),s1=0,p1=0,b1=0;
   ms.forEach(function(k){var o=M[k];if(o.a&&o.b)p1++;else if(o.a)s1++;else b1++});
-  return '<div class="fsk"><span class="t">PO/TR</span><span class="b ok">Sudah di-follow up <b>'+fmt(f)+'</b></span><span class="b no">Belum <b>'+fmt(n-f)+'</b></span><span class="b">dari '+fmt(n)+' PO/TR</span></div>'+
+  return '<div class="fsk"><span class="t">PO/TR</span><span class="b ok">Sudah di-follow up <b>'+fmt(f)+'</b></span><span class="b no">Belum <b>'+fmt(n-f)+'</b></span><span class="b" title="Setiap PO/TR dihitung satu. Item yang belum punya PO/TR dihitung satu per item.">dari '+fmt(n)+' PO/TR / item</span></div>'+
     '<div class="fsk"><span class="t">MS</span><span class="b ok" title="Semua PO/TR di MS ini sudah di-follow up">Sudah <b>'+fmt(s1)+'</b></span><span class="b pt" title="Dalam satu MS ada PO/TR yang sudah dan yang belum di-follow up">Partial <b>'+fmt(p1)+'</b></span><span class="b no" title="Belum ada PO/TR di MS ini yang di-follow up">Belum <b>'+fmt(b1)+'</b></span><span class="b">dari '+fmt(ms.length)+' MS</span></div>';
 }
 function dnStk(g){
