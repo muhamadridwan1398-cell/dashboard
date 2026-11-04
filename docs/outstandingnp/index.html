@@ -345,7 +345,7 @@ body.shot .shotexit:hover,body.shot .shotexit:focus{opacity:1}
 .fu tbody td:nth-child(21),.fu tbody td:nth-child(22),.fu tbody td:nth-child(23){background:#effaf6!important}
 .fu tbody tr:nth-child(even) td:nth-child(21),.fu tbody tr:nth-child(even) td:nth-child(22),.fu tbody tr:nth-child(even) td:nth-child(23){background:#e4f5ee!important}
 .fu tbody td:nth-child(21){border-left:3px solid #f5b942}.fu tbody td:nth-child(23){border-right:3px solid #f5b942}
-.fsum{margin:10px 0 14px;border:1px solid var(--line);border-radius:10px;background:#fff;padding:0 12px 10px}.fsum>summary{cursor:pointer;display:flex;gap:12px;flex-wrap:wrap;align-items:baseline;padding:10px 0;font-size:14px}.fsum>summary span{color:var(--ink3);font-size:13px}.fsk{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}.fsk .b{padding:3px 10px;border-radius:999px;background:#eef1f5;color:#475569;font-size:12px}.fsk .b b{margin-left:4px}.fsk .ok{background:#e8f7ee;color:#146c3a}.fsk .pt{background:#fff6e0;color:#8a5a00}.fsk .no{background:#fdecec;color:#a3231b}.fsc{max-height:300px;overflow:auto}.fsc table{width:100%;border-collapse:collapse;font-size:13px}.fsc th{position:sticky;top:0;background:#f1f4f9;color:#334155;text-align:left;padding:6px 10px;font-size:12px;white-space:nowrap}.fsc td{padding:5px 10px;border-top:1px solid var(--line);white-space:nowrap}.fsc .r{text-align:right;font-variant-numeric:tabular-nums}.fsc .warn{color:#b42318;font-weight:700}
+.fsk{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}.fsk .b{padding:4px 12px;border-radius:999px;background:#eef1f5;color:#475569;font-size:13px}.fsk .b b{margin-left:6px;font-size:15px}.fsk .ok{background:#e8f7ee;color:#146c3a}.fsk .no{background:#fdecec;color:#a3231b}
 .dnwa{display:inline-flex;align-items:center;gap:4px;border:1px solid #cbd5e1;background:#f1f5f9;color:#64748b;border-radius:999px;padding:3px 9px;font:inherit;font-size:12px;font-weight:600;cursor:pointer}.dnwa.on{background:#25d366;border-color:#1fb455;color:#fff}.dnwa:hover{filter:brightness(.95)}.dnwarn{color:#c2410c;margin-right:4px;cursor:help}.dnedit{border:0;background:none;color:#64748b;cursor:pointer;font-size:13px;padding:2px 4px}.dnsk{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:700;background:#eef1f5;color:#64748b}.dnsk.ok{background:#e1f6e9;color:#146c3a}.dnsk.no{background:#fde8e6;color:#a3231b}.fnc{white-space:nowrap}.fnl{height:18px;line-height:18px;display:flex;align-items:center}.fns{font:inherit;font-size:11px;height:17px;padding:0 2px;border:1px solid var(--line);border-radius:5px;background:#fff;color:var(--ink);width:78px}.fns.ready{background:#e8f7ee;border-color:#8fd0a8;color:#146c3a;font-weight:700}.fns.partial{background:#fff6e0;border-color:#e6c166;color:#8a5a00;font-weight:700}.fns.kosong{background:#fdecec;border-color:#e59a96;color:#a3231b;font-weight:700}.fns.dst{width:148px;height:24px;font-size:12px}.fns.dst.siap{background:#e8f7ee;border-color:#8fd0a8;color:#146c3a;font-weight:700}.fns.dst.belum_fb{background:#fff6e0;border-color:#e6c166;color:#8a5a00;font-weight:700}.fns.dst.belum_siap{background:#fdecec;border-color:#e59a96;color:#a3231b;font-weight:700}.fnq{font:inherit;font-size:11px;height:17px;width:56px;margin-left:4px;padding:0 4px;border:1px solid #e6c166;border-radius:5px;box-sizing:border-box}.fnt{font:inherit;font-size:11px;height:17px;width:100%;box-sizing:border-box;padding:0 5px;border:1px solid var(--line);border-radius:5px;background:#fff;color:var(--ink)}.fnt:focus{outline:2px solid #9ec5f4;outline-offset:0}.fnl .fnd{height:17px;padding:0 4px;font-size:11px;line-height:15px}.fnchk{display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;color:var(--ink3)}.fnchk.on{color:#15803d;font-weight:700}.fnchk input{accent-color:#16a34a;width:15px;height:15px;margin:0}.fnd{font:inherit;font-size:12px;padding:3px 5px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);width:118px}.fnd.late{border-color:#e0584f;background:#fff1f0;color:#b42318}.dsc a.dsl{color:#1f4aa8;text-decoration:none;font-weight:600}.dsc a.dsl:hover{text-decoration:underline}.dsc .n b{display:block;font-weight:700;color:var(--ink2,#334155);font-size:10px;letter-spacing:.04em;text-transform:uppercase;margin-bottom:1px}
 .datapanel{display:flex;flex-direction:column;gap:14px}
 .datapanel[hidden]{display:none}
@@ -1366,26 +1366,10 @@ function dtRows(rows,skip){
 function dtLabs(g){var o={};g.rows.forEach(function(r){o[dtKey(r)]=1});return DTQ.filter(function(q){return o[q[0]]}).map(function(q){return DTL[q[0]]})}
 function lateTxt(l){return l==null?'':(l>0?'+'+l+' hari':(l===0?'hari ini':'-'+(-l)+' hari'))}
 function fuSum(){
-  var M={},T={n:0,f:0,r:0,p:0,k:0,u:0};
-  (S.fuL||[]).forEach(function(x){if(!x.d)return;x.d.ds.forEach(function(z){
-    if(!z.vn||deadDoc(z.st))return;
-    var n=fnGet(x.r,z.no)||{},o=M[z.vn]||(M[z.vn]={vn:z.vn,n:0,f:0,r:0,p:0,k:0,u:0,e:'',by:'',t:''});
-    o.n++;T.n++;
-    if(n.f){o.f++;T.f++;
-      if(n.s==='ready'){o.r++;T.r++}else if(n.s==='partial'){o.p++;T.p++}else if(n.s==='kosong'){o.k++;T.k++}else{o.u++;T.u++}
-      if(n.e&&(!o.e||n.e<o.e))o.e=n.e;
-      if(n.t&&n.t>o.t){o.t=n.t;o.by=n.by||''}
-    }
-  })});
-  var L=Object.keys(M).map(function(k){return M[k]}).sort(function(a,b){return b.f-a.f||(b.n-a.n)||(a.vn<b.vn?-1:1)});
-  if(!L.length)return '';
-  var pc=T.n?Math.round(T.f*100/T.n):0;
-  var h='<details class="fsum" open><summary><b>Ringkasan hasil follow up ke supplier</b><span>'+fmt(T.f)+' dari '+fmt(T.n)+' PO/TR sudah di-follow up ('+pc+'%)</span></summary>'+
-    '<div class="fsk"><span class="b ok">Ready <b>'+fmt(T.r)+'</b></span><span class="b pt">Partial <b>'+fmt(T.p)+'</b></span><span class="b no">Kosong <b>'+fmt(T.k)+'</b></span><span class="b">Stok belum diisi <b>'+fmt(T.u)+'</b></span><span class="b">Belum di-follow up <b>'+fmt(T.n-T.f)+'</b></span></div>'+
-    '<div class="dscroll fsc"><table><thead><tr><th>Supplier</th><th class="r">PO/TR</th><th class="r">Sudah FU</th><th class="r">Belum FU</th><th class="r">Ready</th><th class="r">Partial</th><th class="r">Kosong</th><th class="r">Stok belum diisi</th><th>Est. datang terdekat</th><th>FU terakhir oleh</th></tr></thead><tbody>'+
-    L.map(function(o){var late=o.e&&o.e<todayIso();return '<tr><td>'+esc(o.vn)+'</td><td class="r">'+fmt(o.n)+'</td><td class="r"><b>'+fmt(o.f)+'</b></td><td class="r'+(o.n-o.f?' warn':'')+'">'+fmt(o.n-o.f)+'</td><td class="r">'+(o.r||'')+'</td><td class="r">'+(o.p||'')+'</td><td class="r">'+(o.k||'')+'</td><td class="r">'+(o.u||'')+'</td><td'+(late?' class="warn" title="Estimasi sudah lewat"':'')+'>'+(o.e?isoDisp(o.e):'')+'</td><td>'+esc(o.by)+'</td></tr>'}).join('')+
-    '</tbody></table></div></details>';
-  return h;
+  var n=0,f=0;
+  (S.fuL||[]).forEach(function(x){if(!x.d)return;x.d.ds.forEach(function(z){if(!z.vn||deadDoc(z.st))return;n++;var q=fnGet(x.r,z.no);if(q&&q.f)f++})});
+  if(!n)return '';
+  return '<div class="fsk"><span class="b ok">Sudah di-follow up <b>'+fmt(f)+'</b></span><span class="b no">Belum di-follow up <b>'+fmt(n-f)+'</b></span><span class="b">dari '+fmt(n)+' PO/TR ke supplier</span></div>';
 }
 function dnStk(g){
   if(!STK.hasSys&&!STK.hasWh)return '';
