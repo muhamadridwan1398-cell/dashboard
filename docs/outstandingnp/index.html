@@ -345,7 +345,7 @@ body.shot .shotexit:hover,body.shot .shotexit:focus{opacity:1}
 .fu tbody td:nth-child(21),.fu tbody td:nth-child(22),.fu tbody td:nth-child(23){background:#effaf6!important}
 .fu tbody tr:nth-child(even) td:nth-child(21),.fu tbody tr:nth-child(even) td:nth-child(22),.fu tbody tr:nth-child(even) td:nth-child(23){background:#e4f5ee!important}
 .fu tbody td:nth-child(21){border-left:3px solid #f5b942}.fu tbody td:nth-child(23){border-right:3px solid #f5b942}
-.fnc{white-space:nowrap}.fnl{height:18px;line-height:18px;display:flex;align-items:center}.fns{font:inherit;font-size:11px;height:17px;padding:0 2px;border:1px solid var(--line);border-radius:5px;background:#fff;color:var(--ink);width:78px}.fns.ready{background:#e8f7ee;border-color:#8fd0a8;color:#146c3a;font-weight:700}.fns.partial{background:#fff6e0;border-color:#e6c166;color:#8a5a00;font-weight:700}.fns.kosong{background:#fdecec;border-color:#e59a96;color:#a3231b;font-weight:700}.fnq{font:inherit;font-size:11px;height:17px;width:56px;margin-left:4px;padding:0 4px;border:1px solid #e6c166;border-radius:5px;box-sizing:border-box}.fnt{font:inherit;font-size:11px;height:17px;width:100%;box-sizing:border-box;padding:0 5px;border:1px solid var(--line);border-radius:5px;background:#fff;color:var(--ink)}.fnt:focus{outline:2px solid #9ec5f4;outline-offset:0}.fnl .fnd{height:17px;padding:0 4px;font-size:11px;line-height:15px}.fnchk{display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;color:var(--ink3)}.fnchk.on{color:#15803d;font-weight:700}.fnchk input{accent-color:#16a34a;width:15px;height:15px;margin:0}.fnd{font:inherit;font-size:12px;padding:3px 5px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);width:118px}.fnd.late{border-color:#e0584f;background:#fff1f0;color:#b42318}.dsc a.dsl{color:#1f4aa8;text-decoration:none;font-weight:600}.dsc a.dsl:hover{text-decoration:underline}.dsc .n b{display:block;font-weight:700;color:var(--ink2,#334155);font-size:10px;letter-spacing:.04em;text-transform:uppercase;margin-bottom:1px}
+.dnwa{display:inline-flex;align-items:center;gap:4px;border:1px solid #cbd5e1;background:#f1f5f9;color:#64748b;border-radius:999px;padding:3px 9px;font:inherit;font-size:12px;font-weight:600;cursor:pointer}.dnwa.on{background:#25d366;border-color:#1fb455;color:#fff}.dnwa:hover{filter:brightness(.95)}.dnedit{border:0;background:none;color:#64748b;cursor:pointer;font-size:13px;padding:2px 4px}.dnsk{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:700;background:#eef1f5;color:#64748b}.dnsk.ok{background:#e1f6e9;color:#146c3a}.dnsk.no{background:#fde8e6;color:#a3231b}.fnc{white-space:nowrap}.fnl{height:18px;line-height:18px;display:flex;align-items:center}.fns{font:inherit;font-size:11px;height:17px;padding:0 2px;border:1px solid var(--line);border-radius:5px;background:#fff;color:var(--ink);width:78px}.fns.ready{background:#e8f7ee;border-color:#8fd0a8;color:#146c3a;font-weight:700}.fns.partial{background:#fff6e0;border-color:#e6c166;color:#8a5a00;font-weight:700}.fns.kosong{background:#fdecec;border-color:#e59a96;color:#a3231b;font-weight:700}.fnq{font:inherit;font-size:11px;height:17px;width:56px;margin-left:4px;padding:0 4px;border:1px solid #e6c166;border-radius:5px;box-sizing:border-box}.fnt{font:inherit;font-size:11px;height:17px;width:100%;box-sizing:border-box;padding:0 5px;border:1px solid var(--line);border-radius:5px;background:#fff;color:var(--ink)}.fnt:focus{outline:2px solid #9ec5f4;outline-offset:0}.fnl .fnd{height:17px;padding:0 4px;font-size:11px;line-height:15px}.fnchk{display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;color:var(--ink3)}.fnchk.on{color:#15803d;font-weight:700}.fnchk input{accent-color:#16a34a;width:15px;height:15px;margin:0}.fnd{font:inherit;font-size:12px;padding:3px 5px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);width:118px}.fnd.late{border-color:#e0584f;background:#fff1f0;color:#b42318}.dsc a.dsl{color:#1f4aa8;text-decoration:none;font-weight:600}.dsc a.dsl:hover{text-decoration:underline}.dsc .n b{display:block;font-weight:700;color:var(--ink2,#334155);font-size:10px;letter-spacing:.04em;text-transform:uppercase;margin-bottom:1px}
 .datapanel{display:flex;flex-direction:column;gap:14px}
 .datapanel[hidden]{display:none}
 .dp-h{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.dp-h h2{margin:0;font-size:16px;font-weight:800}
@@ -912,6 +912,10 @@ function colsFor(id){
 function sortVal(g,k){
   if(k==='pd')return g.pd==null?1e9:g.pd;
   if(k==='late')return g.late==null?-1e9:g.late;
+  if(k==='wa')return (FN['NP:'+g.np]||{}).k?1:0;
+  if(k==='stk')return g.stk||'';
+  if(k==='fup')return (FN['NP:'+g.np]||{}).f||'';
+  if(k==='eta')return (FN['NP:'+g.np]||{}).e||'9999';
   if(k==='n')return g.rows.length;
   if(k==='qty')return g.qty;
   if(k==='cons')return g.cons;
@@ -1328,8 +1332,8 @@ function followup(rows){
 /* ---------- Detail Delivery (gabungan Gudang + Supplier + Another Site/DC) ---------- */
 var DTL={ga:'Gudang · Amsen',gk:'Gudang · Kirim',vs:'Supplier',vd:'Another Site/DC'};
 var DTQ=[['ga','Delivery via Gudang · Amsen'],['gk','Delivery via Gudang · Kirim'],['vs','Delivery via Supplier'],['vd','Delivery via Another Site/DC']];
-var DTC=[['pd','PDD'],['late','Telat'],['np','No. NP'],['cu','Customer Name'],['sp','Salesperson'],['ty','Tipe NP'],['dv','Delivery'],['n','Item',1],['qty','Qty OTS',1],['cons','Consi',1],['ret','Retail',1],['flags','Perlu perhatian']];
-var DTW={pd:92,late:100,np:172,cu:186,sp:172,dv:134,n:66,qty:82,cons:72,ret:72,flags:214,ty:250};
+var DTC=[['pd','PDD'],['late','Telat'],['np','No. NP'],['cu','Customer Name'],['sp','Salesperson'],['ty','Tipe NP'],['dv','Delivery'],['wa','WA customer'],['stk','Stok inventory'],['fup','Status follow up'],['eta','Estimasi pengiriman'],['flags','Perlu perhatian']];
+var DTW={pd:92,late:100,np:172,cu:186,sp:172,dv:134,n:66,qty:82,cons:72,ret:72,flags:214,ty:250,wa:104,stk:118,fup:156,eta:150};
 var DTNUM={pd:1,late:-1,n:1,qty:1,cons:1,ret:1};
 function dtKey(r){var s=segOf(r);return s==='gd'?(catOf(r)==='Amsen'?'ga':'gk'):s}
 function dtSegOf(sec,cat){return sec==='gd'?(cat==='Kirim'?['gk']:cat==='Amsen'?['ga']:['ga','gk']):[sec]}
@@ -1347,11 +1351,48 @@ function dtRows(rows,skip){
 }
 function dtLabs(g){var o={};g.rows.forEach(function(r){o[dtKey(r)]=1});return DTQ.filter(function(q){return o[q[0]]}).map(function(q){return DTL[q[0]]})}
 function lateTxt(l){return l==null?'':(l>0?'+'+l+' hari':(l===0?'hari ini':'-'+(-l)+' hari'))}
+function dnStk(g){
+  if(!STK.hasSys&&!STK.hasWh)return '';
+  var rel=g.rows.map(function(r){return stkOf(r).st}).filter(function(x){return x!==''});
+  if(!rel.length)return '–';
+  return rel.every(function(x){return x==='READY'})?'Ready':'Tidak ready';
+}
+function dnFu(g){var n=FN['NP:'+g.np];return n&&n.f?'Sudah':'Belum'}
+function dnEta(g){var n=FN['NP:'+g.np];return n&&n.e?isoDisp(n.e):''}
+function dnCells(g,W){
+  var key=esc('NP:'+g.np),n=FN['NP:'+g.np]||{},ph=n.k||'',stk=g.stk;
+  var late=n.e&&n.e<todayIso();
+  var wa='<button type="button" class="dnwa'+(ph?' on':'')+'" data-wac="'+esc(g.np)+'" title="'+(ph?'WhatsApp customer: follow up pengiriman':'Isi nomor WA customer dulu')+'">'+WAI+(ph?'':' <span>Isi</span>')+'</button>'+(ph?'<button type="button" class="dnedit" data-wae="'+esc(g.np)+'" title="Ubah nomor WA customer">✎</button>':'');
+  var sk=stk==='Ready'?'<span class="dnsk ok">Ready</span>':(stk==='Tidak ready'?'<span class="dnsk no">Tidak ready</span>':'<span class="dnsk">'+(stk||'–')+'</span>');
+  return '<td class="c dnc"'+W('wa')+'>'+wa+'</td><td class="c dnc"'+W('stk')+'>'+sk+'</td>'+
+    '<td class="c dnc"'+W('fup')+'><label class="fnchk'+(n.f?' on':'')+'"'+(n.by?' title="Diisi oleh '+esc(n.by)+'"':'')+'><input type="checkbox" data-fn="f" data-fnk="'+key+'"'+(n.f?' checked':'')+' aria-label="Sudah di-follow up customer"><span>'+(n.f?'Sudah · '+isoDisp(n.f):'Belum')+'</span></label></td>'+
+    '<td class="c dnc"'+W('eta')+'><input type="date" class="fnd'+(late?' late':'')+'" data-fn="e" data-fnk="'+key+'" value="'+esc(n.e||'')+'" aria-label="Estimasi pengiriman"'+(late?' title="Estimasi pengiriman sudah lewat"':'')+'></td>';
+}
+function dnWa(np,edit){
+  var key='NP:'+np,n=FN[key]||{},ph=n.k||'';
+  if(!ph||edit){
+    var v=window.prompt('Nomor WA customer untuk '+np+' (contoh 0812xxxxxxxx).'+(ph?' Kosongkan untuk menghapus.':''),ph?('0'+ph.replace(/^62/,'')):'');
+    if(v===null)return;
+    var d=String(v).replace(/\D/g,'');
+    if(d){if(d.indexOf('0')===0)d='62'+d.slice(1);else if(d.indexOf('8')===0)d='62'+d;if(d.length<10||d.length>15){fnMsg('Nomor WA tidak valid.',true);return}}
+    if(!d&&!ph)return;
+    fnSet(key,'k',d);
+    if(!d||edit)return;ph=d;
+  }
+  var g=(S.dtG||[]).filter(function(x){return x.np===np})[0];if(!g)return;
+  var eta=n.e?isoDisp(n.e):'',its=g.rows.slice(0,6).map(function(r,i){return (i+1)+'. '+(r.inm||'')+' (qty '+fmt(r.o)+')'}).join('\n')+(g.rows.length>6?'\n(+'+(g.rows.length-6)+' item lainnya)':'');
+  var t=waGreet()+' Bapak/Ibu '+(g.cu||'')+',\nKami dari MITRA10 Q-BIG (store 10038). Terkait pesanan '+g.np+':\n'+its+'\n\n'+(eta?'Estimasi pengiriman: '+eta+'.\n':'')+'Mohon konfirmasi alamat dan kesiapan penerimaan barang agar pengiriman bisa kami jadwalkan. Terima kasih.';
+  var q=encodeURIComponent(t);window.open(waMobile()?'https://wa.me/'+ph+'?text='+q:'https://web.whatsapp.com/send?phone='+ph+'&text='+q,'_blank','noopener');
+}
 function dtVals(g,k){
   var v;
   if(k==='pd')v=[g.pd==null?'':dstr(g.pd)];
   else if(k==='late')v=[lateTxt(g.late)];
   else if(k==='dv')v=dtLabs(g);
+  else if(k==='wa')v=[(FN['NP:'+g.np]||{}).k?'Ada nomor':'Belum ada nomor'];
+  else if(k==='stk')v=[g.stk||''];
+  else if(k==='fup')v=[dnFu(g)];
+  else if(k==='eta')v=[dnEta(g)];
   else if(k==='n')v=[String(g.rows.length)];
   else if(k==='qty')v=[fmt(g.qty)];
   else if(k==='cons')v=[g.cons?String(g.cons):''];
@@ -1385,7 +1426,7 @@ function dtNpItems(g,ncols){
 }
 function detailAll(rows){
   var f=S.dt,rd=dtRows(rows),G0=groupNota(rd);
-  G0.forEach(function(g){g.dv=dtLabs(g).join(' / ')});
+  G0.forEach(function(g){g.dv=dtLabs(g).join(' / ');g.stk=dnStk(g)});S.dtG=G0;
   var k=S.sort.k,d=S.sort.d;
   if(!DTC.some(function(c){return c[0]===k})){k='pd';d=1}
   var G=dtColFilter(G0,'');
@@ -1419,7 +1460,7 @@ function detailAll(rows){
   vis.forEach(function(g,gi){
     var fl=Object.keys(g.flags).map(function(x){return '<span class="flag'+(x==='Tidak ada di NAV'||x==='Cek komentar'||x.indexOf('Belum ada')===0?' warn':'')+'">'+x+'</span>'}).join('');
     var W=function(c){return ' style="min-width:'+DTW[c]+'px;max-width:'+DTW[c]+'px"'};
-    h+='<tr class="nota'+(gi%2?' alt':'')+'" data-np="'+esc(g.np)+'"><td class="c num"'+W('pd')+'>'+dstr(g.pd)+'</td><td class="c"'+W('late')+'>'+latePill(g.late)+'</td><td class="c num id"'+W('np')+'>'+esc(g.np)+'</td><td class="c" title="'+esc(g.cu)+'"'+W('cu')+'>'+esc(g.cu)+'</td><td class="c" title="'+esc(g.sp)+'"'+W('sp')+'>'+esc(g.sp)+'</td><td class="c" title="'+esc(g.ty)+'"'+W('ty')+'>'+esc(g.ty)+'</td><td class="c" title="'+esc(g.dv)+'"'+W('dv')+'>'+esc(g.dv)+'</td><td class="c num r"'+W('n')+'>'+g.rows.length+'</td><td class="c num r"'+W('qty')+'>'+fmt(g.qty)+'</td><td class="c num r"'+W('cons')+'>'+(g.cons?g.cons:'–')+'</td><td class="c num r"'+W('ret')+'>'+(g.ret?g.ret:'–')+'</td><td class="c" title="'+esc(Object.keys(g.flags).join(', '))+'"'+W('flags')+'>'+fl+'</td></tr>';
+    h+='<tr class="nota'+(gi%2?' alt':'')+'" data-np="'+esc(g.np)+'"><td class="c num"'+W('pd')+'>'+dstr(g.pd)+'</td><td class="c"'+W('late')+'>'+latePill(g.late)+'</td><td class="c num id"'+W('np')+'>'+esc(g.np)+'</td><td class="c" title="'+esc(g.cu)+'"'+W('cu')+'>'+esc(g.cu)+'</td><td class="c" title="'+esc(g.sp)+'"'+W('sp')+'>'+esc(g.sp)+'</td><td class="c" title="'+esc(g.ty)+'"'+W('ty')+'>'+esc(g.ty)+'</td><td class="c" title="'+esc(g.dv)+'"'+W('dv')+'>'+esc(g.dv)+'</td>'+dnCells(g,W)+'<td class="c" title="'+esc(Object.keys(g.flags).join(', '))+'"'+W('flags')+'>'+fl+'</td></tr>';
     if(S.open[g.np])h+=dtNpItems(g,DTC.length);
   });
   if(!vis.length)h+='<tr><td colspan="'+DTC.length+'" class="empty">Tidak ada NP.</td></tr>';
@@ -1576,6 +1617,8 @@ document.addEventListener('click',function(e){
     else if(pb&&pb.dataset.msclose){S.fopen='';S.fmq='';render()}
     return}
   if(e.target.closest('.cf'))return;
+  var wc=e.target.closest('[data-wac],[data-wae]');if(wc){dnWa(wc.dataset.wac||wc.dataset.wae,!!wc.dataset.wae);return}
+  if(e.target.closest('td.dnc'))return;
   var t=e.target.closest('button,th,tr.nota,tr.mrow,label');if(!t)return;
   if(t.dataset.wadlg){waDlg('');return}
   if(t.dataset.wa){var wm=picFind(t.dataset.wa),wp=wm?picPeople(wm):[];if(wp.length===1)waOpen(wp[0].p,t.dataset.wa,wp[0].n);else waDlg(t.dataset.wa);return}
