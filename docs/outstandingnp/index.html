@@ -1459,7 +1459,7 @@ function detailAll(rows){
     return '<button type="button" class="msb msbtop'+(n?' on':'')+'" data-ms="dq:'+q[0]+'" aria-haspopup="true" aria-expanded="'+(S.fopen==='dq:'+q[0])+'"><span>'+q[1]+': '+(n===0?'Semua':(one?esc(one.label):n+' dipilih'))+'</span><i>▾</i></button>';
   };
   var h='<section class="panel"><div class="mph"><div><h2>Detail Delivery</h2><p class="sub" style="margin:2px 0 0">Semua NP outstanding dalam satu daftar. Klik baris untuk melihat item, klik judul kolom untuk mengurutkan. Setiap filter bisa dipilih lebih dari satu.</p></div></div>';
-  h+='<div class="mk"><span><b>'+fmt(st.n)+'</b> NP OTS</span>'+DTQ.filter(function(q){return per[q[0]]}).map(function(q){return '<span>'+DTL[q[0]]+' <b>'+fmt(per[q[0]].size)+'</b></span>'}).join('')+'<span>qty <b>'+fmt(st.q)+'</b></span><span>lewat PDD <b>'+fmt(st.late)+'</b> NP</span><span>telat &gt;14 hari <b>'+fmt(st.l14)+'</b> NP</span></div>';
+  h+='<div class="mk"><span><b>'+fmt(st.n)+'</b> NP OTS</span>'+DTQ.filter(function(q){return per[q[0]]}).map(function(q){return '<span>'+DTL[q[0]]+' <b>'+fmt(per[q[0]].size)+'</b></span>'}).join('')+'<span>punya nomor WA <b>'+fmt(G.filter(function(g){return g.wph||(FN['NP:'+g.np]||{}).k}).length)+'</b> NP</span><span>qty <b>'+fmt(st.q)+'</b></span><span>lewat PDD <b>'+fmt(st.late)+'</b> NP</span><span>telat &gt;14 hari <b>'+fmt(st.l14)+'</b> NP</span></div>';
   h+='<div class="dh"><h3>Detail no. NP</h3></div>';
   h+='<div class="futool"><div class="fuf">'+TQ.map(tqBtn).join('')+'</div><div class="fusum"><span class="num">'+fmt(G.length)+' NP</span>'+(anyF?'<button class="btn ghost" type="button" data-dtclear="1">Reset filter</button>':'')+'</div></div>';
   var lim=S.shown.dt||100,vis=G.slice(0,lim);
