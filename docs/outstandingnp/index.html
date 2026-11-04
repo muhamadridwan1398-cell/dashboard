@@ -1707,7 +1707,9 @@ function parseSheet(rows2d){
   var iso;
   if(m){var mo=MONEN[m[2].toLowerCase()];iso=m[3]+'-'+String(mo+1).padStart(2,'0')+'-'+String(+m[1]).padStart(2,'0')+'T'+m[4]+':'+m[5]}
   else{var n=new Date();iso=n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0')+'T00:00'}
-  return {rows:out,report:iso,store:st?st[1].trim():'',noDate:!m};
+  var phC=[];['hp','ph'].forEach(function(k){if(idx[k]!=null)phC.push(String(rows2d[hi][idx[k]]).trim())});
+  var phN=out.filter(function(r){return waNorm(r[26])||waNorm(r[27])}).length;
+  return {rows:out,report:iso,store:st?st[1].trim():'',noDate:!m,phCols:phC,phN:phN};
 }
 $('#file').addEventListener('change',function(e){
   var f=e.target.files[0];if(!f)return;
@@ -1865,7 +1867,7 @@ function dsRead(files){
       setTimeout(function(){
         try{
           var wb=XLSX.read(fr.result,{type:'array',cellDates:true}),r2=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,raw:true,defval:''}),it;
-          try{var p=parseSheet(r2);if(!p.rows.length)throw new Error('Tidak ada baris data di file ini.');it={kind:'main',p:p,n:p.rows.length,unit:'baris',label:fmtStamp(p.report)}}
+          try{var p=parseSheet(r2);if(!p.rows.length)throw new Error('Tidak ada baris data di file ini.');it={kind:'main',p:p,n:p.rows.length,unit:'baris',label:fmtStamp(p.report)+' · '+(p.phCols.length?'nomor WA '+fmt(p.phN)+' baris ('+p.phCols.join(', ')+')':'kolom Phone/Cellular tidak ditemukan')}}
           catch(e1){var q=parseDocs(r2);it={kind:q.kind,p:q,n:(q.kind==='sys'||q.kind==='wh')?q.total:q.rows.length,unit:(q.kind==='sys'||q.kind==='wh')?'item':'baris',label:q.kind==='po'||q.kind==='tr'?q.period:q.label}}
           it.name=f.name;STAGE=STAGE.filter(function(x){return x.kind!==it.kind});STAGE.push(it);
         }catch(err){STAGE.push({err:err.message,name:f.name})}
