@@ -549,7 +549,7 @@ th,.dscroll th,.fu th,.ct th,.dtb>table>thead>tr>th,.pgt thead th{font-family:va
 <script>
 (function(){
 'use strict';
-var FIELDS=['np','od','pd','rc','sp','ty','cu','eb','ca','br','ino','inm','snp','q','o','sh','sw','ow','cm','um','trn','tro','vn','pon','poo','tfrom'];
+var FIELDS=['np','od','pd','rc','sp','ty','cu','eb','ca','br','ino','inm','snp','q','o','sh','sw','ow','cm','um','trn','tro','vn','pon','poo','tfrom','ph','hp'];
 var HEAD={'npno':'np','order date':'od','promised delievery date':'pd','promised delivery date':'pd','receipt no':'rc','sales person name':'sp','nptype':'ty','customer name':'cu','edited by':'eb','category name':'ca','brand name':'br','item no':'ino','item name':'inm','status np':'snp','quantity base':'q','outstanding qty base':'o','qty shipped':'sh','status wms':'sw','outstanding qty base wms':'ow','comment':'cm','uom':'um','transfer request no':'trn','outstanding qty transfer request':'tro','vendor name':'vn','purchase order no':'pon','qty outstanding po':'poo','transfer request from code':'tfrom'};
 var MON=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
 var MONEN={jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
@@ -584,7 +584,7 @@ function norm(a,reportDay){
   var r={},i;
   for(i=0;i<FIELDS.length;i++)r[FIELDS[i]]=a[i]==null?'':a[i];
   r.odD=pdate(a[1]);r.pdD=pdate(a[2]);
-  ['np','rc','sp','ty','cu','eb','ca','br','ino','inm','snp','sw','cm','um','trn','vn','pon','tfrom'].forEach(function(k){r[k]=String(r[k]).trim()});
+  ['np','rc','sp','ty','cu','eb','ca','br','ino','inm','snp','sw','cm','um','trn','vn','pon','tfrom','ph','hp'].forEach(function(k){r[k]=String(r[k]).trim()});
   var o=num(a[14]),ow=num(a[17]);
   r.o=o!=null?o:(ow!=null?ow:0);
   var q=num(a[13]);r.q=q!=null?q:r.o;
@@ -883,11 +883,22 @@ function combinedTable(rows){
 }
 
 /* ---------- detail NP ---------- */
+function waNorm(v){
+  var parts=String(v==null?'':v).split(/[\/,;\n]| atau /i);
+  for(var i=0;i<parts.length;i++){
+    var d=parts[i].replace(/\D/g,'');if(!d)continue;
+    if(d.indexOf('62')===0&&d.length>=10)return d.length<=15?d:'';
+    if(d.indexOf('0')===0)d='62'+d.slice(1);else if(d.indexOf('8')===0)d='62'+d;
+    if(d.indexOf('628')===0&&d.length>=10&&d.length<=15)return d;
+  }
+  return '';
+}
 function groupNota(rows){
   var m=new Map();
   rows.forEach(function(r){
     var g=m.get(r.np);
     if(!g){g={np:r.np,ty:r.ty,cons:0,ret:0,rows:[],pd:r.pdD,late:null,cu:r.cu,sp:r.sp,qty:0,flags:{},res:{}};m.set(r.np,g)}
+    if(!g.wph){var wp0=waNorm(r.hp)||waNorm(r.ph);if(wp0)g.wph=wp0}
     g.rows.push(r);g.qty+=r.o;
     if(r.cons)g.cons++;else g.ret++;
     if(r.grp==='Delivery Gudang')g.res[catOf(r)]=1;
@@ -912,7 +923,7 @@ function colsFor(id){
 function sortVal(g,k){
   if(k==='pd')return g.pd==null?1e9:g.pd;
   if(k==='late')return g.late==null?-1e9:g.late;
-  if(k==='wa')return (FN['NP:'+g.np]||{}).k?1:0;
+  if(k==='wa')return ((FN['NP:'+g.np]||{}).k||g.wph)?1:0;
   if(k==='stk')return g.stk||'';
   if(k==='fup')return (FN['NP:'+g.np]||{}).f||'';
   if(k==='eta')return (FN['NP:'+g.np]||{}).e||'9999';
@@ -1360,24 +1371,24 @@ function dnStk(g){
 function dnFu(g){var n=FN['NP:'+g.np];return n&&n.f?'Sudah':'Belum'}
 function dnEta(g){var n=FN['NP:'+g.np];return n&&n.e?isoDisp(n.e):''}
 function dnCells(g,W){
-  var key=esc('NP:'+g.np),n=FN['NP:'+g.np]||{},ph=n.k||'',stk=g.stk;
+  var key=esc('NP:'+g.np),n=FN['NP:'+g.np]||{},ph=n.k||g.wph||'',stk=g.stk;
   var late=n.e&&n.e<todayIso();
-  var wa='<button type="button" class="dnwa'+(ph?' on':'')+'" data-wac="'+esc(g.np)+'" title="'+(ph?'WhatsApp customer: follow up pengiriman':'Isi nomor WA customer dulu')+'">'+WAI+(ph?'':' <span>Isi</span>')+'</button>'+(ph?'<button type="button" class="dnedit" data-wae="'+esc(g.np)+'" title="Ubah nomor WA customer">✎</button>':'');
+  var wa='<button type="button" class="dnwa'+(ph?' on':'')+'" data-wac="'+esc(g.np)+'" title="'+(ph?'WhatsApp customer +'+ph+': follow up pengiriman':'Nomor customer tidak ada di laporan, isi manual')+'">'+WAI+(ph?'':' <span>Isi</span>')+'</button>'+(ph?'<button type="button" class="dnedit" data-wae="'+esc(g.np)+'" title="Ubah nomor WA customer">✎</button>':'');
   var sk=stk==='Ready'?'<span class="dnsk ok">Ready</span>':(stk==='Tidak ready'?'<span class="dnsk no">Tidak ready</span>':'<span class="dnsk">'+(stk||'–')+'</span>');
   return '<td class="c dnc"'+W('wa')+'>'+wa+'</td><td class="c dnc"'+W('stk')+'>'+sk+'</td>'+
     '<td class="c dnc"'+W('fup')+'><label class="fnchk'+(n.f?' on':'')+'"'+(n.by?' title="Diisi oleh '+esc(n.by)+'"':'')+'><input type="checkbox" data-fn="f" data-fnk="'+key+'"'+(n.f?' checked':'')+' aria-label="Sudah di-follow up customer"><span>'+(n.f?'Sudah · '+isoDisp(n.f):'Belum')+'</span></label></td>'+
     '<td class="c dnc"'+W('eta')+'><input type="date" class="fnd'+(late?' late':'')+'" data-fn="e" data-fnk="'+key+'" value="'+esc(n.e||'')+'" aria-label="Estimasi pengiriman"'+(late?' title="Estimasi pengiriman sudah lewat"':'')+'></td>';
 }
 function dnWa(np,edit){
-  var key='NP:'+np,n=FN[key]||{},ph=n.k||'';
+  var key='NP:'+np,n=FN[key]||{},g0=(S.dtG||[]).filter(function(x){return x.np===np})[0],ph=n.k||(g0&&g0.wph)||'';
   if(!ph||edit){
-    var v=window.prompt('Nomor WA customer untuk '+np+' (contoh 0812xxxxxxxx).'+(ph?' Kosongkan untuk menghapus.':''),ph?('0'+ph.replace(/^62/,'')):'');
+    var v=window.prompt('Nomor WA customer untuk '+np+' (contoh 0812xxxxxxxx).'+(n.k?' Kosongkan untuk kembali ke nomor dari laporan.':''),ph?('0'+ph.replace(/^62/,'')):'');
     if(v===null)return;
     var d=String(v).replace(/\D/g,'');
     if(d){if(d.indexOf('0')===0)d='62'+d.slice(1);else if(d.indexOf('8')===0)d='62'+d;if(d.length<10||d.length>15){fnMsg('Nomor WA tidak valid.',true);return}}
-    if(!d&&!ph)return;
+    if(!d&&!n.k)return;
     fnSet(key,'k',d);
-    if(!d||edit)return;ph=d;
+    if(edit)return;if(d)ph=d;if(!ph)return;
   }
   var g=(S.dtG||[]).filter(function(x){return x.np===np})[0];if(!g)return;
   var eta=n.e?isoDisp(n.e):'',its=g.rows.slice(0,6).map(function(r,i){return (i+1)+'. '+(r.inm||'')+' (qty '+fmt(r.o)+')'}).join('\n')+(g.rows.length>6?'\n(+'+(g.rows.length-6)+' item lainnya)':'');
@@ -1389,7 +1400,7 @@ function dtVals(g,k){
   if(k==='pd')v=[g.pd==null?'':dstr(g.pd)];
   else if(k==='late')v=[lateTxt(g.late)];
   else if(k==='dv')v=dtLabs(g);
-  else if(k==='wa')v=[(FN['NP:'+g.np]||{}).k?'Ada nomor':'Belum ada nomor'];
+  else if(k==='wa')v=[((FN['NP:'+g.np]||{}).k||g.wph)?'Ada nomor':'Belum ada nomor'];
   else if(k==='stk')v=[g.stk||''];
   else if(k==='fup')v=[dnFu(g)];
   else if(k==='eta')v=[dnEta(g)];
@@ -1681,7 +1692,7 @@ function parseSheet(rows2d){
   }
   if(hi<0)throw new Error('Kolom NPno dan Item No tidak ditemukan. Pastikan file adalah Report Outstanding Nota Penjualan WMS dan NAV.');
   var idx={};
-  rows2d[hi].forEach(function(c,j){var k=HEAD[String(c).trim().toLowerCase()];if(k&&idx[k]==null)idx[k]=j});
+  rows2d[hi].forEach(function(c,j){var hc=String(c).trim().toLowerCase(),k=HEAD[hc];if(!k){if(/cell?ul[ae]r|mobile|hand ?phone|\bhp\b|\bwa\b|whats/.test(hc))k='hp';else if(/phone|telp|tlp/.test(hc))k='ph'}if(k&&idx[k]==null)idx[k]=j});
   ['np','pd','o'].forEach(function(k){if(idx[k]==null)throw new Error('Kolom wajib tidak ada: '+k)});
   var out=[];
   for(i=hi+1;i<rows2d.length;i++){
