@@ -1015,26 +1015,29 @@ function fnCells(x){
   var r=x.r,n=fnGet(r),key=esc(fnKey(r));
   if(x.i>0)return '<td class="fnc"></td><td class="fnc"></td>';
   var late=n&&n.e&&n.e<todayIso()&&kbOf(x)!=='ok';
-  return '<td class="fnc"><label class="fnchk'+(n&&n.f?' on':'')+'"><input type="checkbox" data-fn="f" data-fnk="'+key+'"'+(n&&n.f?' checked':'')+' aria-label="Sudah di-follow up"><span>'+(n&&n.f?'Sudah · '+isoDisp(n.f):'Belum')+'</span></label></td>'+
+  return '<td class="fnc"><label class="fnchk'+(n&&n.f?' on':'')+'"'+(n&&n.by?' title="Diisi oleh '+esc(n.by)+'"':'')+'><input type="checkbox" data-fn="f" data-fnk="'+key+'"'+(n&&n.f?' checked':'')+' aria-label="Sudah di-follow up"><span>'+(n&&n.f?'Sudah · '+isoDisp(n.f):'Belum')+'</span></label></td>'+
     '<td class="fnc"><input type="date" class="fnd'+(late?' late':'')+'" data-fn="e" data-fnk="'+key+'" value="'+esc(n&&n.e||'')+'" aria-label="Estimasi barang datang"'+(late?' title="Estimasi sudah lewat, barang belum datang"':'')+'></td>';
 }
+function fnName(){
+  var n='';try{n=localStorage.getItem('qbig_fu_name')||''}catch(e){}
+  if(!n&&_who)n=String(_who).split('@')[0];
+  if(!n){n=(window.prompt('Nama kamu (dicatat pada isian follow up):','')||'').trim().slice(0,30);if(n){try{localStorage.setItem('qbig_fu_name',n)}catch(e){}}}
+  return n;
+}
 function fnSet(key,fld,val){
-  if(!sbOk())render();
-  sbAsk(function(){
-    var o=FN[key]||{},c={f:o.f||'',e:o.e||'',by:o.by,t:o.t};c[fld]=val;
-    if(!c.f&&!c.e){delete FN[key];FNQ[key]=null}else{FN[key]=c;FNQ[key]={f:c.f,e:c.e}}
-    render();clearTimeout(fnT);fnT=setTimeout(fnPut,500);
-  });
+  var nm=fnName();
+  if(!nm){render();return}
+  var o=FN[key]||{},c={f:o.f||'',e:o.e||'',by:nm,t:new Date().toISOString()};c[fld]=val;
+  if(!c.f&&!c.e){delete FN[key];FNQ[key]=null}else{FN[key]=c;FNQ[key]={f:c.f,e:c.e}}
+  render();clearTimeout(fnT);fnT=setTimeout(fnPut,500);
 }
 function fnPut(){
   var q=FNQ;if(!Object.keys(q).length)return;FNQ={};
   if(typeof CompressionStream==='undefined'){fnMsg('Browser ini belum mendukung simpan online. Pakai Chrome atau Edge terbaru.',true);return}
-  sbAsk(function(){
-    var st=new Blob([JSON.stringify({notes:q})]).stream().pipeThrough(new CompressionStream('gzip'));
-    new Response(st).arrayBuffer().then(function(b){return fetch(FNURL,{method:'PUT',headers:{'Content-Type':'application/gzip','Authorization':'Bearer '+_tok},body:b})})
-    .then(function(r){return r.json().catch(function(){return {}}).then(function(j){if(!r.ok)throw new Error(j.error||('Simpan gagal ('+r.status+').'));fnMsg('Follow up tersimpan untuk semua pengguna.')})})
-    .catch(function(e){Object.keys(q).forEach(function(k){if(!(k in FNQ))FNQ[k]=q[k]});fnMsg((e&&e.message)||'Follow up gagal disimpan.',true);FNQ={};fnLoad()});
-  });
+  var st=new Blob([JSON.stringify({notes:q})]).stream().pipeThrough(new CompressionStream('gzip'));
+  new Response(st).arrayBuffer().then(function(b){return fetch(FNURL,{method:'PUT',headers:{'Content-Type':'application/gzip','X-Fu-Name':encodeURIComponent(fnName())},body:b})})
+  .then(function(r){return r.json().catch(function(){return {}}).then(function(j){if(!r.ok)throw new Error(j.error||('Simpan gagal ('+r.status+').'));fnMsg('Follow up tersimpan untuk semua pengguna.')})})
+  .catch(function(e){fnMsg((e&&e.message)||'Follow up gagal disimpan.',true);FNQ={};FNS='';fnLoad()});
 }
 function fnLoad(){
   if(location.protocol==='file:'||Object.keys(FNQ).length)return;
