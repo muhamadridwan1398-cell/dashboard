@@ -1035,17 +1035,18 @@ function fnKey(r,no){return r.np+'|'+r.ino+(no?'|'+no:'')}
 function fnGet(r,no){return FN[fnKey(r,no)]||FN[fnKey(r)]||null}
 function todayIso(){return new Date(Date.now()+7*36e5).toISOString().slice(0,10)}
 function isoDisp(v){var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(v||'');return m?(+m[3])+' '+MON[+m[2]-1]+' '+m[1].slice(2):''}
-function fnTxt(r,k,no,z){if(z&&kbLine(z)==='ok')return '';var n=fnGet(r,no);if(k==='ket')return n&&n.s?({ready:'Ready',partial:'Partial'+(n.q?' '+n.q:''),kosong:'Kosong'}[n.s]||''):'';return k==='fup'?(n&&n.f?'Sudah · '+isoDisp(n.f):'Belum'):(n&&n.e?isoDisp(n.e):'')}
+function fuSkip(x,z){if(z){var c=kbLine(z);return c==='ok'||c==='x'||c===''}return !!x&&!x.d&&kbOf(x)===''}
+function fnTxt(r,k,no,z,x){if(fuSkip(x,z))return '';var n=fnGet(r,no);if(k==='ket')return n&&n.s?({ready:'Ready',partial:'Partial'+(n.q?' '+n.q:''),kosong:'Kosong'}[n.s]||''):'';return k==='fup'?(n&&n.f?'Sudah · '+isoDisp(n.f):'Belum'):(n&&n.e?isoDisp(n.e):'')}
 function fnMsg(t,err){var m=document.getElementById('msg');if(!m)return;m.textContent=t;m.className=err?'err':''}
-function fnLine(r,z,i){
-  if(z&&kbLine(z)==='ok'){var dn='<div class="fnl fnx" title="Barang sudah datang, tidak perlu follow up">–</div>';return {f:dn,k:dn,e:dn}}
+function fnLine(r,z,i,x){
+  if(fuSkip(x,z)){var dn='<div class="fnl fnx" title="Belum ada status barang atau barang sudah datang: tidak perlu follow up">–</div>';return {f:dn,k:dn,e:dn}}
   var no=z?z.no:'',n=fnGet(r,no),key=esc(fnKey(r,no)),late=n&&n.e&&n.e<todayIso()&&(!z||kbLine(z)!=='ok');
   return {f:'<div class="fnl"><label class="fnchk'+(n&&n.f?' on':'')+'"'+(n&&n.by?' title="Diisi oleh '+esc(n.by)+'"':'')+'><input type="checkbox" data-fn="f" data-fnk="'+key+'"'+(n&&n.f?' checked':'')+' aria-label="Sudah di-follow up '+esc(no)+'"><span>'+(n&&n.f?'Sudah · '+isoDisp(n.f):'Belum')+'</span></label></div>',
     k:'<div class="fnl"><select class="fns '+(n&&n.s||'')+'" data-fn="s" data-fnk="'+key+'" aria-label="Stok SPL/DC '+esc(no)+'"><option value="">–</option><option value="ready"'+(n&&n.s==='ready'?' selected':'')+'>Ready</option><option value="partial"'+(n&&n.s==='partial'?' selected':'')+'>Partial</option><option value="kosong"'+(n&&n.s==='kosong'?' selected':'')+'>Kosong</option></select>'+(n&&n.s==='partial'?'<input type="number" min="0" step="1" class="fnq" data-fn="q" data-fnk="'+key+'" value="'+esc(n.q||'')+'" placeholder="Qty" title="Qty yang ada di supplier" aria-label="Qty partial supplier '+esc(no)+'">':'')+'</div>',
     e:'<div class="fnl"><input type="date" class="fnd'+(late?' late':'')+'" data-fn="e" data-fnk="'+key+'" value="'+esc(n&&n.e||'')+'" aria-label="Estimasi datang '+esc(no)+'"'+(late?' title="Estimasi sudah lewat, barang belum datang"':'')+'></div>'};
 }
 function fnCells(x){
-  var r=x.r,ds=x.d?x.d.ds:[null],ls=ds.map(function(z,i){return fnLine(r,z,i)});
+  var r=x.r,ds=x.d?x.d.ds:[null],ls=ds.map(function(z,i){return fnLine(r,z,i,x)});
   return '<td class="fnc">'+ls.map(function(l){return l.f}).join('')+'</td><td class="fnc">'+ls.map(function(l){return l.k}).join('')+'</td><td class="fnc">'+ls.map(function(l){return l.e}).join('')+'</td>';
 }
 function fnName(){
@@ -1223,7 +1224,7 @@ function fuLn(x,k){
   if(k==='dq')return d.ds.map(function(z){return z.q!=null?fmt(z.q):''});
   if(k==='dr')return d.ds.map(function(z){return z.rv!=null?fmt(z.rv):''});
   if(k==='ds')return d.ds.map(function(z){return z.st||''});
-  if(k==='fup'||k==='eta'||k==='ket')return d.ds.map(function(z){return fnTxt(x.r,k,z.no,z)});
+  if(k==='fup'||k==='eta'||k==='ket')return d.ds.map(function(z){return fnTxt(x.r,k,z.no,z,x)});
   return null;
 }
 function fuTexts(x,k){var a=fuLn(x,k);return a&&a.length?a:[fuText(x,k)]}
@@ -1246,7 +1247,7 @@ function fuText(x,k){
   if(k==='dr')return d?fmt(d.ra):'';
   if(k==='ds')return d&&d.st?d.st:'';
   if(k==='kb')return KBL[kbOf(x)]||'';
-  if(k==='fup'||k==='eta'||k==='ket'){var fl=fuLn(x,k);return fl?fl.join('\n'):fnTxt(r,k)}
+  if(k==='fup'||k==='eta'||k==='ket'){var fl=fuLn(x,k);return fl?fl.join('\n'):fnTxt(r,k,'',null,x)}
   if(k==='o')return fmt(r.o);
   return String(r[k]==null?'':r[k]);
 }
@@ -1408,7 +1409,7 @@ function fhMenu(t){
 function fuSum(){
   var n=0,f=0,M={};
   (S.fuL||[]).forEach(function(x){
-    var us=(x.d&&x.d.ds.length)?x.d.ds.filter(function(z){return !waDone(z)}).map(function(z){return z.no}):(x.d?[]:['']);
+    var us=(x.d&&x.d.ds.length)?x.d.ds.filter(function(z){return !fuSkip(x,z)}).map(function(z){return z.no}):(x.d||fuSkip(x,null)?[]:['']);
     us.forEach(function(no){n++;var q=fnGet(x.r,no),y=q&&q.f?1:0;f+=y;var o=M[x.r.np]||(M[x.r.np]={a:0,b:0});if(y)o.a++;else o.b++})
   });
   if(!n)return '';
@@ -1573,7 +1574,7 @@ function fuRaw(x,k){
   if(k==='vn')return d?d.vn.split('\n').filter(Boolean).join('; '):'';
   if(k==='dq')return d?d.qa:'';
   if(k==='dr')return d?d.ra:'';
-  if(k==='fup'||k==='eta'||k==='ket'){var rl=fuLn(x,k);return rl?rl.join('; '):fnTxt(r,k)}
+  if(k==='fup'||k==='eta'||k==='ket'){var rl=fuLn(x,k);return rl?rl.join('; '):fnTxt(r,k,'',null,x)}
   if(k==='ds')return d&&d.st?d.st.split('\n').join('; '):'';
   if(k==='kb'){var kl=fuLn(x,'kb');return kl?kl.map(function(t){return t||'–'}).join('; '):(KBL[kbOf(x)]||'')}
   if(k==='o')return r.o;
@@ -1608,7 +1609,7 @@ function exportFollowup(split){
         if(k==='dr')return z.rv!=null?z.rv:'';
         if(k==='ds')return z.st||'';
         if(k==='kb')return (kl&&kl[zi])||'';
-        if(k==='fup'||k==='eta'||k==='ket')return fnTxt(x.r,k,z.no,z);
+        if(k==='fup'||k==='eta'||k==='ket')return fnTxt(x.r,k,z.no,z,x);
         return fuRaw(x,k)}))});
   });
   var aoa=[head].concat(rowsX);
