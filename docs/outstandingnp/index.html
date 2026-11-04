@@ -351,6 +351,7 @@ body.shot .shotexit:hover,body.shot .shotexit:focus{opacity:1}
 .dtb>table>thead>tr>th.dtg{background:#0f6b5b!important;color:#fff}.dtb>table>thead>tr>th.dtg1{border-left:3px solid #f5b942}.dtb>table>thead>tr>th.dtg3{border-right:3px solid #f5b942}.dtb>table>tbody>tr>td.dtg{background:#effaf6!important}.dtb>table>tbody>tr.alt>td.dtg{background:#e4f5ee!important}.dtb>table>tbody>tr>td.dtg1{border-left:3px solid #f5b942}.dtb>table>tbody>tr>td.dtg3{border-right:3px solid #f5b942}
 .fnx{color:#94a3b8;justify-content:center}
 .fu th:nth-child(24){background:#5b3fa0!important;color:#fff}.fu tbody td:nth-child(24){background:#f6f3fd!important}.fu tbody tr:nth-child(even) td:nth-child(24){background:#ece7f9!important}.fnq.cek{width:90px;margin-left:0;height:22px;font-size:12px;border-color:#b7a6e6}
+.pgset{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 12px}.pgset .sub.err{color:#b42318}
 .dnwa{display:inline-flex;align-items:center;gap:4px;border:1px solid #cbd5e1;background:#f1f5f9;color:#64748b;border-radius:999px;padding:3px 9px;font:inherit;font-size:12px;font-weight:600;cursor:pointer}.dnwa.on{background:#25d366;border-color:#1fb455;color:#fff}.dnwa:hover{filter:brightness(.95)}.dnwarn{color:#c2410c;margin-right:4px;cursor:help}.dnedit{border:0;background:none;color:#64748b;cursor:pointer;font-size:13px;padding:2px 4px}.dnsk{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:700;background:#eef1f5;color:#64748b}.dnsk.ok{background:#e1f6e9;color:#146c3a}.dnsk.no{background:#fde8e6;color:#a3231b}.fnc{white-space:nowrap}.fnl{height:18px;line-height:18px;display:flex;align-items:center}.fns{font:inherit;font-size:11px;height:17px;padding:0 2px;border:1px solid var(--line);border-radius:5px;background:#fff;color:var(--ink);width:78px}.fns.ready{background:#e8f7ee;border-color:#8fd0a8;color:#146c3a;font-weight:700}.fns.partial{background:#fff6e0;border-color:#e6c166;color:#8a5a00;font-weight:700}.fns.kosong{background:#fdecec;border-color:#e59a96;color:#a3231b;font-weight:700}.fns.dst{width:148px;height:24px;font-size:12px}.fns.dst.siap{background:#e8f7ee;border-color:#8fd0a8;color:#146c3a;font-weight:700}.fns.dst.belum_fb{background:#fff6e0;border-color:#e6c166;color:#8a5a00;font-weight:700}.fns.dst.belum_siap{background:#fdecec;border-color:#e59a96;color:#a3231b;font-weight:700}.fnq{font:inherit;font-size:11px;height:17px;width:56px;margin-left:4px;padding:0 4px;border:1px solid #e6c166;border-radius:5px;box-sizing:border-box}.fnt{font:inherit;font-size:11px;height:17px;width:100%;box-sizing:border-box;padding:0 5px;border:1px solid var(--line);border-radius:5px;background:#fff;color:var(--ink)}.fnt:focus{outline:2px solid #9ec5f4;outline-offset:0}.fnl .fnd{height:17px;padding:0 4px;font-size:11px;line-height:15px}.fnchk{display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;color:var(--ink3)}.fnchk.on{color:#15803d;font-weight:700}.fnchk input{accent-color:#16a34a;width:15px;height:15px;margin:0}.fnd{font:inherit;font-size:12px;padding:3px 5px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);width:118px}.fnd.late{border-color:#e0584f;background:#fff1f0;color:#b42318}.dsc a.dsl{color:#1f4aa8;text-decoration:none;font-weight:600}.dsc a.dsl:hover{text-decoration:underline}.dsc .n b{display:block;font-weight:700;color:var(--ink2,#334155);font-size:10px;letter-spacing:.04em;text-transform:uppercase;margin-bottom:1px}
 .datapanel{display:flex;flex-direction:column;gap:14px}
 .datapanel[hidden]{display:none}
@@ -818,11 +819,37 @@ function pgChart(title,items,sA,sB){
     }).join('')+'</div></div></div><div class="legend"><span><i class="sw" style="background:var(--'+sA[2]+')"></i>'+sA[0]+'</span><span><i class="sw" style="background:var(--'+sB[2]+')"></i>'+sB[0]+'</span></div></div>';
   return h;
 }
+function progBar(){return '<div class="pgset"><button type="button" class="btn ghost" data-pgset="1" title="Pilih file OTS (Report Outstanding Nota Penjualan WMS dan NAV) untuk dijadikan data Before">Ganti data Before…</button><input type="file" id="pgfile" accept=".xlsx,.xls,.csv" hidden><span id="pgmsg" class="sub"></span></div>'}
+function progMake(p){
+  var m=String(p.report).match(/(\d{4})-(\d{2})-(\d{2})/),day=Math.floor(Date.UTC(+m[1],+m[2]-1,+m[3])/864e5);
+  var rs=dedupe(p.rows.map(function(a){return norm(a,day)}));
+  return {report:p.report,store:p.store||'',rows:rs.map(function(r){return [r.np,r.ino,r.pdD==null?'':r.pdD,segOf(r),catOf(r),r.cons?1:0,r.o]})};
+}
+function progSetFile(f){
+  var msg=$('#pgmsg');if(!f)return;
+  if(typeof XLSX==='undefined'){msg.textContent='Pembaca Excel belum termuat. Muat ulang halaman.';return}
+  msg.textContent='Membaca '+f.name+'…';
+  var fr=new FileReader();
+  fr.onload=function(){setTimeout(function(){
+    try{
+      var wb=XLSX.read(fr.result,{type:'array',cellDates:true}),r2=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,raw:true,defval:''}),p=parseSheet(r2);
+      if(!p.rows.length)throw new Error('Tidak ada baris data di file ini.');
+      var cur=S.last&&S.last[1];
+      if(cur&&String(p.report)>=String(cur))throw new Error('File ini ('+fmtStamp(p.report)+') tidak lebih lama dari data After ('+fmtStamp(cur)+'). Pilih OTS yang lebih lama.');
+      var prev=progMake(p);
+      saveDocs({prev:prev});render();shSave();
+      var m2=$('#pgmsg');if(m2)m2.textContent='';
+      $('#msg').className='';$('#msg').textContent='Data Before diganti: '+fmtStamp(p.report)+' ('+fmt(prev.rows.length)+' item).';
+    }catch(e){var m3=$('#pgmsg');if(m3){m3.className='sub err';m3.textContent=(e&&e.message)||'File tidak bisa dibaca.'}}
+  },30)};
+  fr.onerror=function(){msg.textContent='File tidak bisa dibaca.'};
+  fr.readAsArrayBuffer(f);
+}
 function progPanel(){
   var R=progBuild(),h='<section class="panel full" id="progpanel"><h2 style="font-size:16px;font-weight:800;margin:0 0 4px">Progres OTS: Before vs After</h2>';
-  if(!R)return h+'<p class="sub" style="margin:4px 0 0">Belum ada data Before. Saat OTS NP yang lebih baru di-Generate, OTS yang sekarang (<b>'+esc(S.reportLabel)+'</b>) otomatis disimpan sebagai Before, lalu progresnya tampil di sini.</p></section>';
+  if(!R)return h+'<p class="sub" style="margin:4px 0 0">Belum ada data Before. Saat OTS NP yang lebih baru di-Generate, OTS yang sekarang (<b>'+esc(S.reportLabel)+'</b>) otomatis disimpan sebagai Before, lalu progresnya tampil di sini. Atau pilih sendiri file OTS lama sebagai Before.</p>'+progBar()+'</section>';
   var nB=Object.keys(R.B).length,nA=Object.keys(R.A).length,pct=nB?Math.round(R.done.length/nB*100):0;
-  h+='<p class="sub" style="margin:2px 0 12px">Before: <b>'+esc(progLab(R.P.report))+'</b> → After: <b>'+esc(S.reportLabel)+'</b>. Ukuran: jumlah NP outstanding. Hijau berarti NP berkurang (ada progres).</p>';
+  h+='<p class="sub" style="margin:2px 0 12px">Before: <b>'+esc(progLab(R.P.report))+'</b> → After: <b>'+esc(S.reportLabel)+'</b>. Ukuran: jumlah NP outstanding. Hijau berarti NP berkurang (ada progres).</p>';h+=progBar();
   h+='<div class="pgk"><div><span>NP Before</span><b>'+fmt(nB)+'</b></div><div><span>NP After</span><b>'+fmt(nA)+'</b></div><div><span>Selisih</span><b>'+progDelta(nB,nA)+'</b></div><div><span>NP selesai</span><b class="pg-ok">'+fmt(R.done.length)+'</b><i>'+pct+'% dari Before</i></div><div><span>NP baru masuk</span><b class="pg-bad">'+fmt(R.added.length)+'</b></div></div>';
   var cnt=function(M,c){var n=0;Object.keys(M).forEach(function(k){if(!c||M[k].c===c)n++});return n};
   var typ=PCOL.map(function(c){return {l:c[1].replace('Gudang · ','Gudang ').replace('Supplier · ','Supplier ').replace('Another Site/DC','Site/DC'),b:cnt(R.B,c[0]),a:cnt(R.A,c[0])}});
@@ -1714,8 +1741,8 @@ function render(){
 
 /* ---------- interaksi ---------- */
 document.addEventListener('toggle',function(e){if(e.target.classList&&e.target.classList.contains('fhm'))S.fhOpen=e.target.open?e.target.dataset.fht:''},true);
-document.addEventListener('change',function(e){var t=e.target;if(t.dataset&&t.dataset.fh){var tb=t.dataset.fht,a=fhGet(tb).filter(function(k){return k!==t.dataset.fh});if(!t.checked)a.push(t.dataset.fh);fhSet(tb,a);var sm=document.querySelector('.fhm[data-fht="'+tb+'"] summary');if(sm)sm.innerHTML=fhLab(a,tb)}});
-document.addEventListener('click',function(e){var q=e.target.closest&&e.target.closest('[data-fhall]');if(q){var tb=q.dataset.fhall;fhSet(tb,[]);document.querySelectorAll('.fhm[data-fht="'+tb+'"] input[data-fh]').forEach(function(i){i.checked=true});var sm=document.querySelector('.fhm[data-fht="'+tb+'"] summary');if(sm)sm.textContent=tb==='fu'?'Kolom Hide':'Kolom';return}
+document.addEventListener('change',function(e){var t=e.target;if(t.id==='pgfile'){var f=t.files&&t.files[0];t.value='';progSetFile(f);return}if(t.dataset&&t.dataset.fh){var tb=t.dataset.fht,a=fhGet(tb).filter(function(k){return k!==t.dataset.fh});if(!t.checked)a.push(t.dataset.fh);fhSet(tb,a);var sm=document.querySelector('.fhm[data-fht="'+tb+'"] summary');if(sm)sm.innerHTML=fhLab(a,tb)}});
+document.addEventListener('click',function(e){var pb=e.target.closest&&e.target.closest('[data-pgset]');if(pb){sbAsk(function(){var i=document.getElementById('pgfile');if(i)i.click()});return}var q=e.target.closest&&e.target.closest('[data-fhall]');if(q){var tb=q.dataset.fhall;fhSet(tb,[]);document.querySelectorAll('.fhm[data-fht="'+tb+'"] input[data-fh]').forEach(function(i){i.checked=true});var sm=document.querySelector('.fhm[data-fht="'+tb+'"] summary');if(sm)sm.textContent=tb==='fu'?'Kolom Hide':'Kolom';return}
   if(e.target.closest&&e.target.closest('.fhm'))return;if(S.fhOpen){S.fhOpen='';var fd=document.querySelector('.fhm');if(fd)fd.open=false}
   if(S.fopen&&!e.target.closest('.mpop')&&!e.target.closest('.msb')){S.fopen='';S.fmq='';render()}
   var mb=e.target.closest('.msb');
