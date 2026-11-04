@@ -1037,15 +1037,16 @@ function fnKey(r,no){return r.np+'|'+r.ino+(no?'|'+no:'')}
 function fnGet(r,no){return FN[fnKey(r,no)]||FN[fnKey(r)]||null}
 function todayIso(){return new Date(Date.now()+7*36e5).toISOString().slice(0,10)}
 function isoDisp(v){var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(v||'');return m?(+m[3])+' '+MON[+m[2]-1]+' '+m[1].slice(2):''}
+function cekOn(x,z){return z?kbLine(z)==='no':(!!x&&!x.d&&kbOf(x)==='no')}
 function fuSkip(x,z){if(z){var c=kbLine(z);return c==='ok'||c==='x'||c===''}return !!x&&!x.d&&kbOf(x)===''}
-function fnTxt(r,k,no,z,x){if(fuSkip(x,z))return '';var n=fnGet(r,no);if(k==='cek'){if(!z||kbLine(z)!=='no')return '';return n&&/^\d+$/.test(n.c||'')?n.c:''}if(k==='ket')return n&&n.s?({ready:'Ready',partial:'Partial'+(n.q?' '+n.q:''),kosong:'Kosong'}[n.s]||''):'';return k==='fup'?(n&&n.f?'Sudah · '+isoDisp(n.f):'Belum'):(n&&n.e?isoDisp(n.e):'')}
+function fnTxt(r,k,no,z,x){if(fuSkip(x,z))return '';var n=fnGet(r,no);if(k==='cek'){if(!cekOn(x,z))return '';return n&&/^\d+$/.test(n.c||'')?n.c:''}if(k==='ket')return n&&n.s?({ready:'Ready',partial:'Partial'+(n.q?' '+n.q:''),kosong:'Kosong'}[n.s]||''):'';return k==='fup'?(n&&n.f?'Sudah · '+isoDisp(n.f):'Belum'):(n&&n.e?isoDisp(n.e):'')}
 function fnMsg(t,err){var m=document.getElementById('msg');if(!m)return;m.textContent=t;m.className=err?'err':''}
 function fnLine(r,z,i,x){
   if(fuSkip(x,z)){var dn='<div class="fnl fnx" title="Belum ada status barang atau barang sudah datang: tidak perlu follow up">–</div>';return {f:dn,k:dn,e:dn,c:dn}}
   var no=z?z.no:'',n=fnGet(r,no),key=esc(fnKey(r,no)),late=n&&n.e&&n.e<todayIso()&&(!z||kbLine(z)!=='ok');
   return {f:'<div class="fnl"><label class="fnchk'+(n&&n.f?' on':'')+'"'+(n&&n.by?' title="Diisi oleh '+esc(n.by)+'"':'')+'><input type="checkbox" data-fn="f" data-fnk="'+key+'"'+(n&&n.f?' checked':'')+' aria-label="Sudah di-follow up '+esc(no)+'"><span>'+(n&&n.f?'Sudah · '+isoDisp(n.f):'Belum')+'</span></label></div>',
     k:'<div class="fnl"><select class="fns '+(n&&n.s||'')+'" data-fn="s" data-fnk="'+key+'" aria-label="Stok SPL/DC '+esc(no)+'"><option value="">–</option><option value="ready"'+(n&&n.s==='ready'?' selected':'')+'>Ready</option><option value="partial"'+(n&&n.s==='partial'?' selected':'')+'>Partial</option><option value="kosong"'+(n&&n.s==='kosong'?' selected':'')+'>Kosong</option></select>'+(n&&n.s==='partial'?'<input type="number" min="0" step="1" class="fnq" data-fn="q" data-fnk="'+key+'" value="'+esc(n.q||'')+'" placeholder="Qty" title="Qty yang ada di supplier" aria-label="Qty partial supplier '+esc(no)+'">':'')+'</div>',
-    c:(z&&kbLine(z)==='no')?'<div class="fnl"><input type="number" min="0" step="1" class="fnq cek" data-fn="c" data-fnk="'+key+'" value="'+esc(n&&/^\d+$/.test(n.c||'')?n.c:'')+'" placeholder="Qty" title="Qty yang ready di toko" aria-label="Qty ready di toko '+esc(no)+'"></div>':'<div class="fnl fnx" title="Hanya untuk barang yang belum datang">–</div>',
+    c:cekOn(x,z)?'<div class="fnl"><input type="number" min="0" step="1" class="fnq cek" data-fn="c" data-fnk="'+key+'" value="'+esc(n&&/^\d+$/.test(n.c||'')?n.c:'')+'" placeholder="Qty" title="Qty yang ready di toko" aria-label="Qty ready di toko '+esc(no)+'"></div>':'<div class="fnl fnx" title="Hanya untuk barang yang belum datang">–</div>',
     e:'<div class="fnl"><input type="date" class="fnd'+(late?' late':'')+'" data-fn="e" data-fnk="'+key+'" value="'+esc(n&&n.e||'')+'" aria-label="Estimasi datang '+esc(no)+'"'+(late?' title="Estimasi sudah lewat, barang belum datang"':'')+'></div>'};
 }
 function fnCells(x){
@@ -1285,7 +1286,7 @@ function fuVal(x,k){
   if(k==='dq')return d?d.qa:-1;
   if(k==='dr')return d?d.ra:-1;
   if(k==='ds')return d?String(d.st).toLowerCase():'';
-  if(k==='ket'||k==='cek')return fnTxt(r,k,d&&d.ds[0]?d.ds[0].no:'',d&&d.ds[0]).toLowerCase();
+  if(k==='ket'||k==='cek')return fnTxt(r,k,d&&d.ds[0]?d.ds[0].no:'',d&&d.ds[0],x).toLowerCase();
   if(k==='fup'||k==='eta'){var z0=d&&d.ds[0],n1=fnGet(r,z0?z0.no:'');return k==='fup'?(n1&&n1.f?n1.f:''):(n1&&n1.e?n1.e:'9999')}
   if(k==='o')return r.o;
   return String(r[k]==null?'':r[k]).toLowerCase();
