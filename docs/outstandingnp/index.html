@@ -1095,7 +1095,7 @@ document.addEventListener('visibilitychange',function(){if(!document.hidden)fnLo
 setInterval(function(){if(!document.hidden)fnLoad()},15000);window.addEventListener('focus',fnLoad);window.addEventListener('pageshow',fnLoad);
 function FUCM_L(k){if(k==='mon')return 'Bulan PDD';for(var i=0;i<FUC.length;i++)if(FUC[i][0]===k)return FUC[i][1];return k}
 function umurTxt(u){return u==null?'':(u===0?'Hari ini':(u===-1?'Besok':(u<0?(-u)+' hari lagi':u+' hari')))}
-var FUC=[['ca','Category Name'],['age','Umur',1],['od','Order Date'],['pd','PDD'],['hk','Leadtime',1],['sp','Sales Person Name'],['np','NPno'],['cu','Cust Name'],['ty','NPType'],['ino','Item No'],['inm','Item Name'],['mb','Master Brand'],['jn','Jenis'],['um','UOM'],['vn','Vendor'],['dv','No PO/TR'],['dq','Qty PO/TR',1],['dr','Rcv Qty PO/TR',1],['ds','Status PO&TR'],['kb','Keterangan Barang'],['fup','Follow up'],['ket','Stok SPL/DC'],['eta','Est. datang'],['cek','Ready di toko'],['o','OTS Qty',1],['stS','Stock NAV',1],['stF','Stock WMS',1],['stat','Status Stok'],['chk','Cek Silang']];
+var FUC=[['ca','Category Name'],['age','Umur',1],['od','Order Date'],['pd','PDD'],['hk','Leadtime',1],['sp','Sales Person Name'],['np','NPno'],['cu','Cust Name'],['ty','NPType'],['ino','Item No'],['inm','Item Name'],['mb','Master Brand'],['jn','Jenis'],['um','UOM'],['vn','Vendor'],['dv','No PO/TR'],['dq','Qty PO/TR',1],['dr','Rcv Qty PO/TR',1],['ds','Status PO&TR'],['kb','Keterangan Barang'],['fup','Follow up'],['ket','Stok SPL/DC'],['eta','Est. datang'],['cek','Ready di toko'],['o','OTS Qty',1],['stS','Stock NAV',1],['stF','Stock WMS',1],['stat','Status Stok']];
 function fuFilter(rows,skip){
   var f=S.fu,mon=S.mon.fu||'';
   return rows.filter(function(r){
@@ -1318,7 +1318,6 @@ function followup(rows){
     ['doc','Status PO/TR',[['none','Belum ada PO/TR',function(r){return r.noDoc}],['has','Sudah ada PO/TR',function(r){return r.pos.length||r.trs.length}]]],
     ['kb','Keterangan barang',[['ok','Sudah datang'],['pt','Partial'],['no','Belum datang']]],
     ['stk','Status stok',[['READY','Ready'],['PARTIAL','Partial'],['KOSONG','Kosong']]],
-    ['chk','Cek silang stok',[['Sesuai','Sesuai'],['WMS ready','WMS ready'],['WMS partial','WMS partial'],['WMS kosong','WMS kosong'],['NAV ready','NAV ready'],['NAV partial','NAV partial'],['NAV kosong','NAV kosong']]]
   ];
   var LK={kb:function(x){return kbOf(x)},stk:function(x){return stkOf(x.r).st},chk:function(x){return stkOf(x.r).chk}};
   var fqCount=function(q,o){return LK[q[0]]?L0.filter(function(x){return LK[q[0]](x)===o[0]}).length:fuFilter(rows,q[0]).filter(o[2]).length};
