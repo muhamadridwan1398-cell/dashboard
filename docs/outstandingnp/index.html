@@ -1406,10 +1406,10 @@ function fhApply(){
     st.textContent=css?css+'{display:none!important}':'';
   });
 }
-function fhLab(a){return 'Kolom'+(a.length?' <b>('+a.length+' disembunyikan)</b>':'')}
+function fhLab(a,t){return (t==='fu'?'Kolom Hide':'Kolom')+(a.length?' <b>('+a.length+' disembunyikan)</b>':'')}
 function fhMenu(t){
   var hid=fhGet(t);
-  return '<details class="fhm" data-fht="'+t+'"'+(S.fhOpen===t?' open':'')+'><summary class="btn ghost">'+fhLab(hid)+'</summary><div class="fhp"><div class="fhn">Pilihan ini hanya berlaku di browser kamu.</div>'+
+  return '<details class="fhm" data-fht="'+t+'"'+(S.fhOpen===t?' open':'')+'><summary class="btn ghost">'+fhLab(hid,t)+'</summary><div class="fhp"><div class="fhn">Pilihan ini hanya berlaku di browser kamu.</div>'+
     fhCols(t).map(function(c){return '<label><input type="checkbox" data-fh="'+c[0]+'" data-fht="'+t+'"'+(hid.indexOf(c[0])>-1?'':' checked')+'><span>'+esc(c[1])+'</span></label>'}).join('')+
     '<div class="fhf"><button type="button" class="btn ghost" data-fhall="'+t+'">Tampilkan semua</button></div></div></details>';
 }
@@ -1715,8 +1715,8 @@ function render(){
 
 /* ---------- interaksi ---------- */
 document.addEventListener('toggle',function(e){if(e.target.classList&&e.target.classList.contains('fhm'))S.fhOpen=e.target.open?e.target.dataset.fht:''},true);
-document.addEventListener('change',function(e){var t=e.target;if(t.dataset&&t.dataset.fh){var tb=t.dataset.fht,a=fhGet(tb).filter(function(k){return k!==t.dataset.fh});if(!t.checked)a.push(t.dataset.fh);fhSet(tb,a);var sm=document.querySelector('.fhm[data-fht="'+tb+'"] summary');if(sm)sm.innerHTML=fhLab(a)}});
-document.addEventListener('click',function(e){var q=e.target.closest&&e.target.closest('[data-fhall]');if(q){var tb=q.dataset.fhall;fhSet(tb,[]);document.querySelectorAll('.fhm[data-fht="'+tb+'"] input[data-fh]').forEach(function(i){i.checked=true});var sm=document.querySelector('.fhm[data-fht="'+tb+'"] summary');if(sm)sm.textContent='Kolom';return}
+document.addEventListener('change',function(e){var t=e.target;if(t.dataset&&t.dataset.fh){var tb=t.dataset.fht,a=fhGet(tb).filter(function(k){return k!==t.dataset.fh});if(!t.checked)a.push(t.dataset.fh);fhSet(tb,a);var sm=document.querySelector('.fhm[data-fht="'+tb+'"] summary');if(sm)sm.innerHTML=fhLab(a,tb)}});
+document.addEventListener('click',function(e){var q=e.target.closest&&e.target.closest('[data-fhall]');if(q){var tb=q.dataset.fhall;fhSet(tb,[]);document.querySelectorAll('.fhm[data-fht="'+tb+'"] input[data-fh]').forEach(function(i){i.checked=true});var sm=document.querySelector('.fhm[data-fht="'+tb+'"] summary');if(sm)sm.textContent=tb==='fu'?'Kolom Hide':'Kolom';return}
   if(e.target.closest&&e.target.closest('.fhm'))return;if(S.fhOpen){S.fhOpen='';var fd=document.querySelector('.fhm');if(fd)fd.open=false}
   if(S.fopen&&!e.target.closest('.mpop')&&!e.target.closest('.msb')){S.fopen='';S.fmq='';render()}
   var mb=e.target.closest('.msb');
