@@ -1031,7 +1031,11 @@ function fnName(){
 function fnSet(key,fld,val){
   var nm=fnName();
   if(!nm){render();return}
-  var o=FN[key]||{},c={f:o.f||'',e:o.e||'',k:o.k||'',s:o.s||'',q:o.q||'',by:nm,t:new Date().toISOString()};c[fld]=val;
+  var pp=key.split('|'),base=pp[0]+'|'+pp[1],lg=(pp.length>2&&FN[base])?FN[base]:null;
+  if(lg){/* pindahkan catatan format lama (per item) ke tiap PO/TR agar tidak hidup kembali setelah di-uncheck */
+    (S.fuL||[]).forEach(function(x){if(x.r.np===pp[0]&&x.r.ino===pp[1]&&x.d)x.d.ds.forEach(function(z){var k2=base+'|'+z.no;if(k2!==key&&!FN[k2]){FN[k2]={f:lg.f||'',e:lg.e||'',k:lg.k||'',s:lg.s||'',q:lg.q||'',by:lg.by,t:lg.t};FNQ[k2]={f:lg.f||'',e:lg.e||'',k:lg.k||'',s:lg.s||'',q:lg.q||''}}})});
+    delete FN[base];FNQ[base]=null}
+  var o=FN[key]||lg||{},c={f:o.f||'',e:o.e||'',k:o.k||'',s:o.s||'',q:o.q||'',by:nm,t:new Date().toISOString()};c[fld]=val;
   if(fld==='s'&&val!=='partial')c.q='';
   if(fld==='q'){var qn=Math.max(0,Math.floor(+val||0));c.q=qn?String(qn):''}
   if(!c.f&&!c.e&&!c.k&&!c.s){delete FN[key];FNQ[key]=null}else{FN[key]=c;FNQ[key]={f:c.f,e:c.e,k:c.k,s:c.s,q:c.q}}
