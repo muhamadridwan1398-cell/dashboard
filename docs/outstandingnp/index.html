@@ -1000,7 +1000,8 @@ function stkLoad(d){
 }
 var STKL={READY:'READY',PARTIAL:'PARTIAL',KOSONG:'KOSONG'};
 function stkStat(q,need){return q<=0?'KOSONG':(q>=need?'READY':'PARTIAL')}
-function stkFis(r){return false}
+function stkFis(r){return !!r.cons}
+function docArr(r){var a=0,bad=0;(r.pos||[]).map(function(p){return {q:p.ord,rv:p.rec,st:p.st||''}}).concat((r.trs||[]).map(function(t){return {q:t.trq,rv:t.tiq,st:t.st||''}})).forEach(function(z){var c=kbLine(z);if(c==='ok')a++;else if(c==='no'||c==='pt')bad++});return a>0&&!bad}
 function mbOf(r){return STK.mb[stkKey(r.ino)]||''}
 function stkOf(r){
   if(!STK.hasSys&&!STK.hasWh)return {sys:null,wh:null,st:'',chk:'',ref:''};
@@ -1008,6 +1009,7 @@ function stkOf(r){
   var sg0=segOf(r);if(sg0==='vs'||sg0==='vd')return {sys:sys,wh:wh,st:'',chk:'',ref:sg0};
   var fis=stkFis(r)&&STK.hasWh,ref=fis?'wh':(STK.hasSys?'sys':'wh');
   var st=ref==='wh'?stkStat(wh,need):stkStat(sys,need),chk='';
+  if((ref==='wh'?wh:sys)<=0&&docArr(r))st='READY';
   if(STK.hasSys&&STK.hasWh){var other=ref==='wh'?stkStat(sys,need):stkStat(wh,need);chk=other===st?'Sesuai':(ref==='wh'?'NAV ':'WMS ')+other.toLowerCase()}
   return {sys:sys,wh:wh,st:st,chk:chk,ref:ref};
 }
@@ -1217,7 +1219,7 @@ function kbOf(x){
   return kbStk(x);
 }
 var KBL={ok:'SUDAH DATANG',pt:'PARTIAL',no:'BELUM DATANG'};
-function kbBadges(x){if(!x.d){var k0=kbOf(x);return k0?'<span class="kb kb-'+k0+'" title="Item Consi: berdasarkan Stock NAV">'+KBL[k0]+'</span>':'–'}return x.d?x.d.ds.map(function(z){var c=kbLine(z);return c?'<span class="kb kb-'+c+'">'+(c==='x'?'BATAL':KBL[c])+'</span>':'–'}).join('<br>'):'–'}
+function kbBadges(x){if(!x.d){var k0=kbOf(x);return k0?'<span class="kb kb-'+k0+'" title="Item Consi: berdasarkan Stock WMS">'+KBL[k0]+'</span>':'–'}return x.d?x.d.ds.map(function(z){var c=kbLine(z);return c?'<span class="kb kb-'+c+'">'+(c==='x'?'BATAL':KBL[c])+'</span>':'–'}).join('<br>'):'–'}
 var FNUM={age:-1,od:1,pd:1,hk:1,stS:1,stF:1,dq:1,dr:1,o:1};var FSEL={mon:1};FUC.forEach(function(c){FSEL[c[0]]=1});
 function mlc(a){return a.map(function(t){return t===''?'–':esc(t)}).join('<br>')}
 function kbLine(z){if(deadDoc(z.st))return 'x';var q=+z.q;if(!(q>0))return '';var rv=+z.rv||0;return rv>=q?'ok':(rv<=0?'no':'pt')}
