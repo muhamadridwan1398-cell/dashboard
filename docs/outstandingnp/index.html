@@ -1007,7 +1007,7 @@ function hkSel(r){return r.odD==null||r.pdD==null?null:hkBetween(r.odD,r.pdD)}
 function umurOf(r){return r.pdD==null?null:Math.floor(Date.now()/864e5+7/24)-r.pdD}
 var FN={},FNQ={},FNS='',fnT=null,FNURL='https://igkdetuufvcczmiluvqd.supabase.co/functions/v1/shared-data?name=fu';
 function fnKey(r,no){return r.np+'|'+r.ino+(no?'|'+no:'')}
-function fnGet(r,no){return FN[fnKey(r,no)]||null}
+function fnGet(r,no){return FN[fnKey(r,no)]||FN[fnKey(r)]||null}
 function todayIso(){return new Date(Date.now()+7*36e5).toISOString().slice(0,10)}
 function isoDisp(v){var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(v||'');return m?(+m[3])+' '+MON[+m[2]-1]+' '+m[1].slice(2):''}
 function fnTxt(r,k,no){var n=fnGet(r,no);if(k==='ket')return n&&n.s?({ready:'Ready',partial:'Partial'+(n.q?' '+n.q:''),kosong:'Kosong'}[n.s]||''):'';return k==='fup'?(n&&n.f?'Sudah · '+isoDisp(n.f):'Belum'):(n&&n.e?isoDisp(n.e):'')}
