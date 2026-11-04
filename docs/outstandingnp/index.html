@@ -291,8 +291,8 @@ button.msbtop i{font-style:normal;color:#6b7a93}
 .fu th:nth-child(18),.fu td:nth-child(18){min-width:92px;max-width:92px}
 .fu th:nth-child(19),.fu td:nth-child(19){min-width:150px;max-width:150px}
 .fu th:nth-child(20),.fu td:nth-child(20){min-width:150px;max-width:150px}
-.fu th:nth-child(21),.fu td:nth-child(21),.fu th:nth-child(22),.fu td:nth-child(22){min-width:140px;max-width:140px;overflow:visible}
-.fu th:nth-child(23),.fu td:nth-child(23){min-width:176px;max-width:176px;overflow:visible}
+.fu th:nth-child(21),.fu td:nth-child(21),.fu th:nth-child(23),.fu td:nth-child(23){min-width:140px;max-width:140px;overflow:visible}
+.fu th:nth-child(22),.fu td:nth-child(22){min-width:176px;max-width:176px;overflow:visible}
 .fu th:nth-child(24),.fu td:nth-child(24){min-width:84px;max-width:84px}
 @media(max-width:700px){.fuf .msbtop{flex:1 1 calc(50% - 8px);min-width:0}.fusum{width:100%;justify-content:flex-start;flex-wrap:wrap;margin-left:0}.fusum .num{flex:1 1 100%}}
 /* Detail Delivery */
@@ -1020,7 +1020,7 @@ function fnLine(r,z,i){
 }
 function fnCells(x){
   var r=x.r,ds=x.d?x.d.ds:[null],ls=ds.map(function(z,i){return fnLine(r,z,i)});
-  return '<td class="fnc">'+ls.map(function(l){return l.f}).join('')+'</td><td class="fnc">'+ls.map(function(l){return l.e}).join('')+'</td><td class="fnc">'+ls.map(function(l){return l.k}).join('')+'</td>';
+  return '<td class="fnc">'+ls.map(function(l){return l.f}).join('')+'</td><td class="fnc">'+ls.map(function(l){return l.k}).join('')+'</td><td class="fnc">'+ls.map(function(l){return l.e}).join('')+'</td>';
 }
 function fnName(){
   var n='';try{n=localStorage.getItem('qbig_fu_name')||''}catch(e){}
@@ -1055,7 +1055,7 @@ document.addEventListener('visibilitychange',function(){if(!document.hidden)fnLo
 setInterval(function(){if(!document.hidden)fnLoad()},90000);
 function FUCM_L(k){if(k==='mon')return 'Bulan PDD';for(var i=0;i<FUC.length;i++)if(FUC[i][0]===k)return FUC[i][1];return k}
 function umurTxt(u){return u==null?'':(u===0?'Hari ini':(u===-1?'Besok':(u<0?(-u)+' hari lagi':u+' hari')))}
-var FUC=[['ca','Category Name'],['age','Umur',1],['od','Order Date'],['pd','PDD'],['hk','Leadtime',1],['sp','Sales Person Name'],['np','NPno'],['cu','Cust Name'],['ty','NPType'],['ino','Item No'],['inm','Item Name'],['mb','Master Brand'],['jn','Jenis'],['um','UOM'],['vn','Vendor'],['dv','No PO/TR'],['dq','Qty PO/TR',1],['dr','Rcv Qty PO/TR',1],['ds','Status PO&TR'],['kb','Keterangan Barang'],['fup','Follow up'],['eta','Est. datang'],['ket','Stok supplier'],['o','OTS Qty',1],['stS','Stock NAV',1],['stF','Stock WMS',1],['stat','Status Stok'],['chk','Cek Silang']];
+var FUC=[['ca','Category Name'],['age','Umur',1],['od','Order Date'],['pd','PDD'],['hk','Leadtime',1],['sp','Sales Person Name'],['np','NPno'],['cu','Cust Name'],['ty','NPType'],['ino','Item No'],['inm','Item Name'],['mb','Master Brand'],['jn','Jenis'],['um','UOM'],['vn','Vendor'],['dv','No PO/TR'],['dq','Qty PO/TR',1],['dr','Rcv Qty PO/TR',1],['ds','Status PO&TR'],['kb','Keterangan Barang'],['fup','Follow up'],['ket','Stok supplier'],['eta','Est. datang'],['o','OTS Qty',1],['stS','Stock NAV',1],['stF','Stock WMS',1],['stat','Status Stok'],['chk','Cek Silang']];
 function fuFilter(rows,skip){
   var f=S.fu,mon=S.mon.fu||'';
   return rows.filter(function(r){
