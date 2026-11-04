@@ -1041,13 +1041,15 @@ function fnSet(key,fld,val){
   if(!c.f&&!c.e&&!c.k&&!c.s){delete FN[key];FNQ[key]=null}else{FN[key]=c;FNQ[key]={f:c.f,e:c.e,k:c.k,s:c.s,q:c.q}}
   render();clearTimeout(fnT);fnT=setTimeout(fnPut,500);
 }
+var fnBusy=false;
 function fnPut(){
-  var q=FNQ;if(!Object.keys(q).length)return;FNQ={};
+  if(fnBusy){clearTimeout(fnT);fnT=setTimeout(fnPut,300);return}
+  var q=FNQ;if(!Object.keys(q).length)return;FNQ={};fnBusy=true;
   if(typeof CompressionStream==='undefined'){fnMsg('Browser ini belum mendukung simpan online. Pakai Chrome atau Edge terbaru.',true);return}
   var st=new Blob([JSON.stringify({notes:q})]).stream().pipeThrough(new CompressionStream('gzip'));
   new Response(st).arrayBuffer().then(function(b){return fetch(FNURL,{method:'PUT',headers:{'Content-Type':'application/gzip','X-Fu-Name':encodeURIComponent(fnName())},body:b})})
-  .then(function(r){return r.json().catch(function(){return {}}).then(function(j){if(!r.ok)throw new Error(j.error||('Simpan gagal ('+r.status+').'));fnMsg('Follow up tersimpan untuk semua pengguna.')})})
-  .catch(function(e){fnMsg((e&&e.message)||'Follow up gagal disimpan.',true);FNQ={};FNS='';fnLoad()});
+  .then(function(r){return r.json().catch(function(){return {}}).then(function(j){if(!r.ok)throw new Error(j.error||('Simpan gagal ('+r.status+').'));fnBusy=false;fnMsg('Follow up tersimpan untuk semua pengguna.')})})
+  .catch(function(e){fnBusy=false;fnMsg((e&&e.message)||'Follow up gagal disimpan.',true);FNQ={};FNS='';fnLoad()});
 }
 function fnLoad(){
   if(location.protocol==='file:'||Object.keys(FNQ).length)return;
