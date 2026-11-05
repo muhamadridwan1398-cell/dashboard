@@ -53,6 +53,7 @@ h1 { margin: 2px 0 0; font-family: var(--f-num); font-weight: 400; font-size: cl
 .gate-card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 28px; width: min(100%, 420px); box-shadow: var(--shadow); }
 .gate-row { display: flex; gap: 8px; }
 .gate-row input { flex: 1; min-width: 0; padding: 9px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); font-size: 15px; }
+.lockbar, #reset-key, .hkey, #btn-logout { display: none !important; }
 .gate-err { color: var(--ots); font-weight: 600; font-size: 13px; margin: 10px 0 0; }
 body { margin: 0; }
 .fsep { width: 1px; align-self: stretch; background: var(--line); margin: 0 4px; }
@@ -229,8 +230,8 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
   <div class="gate-card">
     <p class="eyebrow">Report Delivery Service Level</p>
     <h1 style="font-size:28px">Mitra10 Percetakan Negara</h1>
-    <p class="sub" style="margin:6px 0 16px">Masukkan kode akses untuk membuka dashboard.</p>
-    <div class="gate-row">
+    <p class="sub" style="margin:6px 0 16px">Dashboard belum bisa dibuka.</p>
+    <div class="gate-row" hidden>
       <input id="gate-code" type="password" placeholder="Kode akses" aria-label="Kode akses" autocomplete="current-password">
       <button class="btn primary" id="gate-go" type="button">Masuk</button>
     </div>
@@ -310,7 +311,7 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
           <li>Persentase kuning dengan tanda ▼ berarti lebih rendah dari DSL keseluruhan periode itu.</li>
           <li>Filter Dari–Sampai memakai tanggal janji kirim dan berlaku untuk semua tab.</li>
           <li><b>DSL Customer</b> = (NP On time + Early + RC dan AMSEN) ÷ total NP. RC dan AMSEN adalah NP Late/Outstanding yang Reason-nya “Reschedule Customer (RC)” atau “Amsen”.</li>
-          <li>Reason bisa diedit di tab NP Late &amp; Outstanding setelah memasukkan kata kunci. Reason hasil edit diberi tanda “diubah” dan langsung dipakai di semua perhitungan.</li>
+          <li>Reason dan Master Brand bisa langsung diedit di tab NP Late &amp; Outstanding (klik Edit / Isi). Reason hasil edit diberi tanda “diubah” dan langsung dipakai di semua perhitungan.</li>
           <li>Filter Comment memilih NP yang kolom Comment-nya mengandung kata “kirim” atau “amsen” (huruf besar/kecil sama saja). NP yang comment-nya tidak mengandung keduanya hanya muncul di Semua.</li>
         </ul>
       </details>
@@ -427,7 +428,7 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
     </section>
 
     <section class="card">
-      <div><h2>Riwayat upload</h2><p class="note">Data yang dipakai dashboard. Menghapus satu upload (perlu kode edit) akan mengeluarkan barisnya dari perhitungan; Reason dan Master Brand yang sudah diedit tetap tersimpan.</p></div>
+      <div><h2>Riwayat upload</h2><p class="note">Data yang dipakai dashboard. Menghapus satu upload akan mengeluarkan barisnya dari perhitungan; Reason dan Master Brand yang sudah diedit tetap tersimpan.</p></div>
       <div class="tablewrap">
         <table>
           <thead><tr><th>File</th><th>Diupload</th><th>Sumber</th><th>Baris</th><th>Periode janji kirim</th><th></th></tr></thead>
@@ -440,7 +441,7 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
       <div><h2>Hapus All Data</h2><p class="note">Mereset dashboard: menghapus <b>semua file upload, semua baris data, semua Reason yang diedit, dan semua Master Brand</b>. Tindakan ini permanen dan tidak bisa dibatalkan. Sebaiknya download dulu data di tab All Data Pengiriman.</p></div>
       <div class="lockrow" id="reset-step1">
         <input id="reset-key" type="password" placeholder="Kode edit" aria-label="Kode edit untuk hapus semua data" autocomplete="off">
-        <button class="btn danger" id="reset-go" type="button">Hapus All Data</button>
+        <button class="btn danger" id="reset-go" type="button">Hapus All Data…</button>
         <span id="reset-err" class="lock-err" hidden>Kode edit salah.</span>
       </div>
       <div class="lockrow" id="reset-step2" hidden>
@@ -1507,13 +1508,8 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
     }
     return body;
   };
-  const checkEdit = async (code) => {
-    const c = String(code || '').trim();
-    let ok = false;
-    try { ok = (await rpc('dsl_check_code', {p_code: c, p_kind: 'edit'})) === true; } catch (e) {}
-    if (ok) S.editCode = c;
-    return ok;
-  };
+  const OPEN = 'open';
+  const checkEdit = async () => { S.editCode = OPEN; return true; };
   const toPage = (x) => {
     const r = {np: x.np_no, pd: x.promised_date, od: x.order_date, pod: x.posting_date, cd: x.close_date, status: x.status, sn: x.store_no, store: x.store_name, rm: x.rm, dn: x.dn_no, type: x.type_np,
       cust: x.cust_name, phone: x.phone, ic: x.item_code, item: x.item_name, uom: x.uom, qty: x.qty == null ? undefined : Number(x.qty), spc: x.sales_code, sales: x.sales_name,
@@ -1542,7 +1538,7 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
         listeners.brands.forEach((f) => f(snap((m.brands || []).map((x) => [String(x.np_no + '_' + x.promised_date).replace(/[^A-Za-z0-9_\-.~:@+]/g, '-'), {np: x.np_no, pd: x.promised_date, brand: x.brand}]))));
         listeners.uploads.forEach((f) => f(snap(ups.map((u) => [u.id, u]))));
       } catch (e) {
-        if (e.code === 'invalid_argument') { showGate('Kode akses sudah tidak berlaku. Masukkan kode akses yang baru.'); }
+        if (e.code === 'invalid_argument') { showGate('Database belum diperbarui. Jalankan file DSL_Supabase_Tanpa_Kode.sql di Supabase SQL Editor, lalu muat ulang halaman.'); }
         else if (!S.loaded) { $('#data-info').textContent = 'Data gagal dimuat: ' + e.message; }
       } finally { refreshing = null; }
     })();
@@ -1603,7 +1599,7 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
     let ok = false, netErr = false;
     try { ok = (await rpc('dsl_check_code', {p_code: c, p_kind: 'view'})) === true; } catch (e) { netErr = true; }
     btn.disabled = false; btn.textContent = 'Masuk';
-    if (!ok) { if (!silent) showGate(netErr ? 'Tidak bisa terhubung ke server. Periksa koneksi internet lalu coba lagi.' : 'Kode akses salah.'); else showGate(); return false; }
+    if (!ok) { showGate(netErr ? 'Tidak bisa terhubung ke server. Periksa koneksi internet lalu muat ulang halaman.' : 'Database belum diperbarui. Jalankan file DSL_Supabase_Tanpa_Kode.sql di Supabase SQL Editor, lalu muat ulang halaman.'); return false; }
     S.viewCode = c;
     try { localStorage.setItem(VIEW_KEY, c); } catch (e) {}
     $('#gate').hidden = true; $('#app').hidden = false;
@@ -1618,8 +1614,8 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
 
   /* ===== connect ===== */
   renderAll();
-  let saved = ''; try { saved = localStorage.getItem(VIEW_KEY) || ''; } catch (e) {}
-  if (saved) enter(saved, true); else showGate();
+  S.editCode = OPEN; S.unlocked = true;
+  enter(OPEN, false);
   function connect() { (async () => {
     db = supaDb; downloads = fileSaver; canWrite = true; canDelete = true;
     /* Only the small 'uploads' list is live. Each file's rows never change after upload,
