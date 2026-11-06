@@ -508,6 +508,32 @@ th,.dscroll th,.fu th,.ct th,.dtb>table>thead>tr>th,.pgt thead th{font-family:va
 .fu tbody td br{display:block;content:"";margin-top:4px}
 .fuhint{white-space:normal}
 .futool{border-radius:12px}
+
+.fsw{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:10px;margin:10px 0 12px}
+.fsw .fsk{margin:0;padding:10px 14px;background:#fff;border:1px solid #cfd8e6;border-radius:10px;align-items:center;box-shadow:0 1px 2px rgba(15,35,70,.04)}
+.fsw .fsk .t{width:auto;flex:0 0 auto;padding-right:10px;margin-right:2px;border-right:1px solid #d8e0ec;line-height:28px}
+.fsw .fsk .b{border:1px solid #d8e0ec}.fsw .fsk .b.ok{border-color:#b7dfc6}.fsw .fsk .b.no{border-color:#f0bcbc}.fsw .fsk .b.pt{border-color:#efd9a0}
+@media(max-width:640px){
+ .fsw{grid-template-columns:1fr;gap:8px}
+ .fsw .fsk{gap:6px;padding:10px 12px}.fsw .fsk .t{flex:1 1 100%;border:0;padding:0;line-height:1.2;margin:0 0 2px}
+ .futool{padding:10px;gap:10px}
+ .fuf{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;width:100%}
+ .fuf .fuvr{display:none}
+ .fuf>.fupdd{display:contents}
+ .fuf>.fupdd.sgd{display:none}
+ .fuf .pdb{padding:8px 4px;text-align:center;font-size:12.5px;min-width:0}
+ .fuf .pdb[data-hd="0"]{grid-column:1/-1}
+ .fuf .pdb[data-ak]{grid-column:span 2}
+ .fuf .sgm{grid-column:1/-1;display:block}.fuf .sgm .msb{width:100%;justify-content:space-between}
+ .fuf .addf,.fuf>.msbtop{grid-column:span 2;width:100%;justify-content:center}
+ .fuf>.fhm{grid-column:span 2}.fuf>.fhm>summary{display:flex;align-items:center;justify-content:center;width:100%;box-sizing:border-box;min-height:38px;white-space:nowrap;padding:8px 4px;font-size:12.5px}
+ .fuf .addf{min-height:38px}
+ .fusum{display:grid;grid-template-columns:1fr 1fr;gap:6px;width:100%;margin:0;white-space:normal}
+ .fusum .num{grid-column:1/-1;padding-top:8px;border-top:1px solid #d8e0ec}
+ .fusum .btn{width:100%;justify-content:center;padding:9px 6px;font-size:12.5px}
+ .fusum .wabtn{grid-column:1/-1}
+ .fusum .ghost{grid-column:1/-1}
+}
 .fusum .num{font-weight:800}
 </style>
 
@@ -1392,7 +1418,7 @@ function followup(rows){
   var lim=S.shown.fu||100,vis=act?L.slice(0,lim):[];
   var chip=function(key,val,lab,skip,rs){return '<button type="button" data-fk="'+key+'" data-fv="'+val+'" aria-pressed="'+(val===''?f[key].length===0:f[key].indexOf(val)>-1)+'">'+lab+' <span class="num lbl">'+fmt(fuFilter(rows,skip).filter(rs).length)+'</span></button>'};
   var all=function(){return true};
-  var h='<section class="panel"><div class="mph"><div><h2>Followup Terjual</h2><p class="sub" style="margin:2px 0 0">Satu baris per item per PO/TR. Item yang belum punya PO/TR tetap tampil. Setiap filter bisa dipilih lebih dari satu.</p></div></div>';
+  var h='<section class="panel"><div class="mph"><div><h2>Followup Terjual</h2></div></div>';
   var FQ=[
     ['seg','Tipe NP',NPTY.map(function(t){return [t[0],t[1],function(r){return npTy(r)===t[0]}]})],
     ['jns','Jenis item',[['retail','Retail',function(r){return !r.cons}],['consi','Consi',function(r){return r.cons}]]],
@@ -1503,8 +1529,8 @@ function fuSum(){
   if(!n)return '';
   var ms=Object.keys(M),s1=0,p1=0,b1=0;
   ms.forEach(function(k){var o=M[k];if(o.a&&o.b)p1++;else if(o.a)s1++;else b1++});
-  return '<div class="fsk"><span class="t">PO/TR</span><span class="b ok">Sudah di-follow up <b>'+fmt(f)+'</b></span><span class="b no">Belum <b>'+fmt(n-f)+'</b></span><span class="b" title="Setiap PO/TR dihitung satu. Item yang belum punya PO/TR dihitung satu per item.">dari '+fmt(n)+' PO/TR / item</span></div>'+
-    '<div class="fsk"><span class="t">MS</span><span class="b ok" title="Semua PO/TR di MS ini sudah di-follow up">Sudah <b>'+fmt(s1)+'</b></span><span class="b pt" title="Dalam satu MS ada PO/TR yang sudah dan yang belum di-follow up">Partial <b>'+fmt(p1)+'</b></span><span class="b no" title="Belum ada PO/TR di MS ini yang di-follow up">Belum <b>'+fmt(b1)+'</b></span><span class="b">dari '+fmt(ms.length)+' MS</span></div>';
+  return '<div class="fsw"><div class="fsk"><span class="t">PO/TR</span><span class="b ok">Sudah di-follow up <b>'+fmt(f)+'</b></span><span class="b no">Belum <b>'+fmt(n-f)+'</b></span><span class="b" title="Setiap PO/TR dihitung satu. Item yang belum punya PO/TR dihitung satu per item.">dari '+fmt(n)+' PO/TR / item</span></div>'+
+    '<div class="fsk"><span class="t">MS</span><span class="b ok" title="Semua PO/TR di MS ini sudah di-follow up">Sudah <b>'+fmt(s1)+'</b></span><span class="b pt" title="Dalam satu MS ada PO/TR yang sudah dan yang belum di-follow up">Partial <b>'+fmt(p1)+'</b></span><span class="b no" title="Belum ada PO/TR di MS ini yang di-follow up">Belum <b>'+fmt(b1)+'</b></span><span class="b">dari '+fmt(ms.length)+' MS</span></div></div>';
 }
 function dnStk(g){
   if(!STK.hasSys&&!STK.hasWh)return '';
