@@ -1449,7 +1449,7 @@ function followup(rows){
   var sg='<span class="sgm">'+fqBtn(FQ[0])+'</span><div class="fupdd sgd" role="group" aria-label="Filter Tipe NP">'+FQ[0][2].map(function(o){return '<button type="button" class="pdb'+(f.seg.indexOf(o[0])>-1?' on':'')+'" data-fk="seg" data-fv="'+o[0]+'" title="Tipe NP: '+esc(o[1])+'">'+esc(o[1])+' <span class="num">'+fmt(fqCount(FQ[0],o))+'</span></button>'}).join('')+'</div>';
   var chips=FQ.filter(function(q){return q[0]!=='seg'&&(f[q[0]].length||S.fopen==='q:'+q[0])}).map(fqBtn).join('')+(((S.fcol.mon||[]).length||S.fopen==='mon')?monthMulti():'');
   var addBtn='<button type="button" class="msb msbtop addf" data-ms="q:add" aria-haspopup="true" aria-expanded="'+(S.fopen==='q:add')+'"><span>+ Filter</span></button>';
-  h+='<div class="futool"><div class="fuf">'+pdd+'<span class="fuvr"></span>'+ak+'<span class="fuvr"></span>'+sg+'<span class="fuvr"></span>'+chips+addBtn+fhMenu('fu')+'</div><div class="fusum"><span class="num">'+fmt(itemsN)+' item · '+fmt(L.length)+' baris</span><button class="btn" type="button" data-fxl="1" title="Unduh seluruh hasil filter ke Excel">Unduh Excel</button><button class="btn" type="button" data-fxl="2" title="Unduh Excel dengan satu baris per PO/TR (tidak digabung)">Excel pisah PO/TR</button><button class="btn wabtn" type="button" data-wadlg="1" title="WhatsApp ke PIC supplier, rekap item sesuai filter">'+WAI+' WhatsApp Vendor</button>'+((anyF||S.fall)?'<button class="btn ghost" type="button" data-fclear="1">Reset filter</button>':'')+'</div></div>';
+  h+='<div class="futool"><div class="fuf">'+pdd+'<span class="fuvr"></span>'+ak+'<span class="fuvr"></span>'+sg+'<span class="fuvr"></span>'+chips+addBtn+fhMenu('fu')+'</div><div class="fusum"><span class="num">'+fmt(itemsN)+' item · '+fmt(L.length)+' baris</span><button class="btn" type="button" data-fxl="1" title="Unduh seluruh hasil filter ke Excel">Unduh Excel</button><button class="btn" type="button" data-fxl="2" title="Unduh Excel dengan satu baris per PO/TR (tidak digabung)">Excel pisah PO/TR</button>'+(fuAdm()?'<button class="btn" type="button" data-fxl="3" title="Khusus admin: satu baris per lokasi WMS, untuk pivot">Excel per lokasi (admin)</button>':'')+'<button class="btn wabtn" type="button" data-wadlg="1" title="WhatsApp ke PIC supplier, rekap item sesuai filter">'+WAI+' WhatsApp Vendor</button>'+((anyF||S.fall)?'<button class="btn ghost" type="button" data-fclear="1">Reset filter</button>':'')+'</div></div>';
   h+=stkNote();
   h+='<div class="dscroll fu" data-sec="fu"><table><thead><tr>'+FUC.map(function(c){var cv=S.fcol[c[0]]||(FSEL[c[0]]?[]:''),ctl;
     if(FSEL[c[0]]){var nsel=cv.length;ctl='<button type="button" class="msb'+(nsel?' on':'')+'" data-ms="'+c[0]+'" aria-haspopup="true" aria-expanded="'+(S.fopen===c[0])+'" aria-label="Filter '+c[1]+'"><span>'+(nsel===0?'Semua':(nsel===1?(cv[0]==='__blank__'?'(kosong)':esc(cv[0])):nsel+' dipilih'))+'</span><i>▾</i></button>'}
@@ -1720,7 +1720,8 @@ function fuFilterDesc(){
   Object.keys(S.fcol).forEach(function(c){var v=S.fcol[c];if(!hasF(v))return;out.push(FUCM_L(c)+': '+(Array.isArray(v)?v.map(function(z){return z==='__blank__'?'(kosong)':z}).join(', '):v))});
   return out;
 }
-function exportFollowup(split){
+function fuAdm(){try{return sbOk()||!!JSON.parse(localStorage.getItem(SB_LS)||'null')}catch(e){return false}}
+function exportFollowup(split,perLok){
   var msg=$('#msg');
   if(typeof XLSX==='undefined'){msg.className='err';msg.textContent='Pembaca Excel belum termuat. Periksa koneksi internet lalu muat ulang halaman.';return}
   var L=S.fuL||[];
@@ -1741,35 +1742,28 @@ function exportFollowup(split){
         if(k==='fup'||k==='eta'||k==='ket'||k==='cek')return fnTxt(x.r,k,z.no,z,x);
         return fuRaw(x,k)}))});
   });
-  /* Lokasi WMS: tiap lokasi di selnya sendiri (Lokasi n + Qty n), tidak digabung jadi satu teks */
-  var wi0=FUC.map(function(c){return c[0]}).indexOf('wl'),NS=0,wlL=[];
-  L.forEach(function(x,xi){var a=wlOf(x.r);if(a.length>NS)NS=a.length});
-  NS=Math.min(NS,5);
-  var extra=NS>0&&L.some(function(x){return wlOf(x.r).length>NS});
-  var wh=[],wcw=[];for(var si=1;si<=NS;si++){wh.push('Lokasi WMS '+si,'Qty lokasi '+si);wcw.push(16,10)}
-  if(extra){wh.push('Lokasi WMS lainnya');wcw.push(30)}
-  if(wi0>-1){
-    var xi2=0;
-    var fixRow=function(row,x){var a=wlOf(x.r),cells=[];for(var si=0;si<NS;si++){cells.push(a[si]?a[si][0]:'',a[si]?a[si][1]:'')}
-      if(extra)cells.push(a.slice(NS).map(function(t){return t[0]+' ('+fmt(t[1])+')'}).join('; '));
-      return row.slice(0,wi0).concat(cells,row.slice(wi0+1))};
-    var k2=0;
-    L.forEach(function(x){var n=(!split||!x.d||x.d.ds.length<2)?1:x.d.ds.length;for(var q=0;q<n;q++){rowsX[k2]=fixRow(rowsX[k2],x);k2++}});
-    head=head.slice(0,wi0).concat(wh,head.slice(wi0+1));
+  var wi0=FUC.map(function(c){return c[0]}).indexOf('wl');
+  if(perLok&&wi0>-1){/* khusus admin: satu baris per lokasi WMS (format panjang) agar mudah di-pivot */
+    var out=[],k2=0;
+    L.forEach(function(x){var n=(!split||!x.d||x.d.ds.length<2)?1:x.d.ds.length,a=wlOf(x.r);
+      for(var q=0;q<n;q++){var row=rowsX[k2++];
+        if(!a.length)out.push(row.slice(0,wi0).concat(['',''],row.slice(wi0+1)));
+        else a.forEach(function(t){out.push(row.slice(0,wi0).concat([t[0],t[1]],row.slice(wi0+1)))})}});
+    rowsX=out;head=head.slice(0,wi0).concat(['Lokasi WMS','Qty lokasi'],head.slice(wi0+1));
   }
   var aoa=[head].concat(rowsX);
   var ws=XLSX.utils.aoa_to_sheet(aoa);
   FUC.forEach(function(c,ci){if(c[0]!=='od'&&c[0]!=='pd')return;for(var ri=1;ri<aoa.length;ri++){var cell=ws[XLSX.utils.encode_cell({r:ri,c:ci})];if(cell&&cell.t==='n')cell.z='dd-mmm-yy'}});
   var W={ca:24,age:9,od:11,pd:11,hk:12,stS:12,stF:12,wl:30,stat:13,sp:24,np:20,cu:28,ty:34,ino:13,inm:42,mb:20,um:8,vn:30,dv:24,dq:10,dr:10,ds:16,kb:18,o:9};
   var cw=FUC.map(function(c){return W[c[0]]||14});
-  if(wi0>-1)cw=cw.slice(0,wi0).concat(wcw,cw.slice(wi0+1));
+  if(perLok&&wi0>-1)cw=cw.slice(0,wi0).concat([18,11],cw.slice(wi0+1));
   ws['!cols']=cw.map(function(w){return {wch:w}});
   ws['!autofilter']={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:aoa.length-1,c:head.length-1}})};
   var fd=fuFilterDesc();
-  var info=[['Followup Terjual'],['Toko',S.store||''],['Laporan ditarik',S.reportLabel],['Jumlah baris',rowsX.length],['Format',split?'Satu baris per PO/TR':'Satu baris per item (PO/TR digabung)'],['Jumlah item (NP + item)',new Set(L.map(function(x){return x.r.np+'|'+x.r.ino})).size],['Filter aktif',fd.length?fd[0]:'Tidak ada (semua data)']].concat(fd.slice(1).map(function(t){return ['',t]}));
+  var info=[['Followup Terjual'],['Toko',S.store||''],['Laporan ditarik',S.reportLabel],['Jumlah baris',rowsX.length],['Format',perLok?'Satu baris per lokasi WMS (untuk pivot). Stock NAV, Stock WMS, dan Qty OTS berulang di tiap lokasi: jumlahkan Qty lokasi, bukan kolom stok.':(split?'Satu baris per PO/TR':'Satu baris per item (PO/TR digabung)')],['Jumlah item (NP + item)',new Set(L.map(function(x){return x.r.np+'|'+x.r.ino})).size],['Filter aktif',fd.length?fd[0]:'Tidak ada (semua data)']].concat(fd.slice(1).map(function(t){return ['',t]}));
   var wi=XLSX.utils.aoa_to_sheet(info);wi['!cols']=[{wch:26},{wch:80}];
   var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Followup Terjual');XLSX.utils.book_append_sheet(wb,wi,'Info');
-  var name='Followup-Terjual'+(split?'-PisahPO':'')+'_'+new Date(S.reportDay*864e5).toISOString().slice(0,10)+'.xlsx';
+  var name='Followup-Terjual'+(perLok?'-PerLokasi':(split?'-PisahPO':''))+'_'+new Date(S.reportDay*864e5).toISOString().slice(0,10)+'.xlsx';
   try{XLSX.writeFile(wb,name,{compression:true});msg.className='';msg.textContent=name+': '+fmt(rowsX.length)+' baris diunduh.'}
   catch(err){msg.className='err';msg.textContent='Gagal membuat file Excel: '+err.message}
 }
@@ -1881,7 +1875,7 @@ document.addEventListener('click',function(e){var pb=e.target.closest&&e.target.
   if(t.dataset.wasend){waOpen(t.dataset.wasend,t.dataset.wav,t.dataset.wan);return}
   if(t.dataset.wacopy){waCopy(t.dataset.wav,t.dataset.wan,t);return}
   if(t.dataset.wax){var wd=document.getElementById('wadlg');if(wd)wd.remove();return}
-  if(t.dataset.fxl){exportFollowup(t.dataset.fxl==='2');return}
+  if(t.dataset.fxl){exportFollowup(t.dataset.fxl==='2',t.dataset.fxl==='3');return}
   if(t.dataset.dtx){exportDelivery();return}
   if(t.dataset.ak!==undefined){var av=t.dataset.ak,ai=S.fu.ak.indexOf(av);if(ai>-1)S.fu.ak.splice(ai,1);else S.fu.ak.push(av);S.shown.fu=100;S.fopen='';render();return}
   if(t.dataset.hd!==undefined){var hn=+t.dataset.hd;if(!hn){S.fu.hd=[];S.fall=true}else{var hi=S.fu.hd.indexOf(hn);if(hi>-1)S.fu.hd.splice(hi,1);else S.fu.hd.push(hn)}S.shown.fu=100;S.fopen='';render();return}
@@ -2268,7 +2262,8 @@ function sbPill(){let p=document.getElementById('sbpill');if(!p){if(!document.ge
   const logged=sbOk()||(()=>{try{return !!JSON.parse(localStorage.getItem(SB_LS)||'null')}catch(e){return false}})();
   const nm=String(_who||'').split('@')[0];
   p.innerHTML=logged?'<i></i><span>Editor'+(nm?' · '+nm.replace(/[<>&"]/g,''):'')+'</span><button type="button" data-a="out">Keluar</button>':'<button type="button" data-a="in">Login Editor</button>';
-  if(!logged)p.style.paddingLeft='6px'; else p.style.paddingLeft='11px'}
+  if(!logged)p.style.paddingLeft='6px'; else p.style.paddingLeft='11px';
+  try{if(S&&S.rows&&S.rows.length&&sbPill.last!==logged){sbPill.last=logged;render()}}catch(e){}}
 function sbAsk(cb){
   if(sbOk()){cb(_tok);return}
   sbRefresh().then(ok=>{if(ok){cb(_tok);return}sbDlg(cb)})
