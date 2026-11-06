@@ -1647,6 +1647,10 @@ function detailAll(rows){
   };
   var h='<section class="panel"><div class="mph"><div><h2>Detail Delivery</h2><p class="sub" style="margin:2px 0 0">Semua NP outstanding dalam satu daftar. Klik baris untuk melihat item, klik judul kolom untuk mengurutkan. Setiap filter bisa dipilih lebih dari satu.</p></div></div>';
   h+='<div class="mk"><span><b>'+fmt(st.n)+'</b> NP OTS</span>'+DTQ.filter(function(q){return per[q[0]]}).map(function(q){return '<span>'+DTL[q[0]]+' <b>'+fmt(per[q[0]].size)+'</b></span>'}).join('')+'<span>punya nomor WA <b>'+fmt(G.filter(function(g){return g.wph||(FN['NP:'+g.np]||{}).k}).length)+'</b> NP</span><span>qty <b>'+fmt(st.q)+'</b></span><span>lewat PDD <b>'+fmt(st.late)+'</b> NP</span><span>telat &gt;14 hari <b>'+fmt(st.l14)+'</b> NP</span></div>';
+  var fs0=0,ds0={siap:0,belum_fb:0,belum_siap:0,'':0};
+  G.forEach(function(g){var n=FN['NP:'+g.np]||{};if(n.f)fs0++;ds0[DST.some(function(x){return x[0]===n.d})?n.d:'']++});
+  h+='<div class="fsw dsw"><div class="fsk"><span class="t">Follow up customer</span><span class="b ok">Sudah di-follow up <b>'+fmt(fs0)+'</b></span><span class="b no">Belum <b>'+fmt(G.length-fs0)+'</b></span><span class="b">dari '+fmt(G.length)+' NP</span></div>'+
+    '<div class="fsk"><span class="t">Status kirim</span><span class="b ok">Siap kirim <b>'+fmt(ds0.siap)+'</b></span><span class="b pt">Belum ada feedback <b>'+fmt(ds0.belum_fb)+'</b></span><span class="b no">Belum siap kirim <b>'+fmt(ds0.belum_siap)+'</b></span><span class="b">Belum diisi <b>'+fmt(ds0[''])+'</b></span></div></div>';
   h+='<div class="dh"><h3>Detail no. NP</h3></div>';
   h+='<div class="futool"><div class="fuf">'+TQ.map(tqBtn).join('')+'</div><div class="fusum"><span class="num">'+fmt(G.length)+' NP</span>'+fhMenu('dt')+'<button class="btn" type="button" data-dtx="1" title="Unduh daftar NP sesuai filter dan urutan yang sedang tampil">Unduh Excel</button>'+(anyF?'<button class="btn ghost" type="button" data-dtclear="1">Reset filter</button>':'')+'</div></div>';
   S.dtX=G;
