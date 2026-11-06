@@ -361,6 +361,7 @@ body.shot .shotexit:hover,body.shot .shotexit:focus{opacity:1}
 .fu th:nth-child(25){background:#5b3fa0!important;color:#fff}.fu tbody td:nth-child(25){background:#f6f3fd!important}.fu tbody tr:nth-child(even) td:nth-child(25){background:#ece7f9!important}.fnq.cek{width:90px;margin-left:0;height:22px;font-size:12px;border-color:#b7a6e6}
 .pgset{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 12px}.pgset .sub.err{color:#b42318}
 .pgdates{display:flex;align-items:stretch;gap:12px;flex-wrap:wrap;margin:6px 0 10px}.pgdates>div{border:1px solid var(--line);border-radius:10px;padding:8px 14px;background:#fff;display:flex;flex-direction:column;gap:2px;min-width:200px}.pgdates span{font-size:11px;font-weight:800;letter-spacing:.06em;color:#64748b}.pgdates b{font-size:16px}.pgdates em{font-size:11px;color:var(--ink3);font-style:normal}.pgdb{border-left:4px solid #94a3b8!important}.pgda{border-left:4px solid #1f4aa8!important}.pgarr{align-self:center;font-size:20px;color:#64748b;border:0!important;background:none!important;padding:0!important;min-width:0!important}.pgth{display:block;font-size:10px;font-weight:500;letter-spacing:0;text-transform:none;opacity:.85;white-space:nowrap}
+.dnsq{font-size:11.5px;color:var(--muted);margin-top:3px;white-space:nowrap}.dnsq b{color:var(--ink);font-family:var(--mono)}
 .dnwa{display:inline-flex;align-items:center;gap:4px;border:1px solid #cbd5e1;background:#f1f5f9;color:#64748b;border-radius:999px;padding:3px 9px;font:inherit;font-size:12px;font-weight:600;cursor:pointer}.dnwa.on{background:#25d366;border-color:#1fb455;color:#fff}.dnwa:hover{filter:brightness(.95)}.dnwarn{color:#c2410c;margin-right:4px;cursor:help}.dnedit{border:0;background:none;color:#64748b;cursor:pointer;font-size:13px;padding:2px 4px}.dnsk{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:700;background:#eef1f5;color:#64748b}.dnsk.ok{background:#e1f6e9;color:#146c3a}.dnsk.no{background:#fde8e6;color:#a3231b}.fnc{white-space:nowrap}.fnl{height:18px;line-height:18px;display:flex;align-items:center}.fns{font:inherit;font-size:11px;height:17px;padding:0 2px;border:1px solid var(--line);border-radius:5px;background:#fff;color:var(--ink);width:78px}.fns.ready{background:#e8f7ee;border-color:#8fd0a8;color:#146c3a;font-weight:700}.fns.partial{background:#fff6e0;border-color:#e6c166;color:#8a5a00;font-weight:700}.fns.kosong{background:#fdecec;border-color:#e59a96;color:#a3231b;font-weight:700}.fns.dst{width:148px;height:24px;font-size:12px}.fns.dst.siap{background:#e8f7ee;border-color:#8fd0a8;color:#146c3a;font-weight:700}.fns.dst.belum_fb{background:#fff6e0;border-color:#e6c166;color:#8a5a00;font-weight:700}.fns.dst.belum_siap{background:#fdecec;border-color:#e59a96;color:#a3231b;font-weight:700}.fnq{font:inherit;font-size:11px;height:17px;width:56px;margin-left:4px;padding:0 4px;border:1px solid #e6c166;border-radius:5px;box-sizing:border-box}.fnt{font:inherit;font-size:11px;height:17px;width:100%;box-sizing:border-box;padding:0 5px;border:1px solid var(--line);border-radius:5px;background:#fff;color:var(--ink)}.fnt:focus{outline:2px solid #9ec5f4;outline-offset:0}.fnl .fnd{height:17px;padding:0 4px;font-size:11px;line-height:15px}.fnchk{display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;color:var(--ink3)}.fnchk.on{color:#15803d;font-weight:700}.fnchk input{accent-color:#16a34a;width:15px;height:15px;margin:0}.fnd{font:inherit;font-size:12px;padding:3px 5px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);width:118px}.fnd.late{border-color:#e0584f;background:#fff1f0;color:#b42318}.dsc a.dsl{color:#1f4aa8;text-decoration:none;font-weight:600}.dsc a.dsl:hover{text-decoration:underline}.dsc .n b{display:block;font-weight:700;color:var(--ink2,#334155);font-size:10px;letter-spacing:.04em;text-transform:uppercase;margin-bottom:1px}
 .datapanel{display:flex;flex-direction:column;gap:14px}
 .datapanel[hidden]{display:none}
@@ -1552,6 +1553,9 @@ function fuSum(){
 function dnStk(g){
   if(!STK.hasSys&&!STK.hasWh)return '';
   var rel=g.rows.map(function(r){return stkOf(r).st}).filter(function(x){return x!==''});
+  g.sa=null;g.sn=null;
+  if(rel.length){var sa=0,sn=0;g.rows.forEach(function(r){var z=stkOf(r);if(z.st==='')return;var need=Number(r.o)||0,have=z.ref==='wh'?z.wh:z.sys;
+    sn+=need;sa+=(z.st==='READY'&&(have==null||have<=0))?need:Math.min(Math.max(have||0,0),need)});g.sa=Math.round(sa*1000)/1000;g.sn=Math.round(sn*1000)/1000}
   if(!rel.length)return '–';
   return rel.every(function(x){return x==='READY'})?'Ready':'Tidak ready';
 }
@@ -1564,6 +1568,7 @@ function dnCells(g,W){
   var late=n.e&&n.e<todayIso();
   var dif=g.wp&&Object.keys(g.wp).length>1&&!n.k,wa=(dif?'<span class="dnwarn" title="Nomor customer berbeda antar item di NP ini: +'+Object.keys(g.wp).join(', +')+'. Dipakai: +'+g.wph+'">⚠</span>':'')+'<button type="button" class="dnwa'+(ph?' on':'')+'" data-wac="'+esc(g.np)+'" title="'+(ph?'WhatsApp customer +'+ph+': follow up pengiriman':'Nomor customer tidak ada di laporan, isi manual')+'">'+WAI+(ph?'':' <span>Isi</span>')+'</button>'+(ph?'<button type="button" class="dnedit" data-wae="'+esc(g.np)+'" title="Ubah nomor WA customer">✎</button>':'');
   var sk=stk==='Ready'?'<span class="dnsk ok">Ready</span>':(stk==='Tidak ready'?'<span class="dnsk no">Tidak ready</span>':'<span class="dnsk">'+(stk||'–')+'</span>');
+  if(g.sn!=null&&(stk==='Ready'||stk==='Tidak ready'))sk+='<div class="dnsq" title="Qty stok tersedia dibanding qty yang dibutuhkan NP ini">stok <b>'+fmt(g.sa)+'</b> / butuh <b>'+fmt(g.sn)+'</b></div>';
   return '<td class="c dnc"'+W('wa')+'>'+wa+'</td><td class="c dnc"'+W('stk')+'>'+sk+'</td>'+
     '<td class="c dnc dtg dtg1"'+W('fup')+'><label class="fnchk'+(n.f?' on':'')+'"'+(n.by?' title="Diisi oleh '+esc(n.by)+'"':'')+'><input type="checkbox" data-fn="f" data-fnk="'+key+'"'+(n.f?' checked':'')+' aria-label="Sudah di-follow up customer"><span>'+(n.f?'Sudah · '+isoDisp(n.f):'Belum')+'</span></label></td>'+
     '<td class="c dnc dtg"'+W('dst')+'><select class="fns dst '+(n.d||'')+'" data-fn="d" data-fnk="'+key+'" aria-label="Keterangan follow up"><option value="">–</option>'+DST.map(function(x){return '<option value="'+x[0]+'"'+(n.d===x[0]?' selected':'')+'>'+x[1]+'</option>'}).join('')+'</select></td>'+
@@ -1784,14 +1789,14 @@ function exportDelivery(){
   var G=S.dtX||[];
   if(!G.length){msg.className='err';msg.textContent='Tidak ada NP untuk diunduh.';return}
   var dt=function(day){return day==null?'':day+25569},iso=function(v){return v?dt(Math.round(Date.parse(v+'T00:00:00Z')/864e5)):''};
-  var head=['PDD','Telat (hari)','No. NP','Customer Name','Salesperson','Tipe NP','Category','Delivery','No. WA customer','Stok inventory','Status follow up','Tanggal follow up','Keterangan follow up','Estimasi pengiriman','Diisi oleh','Perlu perhatian','Jumlah item','Qty OTS'];
+  var head=['PDD','Telat (hari)','No. NP','Customer Name','Salesperson','Tipe NP','Category','Delivery','No. WA customer','Stok inventory','Qty stok tersedia','Status follow up','Tanggal follow up','Keterangan follow up','Estimasi pengiriman','Diisi oleh','Perlu perhatian','Jumlah item','Qty OTS'];
   var rowsX=G.map(function(g){
     var n=FN['NP:'+g.np]||{},ph=n.k||g.wph||'';
-    return [dt(g.pd),g.late==null?'':g.late,g.np,g.cu,g.sp,g.ty,g.ca||'',g.dv,ph?'+'+ph:'',g.stk||'',n.f?'Sudah':'Belum',iso(n.f),dnDst(g),iso(n.e),n.by||'',Object.keys(g.flags).join('; '),g.rows.length,g.qty]
+    return [dt(g.pd),g.late==null?'':g.late,g.np,g.cu,g.sp,g.ty,g.ca||'',g.dv,ph?'+'+ph:'',g.stk||'',g.sa==null?'':g.sa,n.f?'Sudah':'Belum',iso(n.f),dnDst(g),iso(n.e),n.by||'',Object.keys(g.flags).join('; '),g.rows.length,g.qty]
   });
   var aoa=[head].concat(rowsX),ws=XLSX.utils.aoa_to_sheet(aoa);
-  [0,11,13].forEach(function(ci){for(var ri=1;ri<aoa.length;ri++){var c=ws[XLSX.utils.encode_cell({r:ri,c:ci})];if(c&&c.t==='n')c.z='dd-mmm-yy'}});
-  ws['!cols']=[11,10,20,28,24,34,26,18,16,14,14,14,20,16,14,36,10,10].map(function(w){return {wch:w}});
+  [0,12,14].forEach(function(ci){for(var ri=1;ri<aoa.length;ri++){var c=ws[XLSX.utils.encode_cell({r:ri,c:ci})];if(c&&c.t==='n')c.z='dd-mmm-yy'}});
+  ws['!cols']=[11,10,20,28,24,34,26,18,16,14,12,14,14,20,16,14,36,10,10].map(function(w){return {wch:w}});
   ws['!autofilter']={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:aoa.length-1,c:head.length-1}})};
   var ih=['No. NP','Customer Name','Item No','Nama barang','Jenis','Qty OTS','UOM'],ix=[ih];
   G.forEach(function(g){g.rows.forEach(function(r){ix.push([g.np,g.cu,r.ino||'',r.inm||'',r.cons?'Consi':'Retail',r.o,r.um||''])})});
