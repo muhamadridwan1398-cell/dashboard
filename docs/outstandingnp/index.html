@@ -1330,7 +1330,7 @@ function fuText(x,k){
   if(k==='ds')return d&&d.st?d.st:'';
   if(k==='kb')return KBL[kbOf(x)]||'';
   if(k==='cm')return cmOf(r);
-  if(k==='fup'||k==='eta'||k==='ket'||k==='cek'){var fl=fuLn(x,k);return fl?fl.join('\n'):fnTxt(r,k,'',null,x)}
+  if(k==='fup'||k==='eta'||k==='ket'||k==='cek'){var fl=fuLn(x,k);if(fl&&k==='cek'&&!fl.some(Boolean))return '';return fl?fl.join('\n'):fnTxt(r,k,'',null,x)}
   if(k==='o')return fmt(r.o);
   return String(r[k]==null?'':r[k]);
 }
@@ -1661,7 +1661,7 @@ function fuRaw(x,k){
   if(k==='vn')return d?d.vn.split('\n').filter(Boolean).join('; '):'';
   if(k==='dq')return d?d.qa:'';
   if(k==='dr')return d?d.ra:'';
-  if(k==='fup'||k==='eta'||k==='ket'||k==='cek'){var rl=fuLn(x,k);return rl?rl.join('; '):fnTxt(r,k,'',null,x)}
+  if(k==='fup'||k==='eta'||k==='ket'||k==='cek'){var rl=fuLn(x,k);if(rl&&k==='cek'&&!rl.some(Boolean))return '';return rl?rl.join('; '):fnTxt(r,k,'',null,x)}
   if(k==='ds')return d&&d.st?d.st.split('\n').join('; '):'';
   if(k==='kb'){var kl=fuLn(x,'kb');return kl?kl.map(function(t){return t||'–'}).join('; '):(KBL[kbOf(x)]||'')}
   if(k==='o')return r.o;
