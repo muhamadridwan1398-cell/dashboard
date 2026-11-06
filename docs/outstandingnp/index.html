@@ -2245,18 +2245,20 @@ function shApply(sh,force){
   if(changed&&S.last)load.apply(null,S.last);
   return note;
 }
+function shBanner(on){try{var b=document.getElementById('shbanner');if(!on){if(b)b.remove();return}if(b)return;b=document.createElement('div');b.id='shbanner';b.setAttribute('role','alert');b.style.cssText='position:sticky;top:0;z-index:9999;background:#b42318;color:#fff;padding:10px 16px;font:600 14px/1.45 system-ui,sans-serif;display:flex;gap:12px;align-items:center;flex-wrap:wrap';b.innerHTML='<span style="flex:1;min-width:240px">\u26A0 Data terbaru tidak bisa dimuat dari server, jadi yang tampil bisa data LAMA. Penyebab umum: WiFi/jaringan kantor memblokir <u>igkdetuufvcczmiluvqd.supabase.co</u>, atau koneksi terputus. Coba ganti jaringan (mis. hotspot HP) atau minta IT membuka alamat itu.</span><button type="button" id="shbr" style="font:inherit;padding:6px 14px;border:0;border-radius:6px;background:#fff;color:#b42318;cursor:pointer">Coba lagi</button>';document.body.insertBefore(b,document.body.firstChild);document.getElementById('shbr').onclick=function(){location.reload()}}catch(x){}}
 function shLoad(force){
   if(location.protocol==='file:'){shMsg('Data online aktif setelah dashboard dibuka dari alamat websitenya.');return Promise.resolve()}
   shMsg('Memeriksa data terbaru…');
   return fetch(SHURL,{cache:'no-store'}).then(function(r){
-    if(r.status===404){shMsg('Belum ada data tersimpan.');return}
+    if(r.status===404){shBanner(0);shMsg('Belum ada data tersimpan.');return}
     if(!r.ok)throw new Error('Data tidak dapat dimuat ('+r.status+').');
     return r.json().then(function(sh){
       if(force){try{localStorage.removeItem(KEY);localStorage.removeItem(DKEY)}catch(x){}}
       var note=shApply(sh,!!force);
+      shBanner(0);
       shMsg('Data terakhir disimpan: '+shStamp(sh.savedAt)+'.'+(note.length?' Dimuat: '+note.join(', ')+'.':''));
     });
-  }).catch(function(e){shMsg((e&&e.message)||'Data online belum tersedia.',true)});
+  }).catch(function(e){shBanner(1);shMsg((e&&e.message)||'Data online belum tersedia.',true)});
 }
 function shSave(){
   if(location.protocol==='file:'){shMsg('Buka dashboard dari alamat websitenya agar data tersimpan untuk semua orang.',true);return}
