@@ -1107,26 +1107,32 @@ function hkSel(r){return r.odD==null||r.pdD==null?null:hkBetween(r.odD,r.pdD)}
 function umurOf(r){return r.pdD==null?null:Math.floor(Date.now()/864e5+7/24)-r.pdD}
 var FN={},FNQ={},FNS='',fnT=null,FNURL='https://igkdetuufvcczmiluvqd.supabase.co/functions/v1/shared-data?name=fu';
 function fnKey(r,no){return r.np+'|'+r.ino+(no?'|'+no:'')}
+function cekKey(r){return r.np+'|'+r.ino+'|#'}
+function cekVal(r,x){
+  var q=FN[cekKey(r)];if(q&&/^\d+$/.test(q.c||''))return q.c;
+  var ds=x&&x.d?x.d.ds:[];
+  for(var i=0;i<ds.length;i++){var n=FN[fnKey(r,ds[i].no)];if(n&&/^\d+$/.test(n.c||''))return n.c}
+  var b=FN[fnKey(r)];return b&&/^\d+$/.test(b.c||'')?b.c:'';
+}
 function fnGet(r,no){return FN[fnKey(r,no)]||FN[fnKey(r)]||null}
 function todayIso(){return new Date(Date.now()+7*36e5).toISOString().slice(0,10)}
 function isoDisp(v){var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(v||'');return m?(+m[3])+' '+MON[+m[2]-1]+' '+m[1].slice(2):''}
 function cekOn(x,z){var c=z?kbLine(z):(x&&!x.d?kbOf(x):'');return c==='no'||c==='pt'}
 function fuSkip(x,z){if(z){var c=kbLine(z);return c==='ok'||c==='x'||c===''}return !!x&&!x.d&&kbOf(x)===''}
-function fnTxt(r,k,no,z,x){var n=fnGet(r,no);if(k==='cek')return n&&/^\d+$/.test(n.c||'')?n.c:'';if(fuSkip(x,z))return '';if(k==='ket')return n&&n.s?({ready:'Ready',partial:'Partial'+(n.q?' '+n.q:''),kosong:'Kosong'}[n.s]||''):'';return k==='fup'?(n&&n.f?'Sudah · '+isoDisp(n.f):'Belum'):(n&&n.e?isoDisp(n.e):'')}
+function fnTxt(r,k,no,z,x){if(k==='cek')return cekVal(r,x);var n=fnGet(r,no);if(fuSkip(x,z))return '';if(k==='ket')return n&&n.s?({ready:'Ready',partial:'Partial'+(n.q?' '+n.q:''),kosong:'Kosong'}[n.s]||''):'';return k==='fup'?(n&&n.f?'Sudah · '+isoDisp(n.f):'Belum'):(n&&n.e?isoDisp(n.e):'')}
 function fnMsg(t,err){var m=document.getElementById('msg');if(!m)return;m.textContent=t;m.className=err?'err':''}
 function fnLine(r,z,i,x){
   var no=z?z.no:'',n=fnGet(r,no),key=esc(fnKey(r,no));
-  var cc='<div class="fnl"><input type="number" min="0" step="1" class="fnq cek" data-fn="c" data-fnk="'+key+'" value="'+esc(n&&/^\d+$/.test(n.c||'')?n.c:'')+'" placeholder="Qty" title="Qty fisik ready di toko" aria-label="Qty ready di toko '+esc(no)+'"></div>';
-  if(fuSkip(x,z)){var dn='<div class="fnl fnx" title="Belum ada status barang atau barang sudah datang: tidak perlu follow up">–</div>';return {f:dn,k:dn,e:dn,c:cc}}
+  if(fuSkip(x,z)){var dn='<div class="fnl fnx" title="Belum ada status barang atau barang sudah datang: tidak perlu follow up">–</div>';return {f:dn,k:dn,e:dn}}
   var late=n&&n.e&&n.e<todayIso()&&(!z||kbLine(z)!=='ok');
   return {f:'<div class="fnl"><label class="fnchk'+(n&&n.f?' on':'')+'"'+(n&&n.by?' title="Diisi oleh '+esc(n.by)+'"':'')+'><input type="checkbox" data-fn="f" data-fnk="'+key+'"'+(n&&n.f?' checked':'')+' aria-label="Sudah di-follow up '+esc(no)+'"><span>'+(n&&n.f?'Sudah · '+isoDisp(n.f):'Belum')+'</span></label></div>',
     k:'<div class="fnl"><select class="fns '+(n&&n.s||'')+'" data-fn="s" data-fnk="'+key+'" aria-label="Stok SPL/DC '+esc(no)+'"><option value="">–</option><option value="ready"'+(n&&n.s==='ready'?' selected':'')+'>Ready</option><option value="partial"'+(n&&n.s==='partial'?' selected':'')+'>Partial</option><option value="kosong"'+(n&&n.s==='kosong'?' selected':'')+'>Kosong</option></select>'+(n&&n.s==='partial'?'<input type="number" min="0" step="1" class="fnq" data-fn="q" data-fnk="'+key+'" value="'+esc(n.q||'')+'" placeholder="Qty" title="Qty yang ada di supplier" aria-label="Qty partial supplier '+esc(no)+'">':'')+'</div>',
-    c:cc,
     e:'<div class="fnl"><input type="date" class="fnd'+(late?' late':'')+'" data-fn="e" data-fnk="'+key+'" value="'+esc(n&&n.e||'')+'" aria-label="Estimasi datang '+esc(no)+'"'+(late?' title="Estimasi sudah lewat, barang belum datang"':'')+'></div>'};
 }
+var CEKSEEN={};
 function fnCells(x){
-  var r=x.r,ds=x.d?x.d.ds:[null],ls=ds.map(function(z,i){return fnLine(r,z,i,x)});
-  return '<td class="fnc">'+ls.map(function(l){return l.f}).join('')+'</td><td class="fnc">'+ls.map(function(l){return l.k}).join('')+'</td><td class="fnc">'+ls.map(function(l){return l.e}).join('')+'</td><td class="fnc fnck">'+ls.map(function(l){return l.c}).join('')+'</td>';
+  var r=x.r,seen=!!CEKSEEN[cekKey(x.r)];CEKSEEN[cekKey(x.r)]=1;var ds=x.d?x.d.ds:[null],ls=ds.map(function(z,i){return fnLine(r,z,i,x)});
+  return '<td class="fnc">'+ls.map(function(l){return l.f}).join('')+'</td><td class="fnc">'+ls.map(function(l){return l.k}).join('')+'</td><td class="fnc">'+ls.map(function(l){return l.e}).join('')+'</td><td class="fnc fnck">'+(seen?'<div class="fnl fnx" title="Qty fisik item ini diisi di baris pertama item">↑</div>':'<div class="fnl"><input type="number" min="0" step="1" class="fnq cek" data-fn="c" data-fnk="'+esc(cekKey(r))+'" value="'+esc(cekVal(r,x))+'" placeholder="Qty" title="Qty fisik ready di toko (satu angka untuk item ini)" aria-label="Qty ready di toko '+esc(r.np+' '+r.ino)+'"></div>')+'</td>';
 }
 function fnName(){
   var n='';try{n=localStorage.getItem('qbig_fu_name')||''}catch(e){}
@@ -1174,6 +1180,10 @@ function fnSet(key,fld,val){
   if(fld==='c'){c.c=(val===''||val==null)?'':String(Math.max(0,Math.floor(+val||0)))}
   if(fld==='q'){var qn=Math.max(0,Math.floor(+val||0));c.q=qn?String(qn):''}
   if(!c.f&&!c.e&&!c.k&&!c.s&&!c.d&&!c.c){delete FN[key];FNQ[key]=null}else{var prv=FNQ[key],dl={};dl[fld]=c[fld];if(fld==='s')dl.q=c.q;FN[key]=c;FNQ[key]=(prv===null||(prv&&prv.__full))?{f:c.f,e:c.e,k:c.k,s:c.s,q:c.q,d:c.d,c:c.c}:Object.assign(prv||{},dl)}
+  if(fld==='c'&&/\|#$/.test(key)){
+    (S.fuL||[]).forEach(function(x){if(x.r.np===pp[0]&&x.r.ino===pp[1]&&x.d)x.d.ds.forEach(function(z){var k2=base+'|'+z.no,m=FN[k2];if(!m||!m.c)return;m.c='';
+      if(!m.f&&!m.e&&!m.k&&!m.s&&!m.d){delete FN[k2];FNQ[k2]=null}else if(FNQ[k2]!==null){FNQ[k2]=Object.assign(FNQ[k2]||{},{c:''})}})});
+  }
   render();clearTimeout(fnT);fnT=setTimeout(fnPut,500);
 }
 var fnBusy=false;
@@ -1333,7 +1343,7 @@ function fuLn(x,k){
   if(k==='dq')return d.ds.map(function(z){return z.q!=null?fmt(z.q):''});
   if(k==='dr')return d.ds.map(function(z){return z.rv!=null?fmt(z.rv):''});
   if(k==='ds')return d.ds.map(function(z){return z.st||''});
-  if(k==='fup'||k==='eta'||k==='ket'||k==='cek')return d.ds.map(function(z){return fnTxt(x.r,k,z.no,z,x)});
+  if(k==='fup'||k==='eta'||k==='ket')return d.ds.map(function(z){return fnTxt(x.r,k,z.no,z,x)});
   return null;
 }
 function cmOf(r){return String(r.cm==null?'':r.cm).replace(/[;\s]+$/,'').replace(/^[;\s]+/,'').trim()}
@@ -1445,6 +1455,7 @@ function followup(rows){
     if(FSEL[c[0]]){var nsel=cv.length;ctl='<button type="button" class="msb'+(nsel?' on':'')+'" data-ms="'+c[0]+'" aria-haspopup="true" aria-expanded="'+(S.fopen===c[0])+'" aria-label="Filter '+c[1]+'"><span>'+(nsel===0?'Semua':(nsel===1?(cv[0]==='__blank__'?'(kosong)':esc(cv[0])):nsel+' dipilih'))+'</span><i>▾</i></button>'}
     else ctl='<input class="cf" type="search" data-cf="'+c[0]+'" value="'+esc(cv)+'" placeholder="Cari" aria-label="Filter '+c[1]+'">';
     return '<th class="'+(c[2]?'r':'')+'" data-fsort="'+c[0]+'"'+(k===c[0]?' aria-sort="'+(dir>0?'ascending':'descending')+'"':'')+'><div>'+c[1]+(k===c[0]?(dir>0?' ▲':' ▼'):'')+'</div>'+ctl+'</th>'}).join('')+'</tr></thead><tbody>';
+  CEKSEEN={};
   vis.forEach(function(x){
     var r=x.r,d=x.d,sub=' class="'+(x.i>0?'sub ':'')+'rs-'+({READY:'ok',PARTIAL:'pt',KOSONG:'no'}[stkOf(r).st]||'na')+'"';
     var dv=d?mlc(fuLn(x,'dv')):(r.noDoc?'<span class="flag warn">Belum ada '+r.need+'</span>':'–');
