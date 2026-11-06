@@ -695,7 +695,8 @@ var NPTY=[['gs','Cash&Delivery via Gudang Store'],['ia','Delivery Gudang Store (
 function npTy(r){var t=String(r.ty||'').toLowerCase().replace(/\s+/g,' ');if(t.indexOf('indent')>-1)return t.indexOf('supplier')>-1?'is':'ia';if(t.indexOf('supplier')>-1)return 'sp';if(t.indexOf('dc')>-1)return 'dc';return 'gs'}
 function segOf(r){return r.grp==='Via Supplier'?'vs':(r.grp==='Via DC'?'vd':'gd')}
 function catOf(r){return r.res==='Amsen'?'Amsen':'Kirim'}
-var S={fall:false,fcol:{},fu:{seg:[],jns:[],doc:[],kb:[],stk:[],chk:[],hd:[],ak:[]},fopen:'',fpos:null,fmq:'',fot:0,fsort:{k:'pd',d:1},jns:'',canUpload:true,po:[],tr:[],poP:'',trP:'',doc:'',rows:[],reportDay:0,reportLabel:'',store:'',isUpload:false,metric:'nota',q:'',mon:{},open:{},shown:{},sort:{k:'pd',d:1},cat:'',tab:'main'};
+function fuDef(){return {seg:['gs','ia','is'],jns:[],doc:[],kb:[],stk:[],chk:[],hd:[],ak:[]}}
+var S={fall:false,fcol:{},fu:fuDef(),fopen:'',fpos:null,fmq:'',fot:0,fsort:{k:'pd',d:1},jns:'',canUpload:true,po:[],tr:[],poP:'',trP:'',doc:'',rows:[],reportDay:0,reportLabel:'',store:'',isUpload:false,metric:'nota',q:'',mon:{},open:{},shown:{},sort:{k:'pd',d:1},cat:'',tab:'main'};
 S.dt={seg:[],doc:[],jns:[],mon:[]};S.dcol={};
 function load(raw,reportISO,store,isUpload){
   S.last=[raw,reportISO,store,isUpload];
@@ -1830,7 +1831,7 @@ document.addEventListener('click',function(e){var pb=e.target.closest&&e.target.
   if(t.dataset.ak!==undefined){var av=t.dataset.ak,ai=S.fu.ak.indexOf(av);if(ai>-1)S.fu.ak.splice(ai,1);else S.fu.ak.push(av);S.shown.fu=100;S.fopen='';render();return}
   if(t.dataset.hd!==undefined){var hn=+t.dataset.hd;if(!hn){S.fu.hd=[];S.fall=true}else{var hi=S.fu.hd.indexOf(hn);if(hi>-1)S.fu.hd.splice(hi,1);else S.fu.hd.push(hn)}S.shown.fu=100;S.fopen='';render();return}
   if(t.dataset.fall){S.fall=true;S.shown.fu=100;render();return}
-  if(t.dataset.fclear){S.fcol={};S.fu={seg:[],jns:[],doc:[],kb:[],stk:[],chk:[],hd:[],ak:[]};S.fopen='';S.fmq='';S.mon.fu='';S.fall=false;S.shown.fu=100;render();return}
+  if(t.dataset.fclear){S.fcol={};S.fu=fuDef();S.fopen='';S.fmq='';S.mon.fu='';S.fall=false;S.shown.fu=100;render();return}
   if(t.classList.contains('mcell')){dtOpen({seg:dtSegOf(t.dataset.sec,t.dataset.cat),jns:dtJnsOf(t.dataset.sec,t.dataset.cat),mon:[String(t.dataset.mon)]});return}
   if(t.dataset.fk){var fk=t.dataset.fk,fv=t.dataset.fv,fa=S.fu[fk];if(fv==='')S.fu[fk]=[];else{var fi=fa.indexOf(fv);if(fi>-1)fa.splice(fi,1);else fa.push(fv)}S.shown.fu=100;render();return}
   if(t.dataset.fmore){S.shown.fu=(S.shown.fu||100)+100;render();return}
