@@ -371,6 +371,7 @@ body.shot .shotexit:hover,body.shot .shotexit:focus{opacity:1}
 .fu th:nth-child(25){background:#5b3fa0!important;color:#fff}.fu tbody td:nth-child(25){background:#f6f3fd!important}.fu tbody tr:nth-child(even) td:nth-child(25){background:#ece7f9!important}.fnq.cek{width:90px;margin-left:0;height:22px;font-size:12px;border-color:#b7a6e6}
 .pgset{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 12px}.pgset .sub.err{color:#b42318}
 .pgdates{display:flex;align-items:stretch;gap:12px;flex-wrap:wrap;margin:6px 0 10px}.pgdates>div{border:1px solid var(--line);border-radius:10px;padding:8px 14px;background:#fff;display:flex;flex-direction:column;gap:2px;min-width:200px}.pgdates span{font-size:11px;font-weight:800;letter-spacing:.06em;color:#64748b}.pgdates b{font-size:16px}.pgdates em{font-size:11px;color:var(--ink3);font-style:normal}.pgdb{border-left:4px solid #94a3b8!important}.pgda{border-left:4px solid #1f4aa8!important}.pgarr{align-self:center;font-size:20px;color:#64748b;border:0!important;background:none!important;padding:0!important;min-width:0!important}.pgth{display:block;font-size:10px;font-weight:500;letter-spacing:0;text-transform:none;opacity:.85;white-space:nowrap}
+.dnsrc{font-size:10.5px;font-weight:600;color:var(--muted);margin-left:3px}
 .dnsq{font-size:11.5px;color:var(--muted);margin-top:3px;white-space:nowrap}.dnsq b{color:var(--ink);font-family:var(--mono)}
 .dnwa{display:inline-flex;align-items:center;gap:4px;border:1px solid #cbd5e1;background:#f1f5f9;color:#64748b;border-radius:999px;padding:3px 9px;font:inherit;font-size:12px;font-weight:600;cursor:pointer}.dnwa.on{background:#25d366;border-color:#1fb455;color:#fff}.dnwa:hover{filter:brightness(.95)}.dnwarn{color:#c2410c;margin-right:4px;cursor:help}.dnedit{border:0;background:none;color:#64748b;cursor:pointer;font-size:13px;padding:2px 4px}.dnsk{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:700;background:#eef1f5;color:#64748b}.dnsk.ok{background:#e1f6e9;color:#146c3a}.dnsk.no{background:#fde8e6;color:#a3231b}.fnc{white-space:nowrap}.fnl{height:18px;line-height:18px;display:flex;align-items:center}.fns{font:inherit;font-size:11px;height:17px;padding:0 2px;border:1px solid var(--line);border-radius:5px;background:#fff;color:var(--ink);width:78px}.fns.ready{background:#e8f7ee;border-color:#8fd0a8;color:#146c3a;font-weight:700}.fns.partial{background:#fff6e0;border-color:#e6c166;color:#8a5a00;font-weight:700}.fns.kosong{background:#fdecec;border-color:#e59a96;color:#a3231b;font-weight:700}.fns.dst{width:148px;height:24px;font-size:12px}.fns.dst.siap{background:#e8f7ee;border-color:#8fd0a8;color:#146c3a;font-weight:700}.fns.dst.belum_fb{background:#fff6e0;border-color:#e6c166;color:#8a5a00;font-weight:700}.fns.dst.belum_siap{background:#fdecec;border-color:#e59a96;color:#a3231b;font-weight:700}.fnq{font:inherit;font-size:11px;height:17px;width:56px;margin-left:4px;padding:0 4px;border:1px solid #e6c166;border-radius:5px;box-sizing:border-box}.fnt{font:inherit;font-size:11px;height:17px;width:100%;box-sizing:border-box;padding:0 5px;border:1px solid var(--line);border-radius:5px;background:#fff;color:var(--ink)}.fnt:focus{outline:2px solid #9ec5f4;outline-offset:0}.fnl .fnd{height:17px;padding:0 4px;font-size:11px;line-height:15px}.fnchk{display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;color:var(--ink3)}.fnchk.on{color:#15803d;font-weight:700}.fnchk input{accent-color:#16a34a;width:15px;height:15px;margin:0}.fnd{font:inherit;font-size:12px;padding:3px 5px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);width:118px}.fnd.late{border-color:#e0584f;background:#fff1f0;color:#b42318}.dsc a.dsl{color:#1f4aa8;text-decoration:none;font-weight:600}.dsc a.dsl:hover{text-decoration:underline}.dsc .n b{display:block;font-weight:700;color:var(--ink2,#334155);font-size:10px;letter-spacing:.04em;text-transform:uppercase;margin-bottom:1px}
 .datapanel{display:flex;flex-direction:column;gap:14px}
@@ -1560,6 +1561,13 @@ function fuSum(){
   return '<div class="fsw"><div class="fsk"><span class="t">PO/TR</span><span class="b ok">Sudah di-follow up <b>'+fmt(f)+'</b></span><span class="b no">Belum <b>'+fmt(n-f)+'</b></span><span class="b" title="Setiap PO/TR dihitung satu. Item yang belum punya PO/TR dihitung satu per item.">dari '+fmt(n)+' PO/TR / item</span></div>'+
     '<div class="fsk"><span class="t">MS</span><span class="b ok" title="Semua PO/TR di MS ini sudah di-follow up">Sudah <b>'+fmt(s1)+'</b></span><span class="b pt" title="Dalam satu MS ada PO/TR yang sudah dan yang belum di-follow up">Partial <b>'+fmt(p1)+'</b></span><span class="b no" title="Belum ada PO/TR di MS ini yang di-follow up">Belum <b>'+fmt(b1)+'</b></span><span class="b">dari '+fmt(ms.length)+' MS</span></div></div>';
 }
+function dnStkSrc(r,z){return (z.ref==='vs'||z.ref==='vd'||!z.ref)?'':(z.ref==='wh'?'WMS':'NAV')}
+function dnStkQ(r,z){
+  var src=dnStkSrc(r,z);
+  if(!src)return '<span title="'+(z.ref==='vs'?'Dikirim langsung dari supplier, tidak perlu cek stok':(z.ref==='vd'?'Dikirim dari Another Site/DC, tidak perlu cek stok':'Data stok belum diupload'))+'">–</span>';
+  var v=src==='WMS'?z.wh:z.sys;
+  return v==null?'–':fmt(v)+' <span class="dnsrc" title="'+(src==='WMS'?'Barang konsinyasi: acuan Stock WMS':'Barang retail: acuan Stock NAV (Inventory Movement)')+'">'+src+'</span>';
+}
 function dnStk(g){
   if(!STK.hasSys&&!STK.hasWh)return '';
   var rel=g.rows.map(function(r){return stkOf(r).st}).filter(function(x){return x!==''});
@@ -1635,11 +1643,11 @@ function dtPopup(title,opts,sel,cbAttr,noneAttr,withSearch){
     '</div><div class="mfoot"><button type="button" class="btn ghost" '+noneAttr+'>Hapus pilihan</button><button type="button" class="btn" data-msclose="1">Selesai</button></div></div>';
 }
 function dtNpItems(g,ncols){
-  var h='<tr class="det"><td colspan="'+ncols+'"><table class="items dti"><thead><tr><th>Item</th><th>Nama barang</th><th>Jenis</th><th class="r">Qty OTS</th><th class="r">Stock NAV</th><th>UOM</th><th>WMS</th><th>PO/TR</th><th>Comment</th></tr></thead><tbody>';
+  var h='<tr class="det"><td colspan="'+ncols+'"><table class="items dti"><thead><tr><th>Item</th><th>Nama barang</th><th>Jenis</th><th class="r">Qty OTS</th><th class="r">Stok inventory</th><th>UOM</th><th>WMS</th><th>PO/TR</th><th>Comment</th></tr></thead><tbody>';
   g.rows.forEach(function(r){
     var ps=[];if(r.noDoc)ps.push('<span class="flag warn">Belum ada '+r.need+'</span>');if(r.cons&&!r.pos.length&&!r.trs.length)ps.push('<span class="flag">Konsinyasi, tidak perlu PO/TR</span>');r.pos.forEach(function(p){ps.push('PO '+esc(p.pon)+' '+esc(p.vn)+(p.st?' · '+esc(p.st):'')+(p.viaC?' · dari komentar':'')+(p.ord!=null?' (Base Qty '+fmt(p.ord)+', Rcv '+fmt(p.rec)+', OTS '+fmt(p.poo)+')':' (OTS '+fmt(p.poo)+')'))});r.trs.forEach(function(t){ps.push('TR '+esc(t.trn)+' dari '+esc(t.tfrom)+(t.st?' · '+esc(t.st):'')+(t.viaC?' · dari komentar':'')+(t.trq!=null?' (Base Qty '+fmt(t.trq)+', TI '+fmt(t.tiq)+', OTS '+fmt(t.tro)+')':' (OTS '+fmt(t.tro)+')'))});
     var zs=stkOf(r);
-    h+='<tr><td class="num" data-l="Item">'+esc(r.ino)+'</td><td data-l="Nama barang">'+esc(r.inm)+'</td><td data-l="Jenis">'+(r.cons?'Consi':'Retail')+'</td><td class="num r" data-l="Qty OTS">'+fmt(r.o)+'</td><td class="num r" data-l="Stock NAV">'+(zs.sys==null?'–':fmt(zs.sys))+'</td><td data-l="UOM">'+esc(r.um)+'</td><td data-l="WMS">'+esc(r.wms)+'</td><td data-l="PO/TR">'+(ps.join('<br>')||'–')+'</td><td data-l="Comment">'+esc(r.cm)+'</td></tr>';
+    h+='<tr><td class="num" data-l="Item">'+esc(r.ino)+'</td><td data-l="Nama barang">'+esc(r.inm)+'</td><td data-l="Jenis">'+(r.cons?'Consi':'Retail')+'</td><td class="num r" data-l="Qty OTS">'+fmt(r.o)+'</td><td class="num r" data-l="Stok inventory">'+dnStkQ(r,zs)+'</td><td data-l="UOM">'+esc(r.um)+'</td><td data-l="WMS">'+esc(r.wms)+'</td><td data-l="PO/TR">'+(ps.join('<br>')||'–')+'</td><td data-l="Comment">'+esc(r.cm)+'</td></tr>';
   });
   return h+'</tbody></table></td></tr>';
 }
@@ -1808,9 +1816,9 @@ function exportDelivery(){
   [0,12,14].forEach(function(ci){for(var ri=1;ri<aoa.length;ri++){var c=ws[XLSX.utils.encode_cell({r:ri,c:ci})];if(c&&c.t==='n')c.z='dd-mmm-yy'}});
   ws['!cols']=[11,10,20,28,24,34,26,18,16,14,12,14,14,20,16,14,36,10,10].map(function(w){return {wch:w}});
   ws['!autofilter']={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:aoa.length-1,c:head.length-1}})};
-  var ih=['No. NP','Customer Name','Item No','Nama barang','Jenis','Qty OTS','Stock NAV','UOM'],ix=[ih];
-  G.forEach(function(g){g.rows.forEach(function(r){var zs=stkOf(r);ix.push([g.np,g.cu,r.ino||'',r.inm||'',r.cons?'Consi':'Retail',r.o,zs.sys==null?'':zs.sys,r.um||''])})});
-  var wi=XLSX.utils.aoa_to_sheet(ix);wi['!cols']=[20,28,14,44,9,9,10,8].map(function(w){return {wch:w}});wi['!autofilter']={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:ix.length-1,c:ih.length-1}})};
+  var ih=['No. NP','Customer Name','Item No','Nama barang','Jenis','Qty OTS','Stok inventory','Sumber stok','UOM'],ix=[ih];
+  G.forEach(function(g){g.rows.forEach(function(r){var zs=stkOf(r),sc=dnStkSrc(r,zs);ix.push([g.np,g.cu,r.ino||'',r.inm||'',r.cons?'Consi':'Retail',r.o,sc==='WMS'?(zs.wh==null?'':zs.wh):(sc==='NAV'?(zs.sys==null?'':zs.sys):''),sc,r.um||''])})});
+  var wi=XLSX.utils.aoa_to_sheet(ix);wi['!cols']=[20,28,14,44,9,9,12,10,8].map(function(w){return {wch:w}});wi['!autofilter']={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:ix.length-1,c:ih.length-1}})};
   var f=S.dt,fd=[];
   if(f.seg.length)fd.push('Tipe delivery: '+f.seg.map(function(v){return DTL[v]||v}).join(', '));
   if(f.doc.length)fd.push('Status PO/TR: '+f.doc.join(', '));
