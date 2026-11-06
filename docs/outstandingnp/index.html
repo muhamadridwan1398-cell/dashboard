@@ -196,6 +196,16 @@ th{background:var(--surface2);color:var(--navy2);font-weight:600}
 tr.nota:hover td{background:#f1f5fb}
 tr.det td{background:#f8fafc}
 .items th{background:var(--surface2)!important;color:var(--navy2)!important;box-shadow:none!important}
+@media(max-width:640px){
+ .dti{position:sticky;left:6px;display:block;width:min(344px,calc(100vw - 92px));max-width:none}
+ .dti thead{display:none}.dti tbody{display:block}
+ .dti tr{display:block;border:1px solid var(--line);border-radius:8px;margin:6px 0;padding:6px 10px;background:#fff}
+ .dti td{display:flex;gap:10px;justify-content:space-between;text-align:left;border:0;padding:3px 0;white-space:normal;word-break:break-word;font-size:12px}
+ .dti td.r{text-align:left}
+ .dti td::before{content:attr(data-l);font-family:"IBM Plex Sans",system-ui,sans-serif;flex:0 0 84px;color:var(--muted);font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.03em;padding-top:1px}
+ .dti td>*{max-width:100%}
+}
+
 .ct{border-radius:4px}
 .ct th{background:var(--navy);color:#fff;border-bottom:1px solid var(--navy2);font-weight:600}
 .ct th.gh{border-bottom:1px solid #6d86ad}
@@ -1625,11 +1635,11 @@ function dtPopup(title,opts,sel,cbAttr,noneAttr,withSearch){
     '</div><div class="mfoot"><button type="button" class="btn ghost" '+noneAttr+'>Hapus pilihan</button><button type="button" class="btn" data-msclose="1">Selesai</button></div></div>';
 }
 function dtNpItems(g,ncols){
-  var h='<tr class="det"><td colspan="'+ncols+'"><table class="items"><thead><tr><th>Item</th><th>Nama barang</th><th>Jenis</th><th class="r">Qty OTS</th><th class="r">Stock NAV</th><th>UOM</th><th>WMS</th><th>PO/TR</th><th>Comment</th></tr></thead><tbody>';
+  var h='<tr class="det"><td colspan="'+ncols+'"><table class="items dti"><thead><tr><th>Item</th><th>Nama barang</th><th>Jenis</th><th class="r">Qty OTS</th><th class="r">Stock NAV</th><th>UOM</th><th>WMS</th><th>PO/TR</th><th>Comment</th></tr></thead><tbody>';
   g.rows.forEach(function(r){
     var ps=[];if(r.noDoc)ps.push('<span class="flag warn">Belum ada '+r.need+'</span>');if(r.cons&&!r.pos.length&&!r.trs.length)ps.push('<span class="flag">Konsinyasi, tidak perlu PO/TR</span>');r.pos.forEach(function(p){ps.push('PO '+esc(p.pon)+' '+esc(p.vn)+(p.st?' · '+esc(p.st):'')+(p.viaC?' · dari komentar':'')+(p.ord!=null?' (Base Qty '+fmt(p.ord)+', Rcv '+fmt(p.rec)+', OTS '+fmt(p.poo)+')':' (OTS '+fmt(p.poo)+')'))});r.trs.forEach(function(t){ps.push('TR '+esc(t.trn)+' dari '+esc(t.tfrom)+(t.st?' · '+esc(t.st):'')+(t.viaC?' · dari komentar':'')+(t.trq!=null?' (Base Qty '+fmt(t.trq)+', TO '+fmt(t.toq)+', TI '+fmt(t.tiq)+', OTS '+fmt(t.tro)+')':' (OTS '+fmt(t.tro)+')'))});
     var zs=stkOf(r);
-    h+='<tr><td class="num">'+esc(r.ino)+'</td><td>'+esc(r.inm)+'</td><td>'+(r.cons?'Consi':'Retail')+'</td><td class="num r">'+fmt(r.o)+'</td><td class="num r">'+(zs.sys==null?'–':fmt(zs.sys))+'</td><td>'+esc(r.um)+'</td><td>'+esc(r.wms)+'</td><td>'+(ps.join('<br>')||'–')+'</td><td>'+esc(r.cm)+'</td></tr>';
+    h+='<tr><td class="num" data-l="Item">'+esc(r.ino)+'</td><td data-l="Nama barang">'+esc(r.inm)+'</td><td data-l="Jenis">'+(r.cons?'Consi':'Retail')+'</td><td class="num r" data-l="Qty OTS">'+fmt(r.o)+'</td><td class="num r" data-l="Stock NAV">'+(zs.sys==null?'–':fmt(zs.sys))+'</td><td data-l="UOM">'+esc(r.um)+'</td><td data-l="WMS">'+esc(r.wms)+'</td><td data-l="PO/TR">'+(ps.join('<br>')||'–')+'</td><td data-l="Comment">'+esc(r.cm)+'</td></tr>';
   });
   return h+'</tbody></table></td></tr>';
 }
