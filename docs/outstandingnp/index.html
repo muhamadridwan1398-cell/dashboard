@@ -325,8 +325,9 @@ body.shot .shotexit:hover,body.shot .shotexit:focus{opacity:1}
 
 .fu th:nth-child(27),.fu td:nth-child(27){min-width:100px;max-width:100px}
 .fu th:nth-child(28),.fu td:nth-child(28){min-width:100px;max-width:100px}
-.fu th:nth-child(29),.fu td:nth-child(29){min-width:116px;max-width:116px}
-.fu th:nth-child(30),.fu td:nth-child(30){min-width:150px;max-width:150px}
+.fu th:nth-child(29),.fu td:nth-child(29){min-width:170px;max-width:170px;white-space:normal;line-height:1.35}
+.fu th:nth-child(30),.fu td:nth-child(30){min-width:116px;max-width:116px}
+.fu td .wlx{white-space:nowrap;font-size:12px}.fu td .wlx b{color:var(--navy)}.fu td .wlx.m{color:var(--muted)}
 .stknote{font-size:12px;color:var(--ink2);margin:6px 0 0}
 .stknote b{color:var(--ink)}
 
@@ -1025,11 +1026,11 @@ function distinct2(rs,cat){var s=new Set();rs.forEach(function(r){if(!cat||catOf
 
 /* ---------- Followup Terjual ---------- */
 function stkKey(k){k=String(k==null?'':k).trim().replace(/\.0+$/,'');return /^\d+$/.test(k)?k.replace(/^0+/,''):k.toUpperCase()}
-var STK={sys:{},mb:{},wh:{},hasSys:false,hasWh:false,sysLabel:'',whLabel:'',sysName:'',whName:''};
+var STK={sys:{},mb:{},wh:{},wl:{},hasWl:false,hasSys:false,hasWh:false,sysLabel:'',whLabel:'',sysName:'',whName:''};
 function stkLoad(d){
   d=d||{};
   if(d.sys&&d.sys.length){STK.sys={};STK.mb={};d.sys.forEach(function(a){STK.sys[stkKey(a[0])]=a[1];if(a[2])STK.mb[stkKey(a[0])]=a[2]});STK.hasSys=true;STK.sysLabel=d.sysLabel||'';STK.sysName=d.sysName||''}
-  if(d.wh&&d.wh.length){STK.wh={};d.wh.forEach(function(a){STK.wh[stkKey(a[0])]=a[1]});STK.hasWh=true;STK.whLabel=d.whLabel||'';STK.whName=d.whName||''}
+  if(d.wh&&d.wh.length){STK.wh={};STK.wl={};STK.hasWl=false;d.wh.forEach(function(a){STK.wh[stkKey(a[0])]=a[1];if(Array.isArray(a[2])&&a[2].length){STK.wl[stkKey(a[0])]=a[2];STK.hasWl=true}});STK.hasWh=true;STK.whLabel=d.whLabel||'';STK.whName=d.whName||''}
 }
 var STKL={READY:'READY',PARTIAL:'PARTIAL',KOSONG:'KOSONG'};
 function stkStat(q,need){return q<=0?'KOSONG':(q>=need?'READY':'PARTIAL')}
@@ -1047,9 +1048,17 @@ function stkOf(r){
   return {sys:sys,wh:wh,st:st,chk:chk,ref:ref};
 }
 var STC={READY:'ok',PARTIAL:'pt',KOSONG:'no'};
+function wlOf(r){return (STK.hasWh&&STK.wl[stkKey(r.ino)])||[]}
+function wlTxt(r){return wlOf(r).map(function(a){return a[0]+' ('+fmt(a[1])+')'}).join('; ')}
+function wlCell(r){
+  var a=wlOf(r);
+  if(!a.length)return '<td class="wl"'+(STK.hasWh&&!STK.hasWl?' title="Upload ulang Stock Warehouse By Location untuk menampilkan lokasi"':'')+'>–</td>';
+  var top=a.slice(0,4).map(function(x){return '<span class="wlx">'+esc(x[0])+' <b>'+fmt(x[1])+'</b></span>'}).join('<br>')+(a.length>4?'<br><span class="wlx m">+'+(a.length-4)+' lokasi lain</span>':'');
+  return '<td class="wl" title="'+esc(wlTxt(r))+'">'+top+'</td>';
+}
 function stkCells(r){
   var z=stkOf(r);
-  return '<td class="num r">'+(z.sys==null?'–':fmt(z.sys))+'</td><td class="num r">'+(z.wh==null?'–':fmt(z.wh))+'</td><td title="'+((z.ref==='vs'||z.ref==='vd')?(z.ref==='vs'?'Dikirim langsung dari supplier, tidak perlu cek stok':'Dikirim dari Another Site/DC, tidak perlu cek stok'):(z.ref==='wh'?'Acuan: Stock WMS':'Acuan: Stock NAV (Inventory Movement)'))+'">'+(z.ref==='vs'?'<span class="kbx">Dari supplier</span>':z.ref==='vd'?'<span class="kbx">Dari site/DC</span>':(z.st?'<span class="kb kb-'+STC[z.st]+'">'+z.st+'</span>':'–'))+'</td><td>'+(z.chk?(z.chk==='Sesuai'?'Sesuai':'<span class="flag warn">'+z.chk+'</span>'):'–')+'</td>';
+  return '<td class="num r">'+(z.sys==null?'–':fmt(z.sys))+'</td><td class="num r">'+(z.wh==null?'–':fmt(z.wh))+'</td>'+wlCell(r)+'<td title="'+((z.ref==='vs'||z.ref==='vd')?(z.ref==='vs'?'Dikirim langsung dari supplier, tidak perlu cek stok':'Dikirim dari Another Site/DC, tidak perlu cek stok'):(z.ref==='wh'?'Acuan: Stock WMS':'Acuan: Stock NAV (Inventory Movement)'))+'">'+(z.ref==='vs'?'<span class="kbx">Dari supplier</span>':z.ref==='vd'?'<span class="kbx">Dari site/DC</span>':(z.st?'<span class="kb kb-'+STC[z.st]+'">'+z.st+'</span>':'–'))+'</td>';
 }
 function stkMatch(){
   var seen={},n=0,a=0,w=0;
@@ -1157,7 +1166,7 @@ document.addEventListener('visibilitychange',function(){if(!document.hidden)fnLo
 setInterval(function(){if(!document.hidden)fnLoad()},15000);window.addEventListener('focus',fnLoad);window.addEventListener('pageshow',fnLoad);
 function FUCM_L(k){if(k==='mon')return 'Bulan PDD';for(var i=0;i<FUC.length;i++)if(FUC[i][0]===k)return FUC[i][1];return k}
 function umurTxt(u){return u==null?'':(u===0?'Hari ini':(u===-1?'Besok':(u<0?(-u)+' hari lagi':u+' hari')))}
-var FUC=[['ca','Category Name'],['age','Umur',1],['od','Order Date'],['pd','PDD'],['hk','Leadtime',1],['sp','Sales Person Name'],['np','NPno'],['cu','Cust Name'],['ty','NPType'],['ino','Item No'],['inm','Item Name'],['mb','Master Brand'],['jn','Jenis'],['um','UOM'],['vn','Vendor'],['dv','No PO/TR'],['dq','Qty PO/TR',1],['dr','Rcv Qty PO/TR',1],['ds','Status PO&TR'],['kb','Keterangan Barang'],['cm','Komentar OTS'],['fup','Follow up'],['ket','Stok SPL/DC'],['eta','Est. datang'],['cek','Ready di toko'],['o','OTS Qty',1],['stS','Stock NAV',1],['stF','Stock WMS',1],['stat','Status Stok']];
+var FUC=[['ca','Category Name'],['age','Umur',1],['od','Order Date'],['pd','PDD'],['hk','Leadtime',1],['sp','Sales Person Name'],['np','NPno'],['cu','Cust Name'],['ty','NPType'],['ino','Item No'],['inm','Item Name'],['mb','Master Brand'],['jn','Jenis'],['um','UOM'],['vn','Vendor'],['dv','No PO/TR'],['dq','Qty PO/TR',1],['dr','Rcv Qty PO/TR',1],['ds','Status PO&TR'],['kb','Keterangan Barang'],['cm','Komentar OTS'],['fup','Follow up'],['ket','Stok SPL/DC'],['eta','Est. datang'],['cek','Ready di toko'],['o','OTS Qty',1],['stS','Stock NAV',1],['stF','Stock WMS',1],['wl','Lokasi WMS'],['stat','Status Stok']];
 function fuFilter(rows,skip){
   var f=S.fu,mon=S.mon.fu||'';
   return rows.filter(function(r){
@@ -1308,6 +1317,7 @@ function fuText(x,k){
   if(k==='mb')return mbOf(r);
   if(k==='stS'){var a0=stkOf(r).sys;return a0==null?'':fmt(a0)}
   if(k==='stF'){var a1=stkOf(r).wh;return a1==null?'':fmt(a1)}
+  if(k==='wl')return wlTxt(r);
   if(k==='stat')return stkOf(r).st;
   if(k==='chk')return stkOf(r).chk;
   if(k==='mon')return r.pdD==null?'':monLab(monIdx(r.pdD));
@@ -1345,6 +1355,7 @@ function fuVal(x,k){
   if(k==='mb')return mbOf(r);
   if(k==='stS'){var a2=stkOf(r).sys;return a2==null?-1e9:a2}
   if(k==='stF'){var a3=stkOf(r).wh;return a3==null?-1e9:a3}
+  if(k==='wl'){var w0=wlOf(r);return w0.length?w0[0][0].toLowerCase():'~'}
   if(k==='stat')return stkOf(r).st;
   if(k==='chk')return stkOf(r).chk;
   if(k==='cm')return cmOf(r).toLowerCase();
@@ -1641,6 +1652,7 @@ function fuRaw(x,k){
   if(k==='mb')return mbOf(r);
   if(k==='stS'){var a4=stkOf(r).sys;return a4==null?'':a4}
   if(k==='stF'){var a5=stkOf(r).wh;return a5==null?'':a5}
+  if(k==='wl')return wlTxt(r);
   if(k==='stat')return stkOf(r).st;
   if(k==='chk')return stkOf(r).chk;
   if(k==='dv')return d?d.no.split('\n').join('; '):(r.noDoc?'Belum ada '+r.need:'');
@@ -1689,7 +1701,7 @@ function exportFollowup(split){
   var aoa=[head].concat(rowsX);
   var ws=XLSX.utils.aoa_to_sheet(aoa);
   FUC.forEach(function(c,ci){if(c[0]!=='od'&&c[0]!=='pd')return;for(var ri=1;ri<aoa.length;ri++){var cell=ws[XLSX.utils.encode_cell({r:ri,c:ci})];if(cell&&cell.t==='n')cell.z='dd-mmm-yy'}});
-  var W={ca:24,age:9,od:11,pd:11,hk:12,stS:12,stF:12,stat:13,chk:20,sp:24,np:20,cu:28,ty:34,ino:13,inm:42,mb:20,um:8,vn:30,dv:24,dq:10,dr:10,ds:16,kb:18,o:9};
+  var W={ca:24,age:9,od:11,pd:11,hk:12,stS:12,stF:12,wl:30,stat:13,sp:24,np:20,cu:28,ty:34,ino:13,inm:42,mb:20,um:8,vn:30,dv:24,dq:10,dr:10,ds:16,kb:18,o:9};
   ws['!cols']=FUC.map(function(c){return {wch:W[c[0]]||14}});
   ws['!autofilter']={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:aoa.length-1,c:FUC.length-1}})};
   var fd=fuFilterDesc();
@@ -1910,16 +1922,17 @@ var DKEY='kontrol-outstanding-docs-v1';
 function fmtD(v){if(v instanceof Date){var dd=new Date(v.getTime()+6*3600e3);return String(dd.getDate()).padStart(2,'0')+'-'+String(dd.getMonth()+1).padStart(2,'0')+'-'+dd.getFullYear()}return v}
 function parseStok(rows2d,hi,kind){
   var ix={};rows2d[hi].forEach(function(c,j){var k=String(c).trim().toLowerCase();if(ix[k]==null)ix[k]=j});
-  var cmb=kind==='sys'?ix['master brand']:null,ci=kind==='sys'?ix['no item']:ix['item no'],cq=kind==='sys'?ix['ending balance qty']:ix['stock on hand qty'],ca=ix['storage location active status'];
-  var m={},mbm={},i,r,k,v;
+  var cmb=kind==='sys'?ix['master brand']:null,ci=kind==='sys'?ix['no item']:ix['item no'],cq=kind==='sys'?ix['ending balance qty']:ix['stock on hand qty'],ca=ix['storage location active status'],cl=kind==='wh'?ix['storage location id']:null;
+  var m={},mbm={},lm={},i,r,k,v;
   for(i=hi+1;i<rows2d.length;i++){
     r=rows2d[i];k=String(r[ci]==null?'':r[ci]).trim();if(!k)continue;
     if(cmb!=null&&r[cmb]!=null&&String(r[cmb]).trim()&&!mbm[k])mbm[k]=String(r[cmb]).trim();
     if(kind==='wh'&&ca!=null&&String(r[ca]).trim().toUpperCase().indexOf('INACT')===0)continue;
     v=parseFloat(r[cq]);if(isNaN(v))continue;
     m[k]=(m[k]||0)+v;
+    if(cl!=null&&v!==0){var lc=String(r[cl]==null?'':r[cl]).trim();if(lc){var lo=lm[k]||(lm[k]={});lo[lc]=(lo[lc]||0)+v}}
   }
-  var out=[];Object.keys(m).forEach(function(k){var q=Math.round(m[k]*1000)/1000;if(q!==0||mbm[k])out.push(mbm[k]?[k,q,mbm[k]]:[k,q])});
+  var out=[];Object.keys(m).forEach(function(k){var q=Math.round(m[k]*1000)/1000;if(q!==0||mbm[k]){var ls=lm[k]?Object.keys(lm[k]).map(function(c){return [c,Math.round(lm[k][c]*1000)/1000]}).filter(function(a){return a[1]!==0}).sort(function(a,b){return b[1]-a[1]||(a[0]<b[0]?-1:1)}).slice(0,30):null;out.push(mbm[k]?[k,q,mbm[k]]:(ls&&ls.length?[k,q,ls]:[k,q]))}});
   var head=rows2d.slice(0,hi).map(function(r){return r.join(' ')}).join(' | ');
   var dm=head.match(/(\d{1,2})[ -]([A-Za-z]{3,9})[ -](\d{4})\s+(\d{1,2}):(\d{2})/),date='',label='';
   if(dm&&MONEN[dm[2].slice(0,3).toLowerCase()]!=null){var mi=MONEN[dm[2].slice(0,3).toLowerCase()];date=dm[3]+'-'+String(mi+1).padStart(2,'0')+'-'+String(+dm[1]).padStart(2,'0')+'T'+String(+dm[4]).padStart(2,'0')+':'+dm[5];label=(+dm[1])+' '+MON[mi]+' '+dm[3]+' pukul '+String(+dm[4]).padStart(2,'0')+'.'+dm[5]}
@@ -2107,13 +2120,13 @@ function shotClean(root){
   root.querySelectorAll('button').forEach(function(b){var sp=document.createElement('span');sp.className=b.className;sp.innerHTML=b.innerHTML;if(b.getAttribute('style'))sp.setAttribute('style',b.getAttribute('style'));sp.style.font='inherit';if(b.classList.contains('tile')){sp.style.display='block';sp.style.textAlign='left'}else if(b.classList.contains('mcell')){sp.style.display='block';sp.style.textAlign='right'}b.parentNode.replaceChild(sp,b)});
   root.querySelectorAll('[data-fsort],[data-mcell],[data-mon]').forEach(function(e){e.removeAttribute('data-fsort');e.style.cursor='default'});
 }
-var SHOT_COLS={ca:96,od:74,pd:74,sp:110,np:142,cu:130,ino:86,inm:210,vn:190,dq:62,dr:70,kb:104,cm:130,o:56,stS:70,stat:78,jn:62};
+var SHOT_COLS={ca:96,od:74,pd:74,sp:110,np:142,cu:130,ino:86,inm:210,vn:190,dq:62,dr:70,kb:104,cm:130,o:56,stS:70,wl:150,stat:78,jn:62};
 function shotCols(t){
   var keep=FUC.map(function(c){return SHOT_COLS[c[0]]!=null});
   [].slice.call(t.rows).forEach(function(r){
     var cells=[].slice.call(r.cells);if(cells.length!==FUC.length)return;
     cells.forEach(function(c,i){if(!keep[i]){c.remove();return}var w=SHOT_COLS[FUC[i][0]];['min-width','max-width','width'].forEach(function(pr){c.style.setProperty(pr,w+'px','important')})
-      var k=FUC[i][0];if(k==='inm'||k==='vn'||k==='cu'||k==='sp'||k==='ca'||k==='kb'||k==='cm'||k==='stat'){c.style.setProperty('white-space','normal','important');c.style.setProperty('overflow','visible','important');c.style.setProperty('text-overflow','clip','important');c.style.setProperty('word-break','break-word','important')}
+      var k=FUC[i][0];if(k==='inm'||k==='vn'||k==='cu'||k==='sp'||k==='ca'||k==='kb'||k==='cm'||k==='wl'||k==='stat'){c.style.setProperty('white-space','normal','important');c.style.setProperty('overflow','visible','important');c.style.setProperty('text-overflow','clip','important');c.style.setProperty('word-break','break-word','important')}
     });
   });
 }
