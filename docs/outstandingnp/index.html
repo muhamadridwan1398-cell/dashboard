@@ -1568,7 +1568,6 @@ function dnCells(g,W){
   var late=n.e&&n.e<todayIso();
   var dif=g.wp&&Object.keys(g.wp).length>1&&!n.k,wa=(dif?'<span class="dnwarn" title="Nomor customer berbeda antar item di NP ini: +'+Object.keys(g.wp).join(', +')+'. Dipakai: +'+g.wph+'">⚠</span>':'')+'<button type="button" class="dnwa'+(ph?' on':'')+'" data-wac="'+esc(g.np)+'" title="'+(ph?'WhatsApp customer +'+ph+': follow up pengiriman':'Nomor customer tidak ada di laporan, isi manual')+'">'+WAI+(ph?'':' <span>Isi</span>')+'</button>'+(ph?'<button type="button" class="dnedit" data-wae="'+esc(g.np)+'" title="Ubah nomor WA customer">✎</button>':'');
   var sk=stk==='Ready'?'<span class="dnsk ok">Ready</span>':(stk==='Tidak ready'?'<span class="dnsk no">Tidak ready</span>':'<span class="dnsk">'+(stk||'–')+'</span>');
-  if(g.sn!=null&&(stk==='Ready'||stk==='Tidak ready'))sk+='<div class="dnsq" title="Qty stok tersedia dibanding qty yang dibutuhkan NP ini">stok <b>'+fmt(g.sa)+'</b> / butuh <b>'+fmt(g.sn)+'</b></div>';
   return '<td class="c dnc"'+W('wa')+'>'+wa+'</td><td class="c dnc"'+W('stk')+'>'+sk+'</td>'+
     '<td class="c dnc dtg dtg1"'+W('fup')+'><label class="fnchk'+(n.f?' on':'')+'"'+(n.by?' title="Diisi oleh '+esc(n.by)+'"':'')+'><input type="checkbox" data-fn="f" data-fnk="'+key+'"'+(n.f?' checked':'')+' aria-label="Sudah di-follow up customer"><span>'+(n.f?'Sudah · '+isoDisp(n.f):'Belum')+'</span></label></td>'+
     '<td class="c dnc dtg"'+W('dst')+'><select class="fns dst '+(n.d||'')+'" data-fn="d" data-fnk="'+key+'" aria-label="Keterangan follow up"><option value="">–</option>'+DST.map(function(x){return '<option value="'+x[0]+'"'+(n.d===x[0]?' selected':'')+'>'+x[1]+'</option>'}).join('')+'</select></td>'+
@@ -1626,10 +1625,11 @@ function dtPopup(title,opts,sel,cbAttr,noneAttr,withSearch){
     '</div><div class="mfoot"><button type="button" class="btn ghost" '+noneAttr+'>Hapus pilihan</button><button type="button" class="btn" data-msclose="1">Selesai</button></div></div>';
 }
 function dtNpItems(g,ncols){
-  var h='<tr class="det"><td colspan="'+ncols+'"><table class="items"><thead><tr><th>Item</th><th>Nama barang</th><th>Jenis</th><th class="r">Qty OTS</th><th>UOM</th><th>WMS</th><th>PO/TR</th><th>Comment</th></tr></thead><tbody>';
+  var h='<tr class="det"><td colspan="'+ncols+'"><table class="items"><thead><tr><th>Item</th><th>Nama barang</th><th>Jenis</th><th class="r">Qty OTS</th><th class="r">Stock NAV</th><th class="r">Stock WMS</th><th>UOM</th><th>WMS</th><th>PO/TR</th><th>Comment</th></tr></thead><tbody>';
   g.rows.forEach(function(r){
     var ps=[];if(r.noDoc)ps.push('<span class="flag warn">Belum ada '+r.need+'</span>');if(r.cons&&!r.pos.length&&!r.trs.length)ps.push('<span class="flag">Konsinyasi, tidak perlu PO/TR</span>');r.pos.forEach(function(p){ps.push('PO '+esc(p.pon)+' '+esc(p.vn)+(p.st?' · '+esc(p.st):'')+(p.viaC?' · dari komentar':'')+(p.ord!=null?' (Base Qty '+fmt(p.ord)+', Rcv '+fmt(p.rec)+', OTS '+fmt(p.poo)+')':' (OTS '+fmt(p.poo)+')'))});r.trs.forEach(function(t){ps.push('TR '+esc(t.trn)+' dari '+esc(t.tfrom)+(t.st?' · '+esc(t.st):'')+(t.viaC?' · dari komentar':'')+(t.trq!=null?' (Base Qty '+fmt(t.trq)+', TO '+fmt(t.toq)+', TI '+fmt(t.tiq)+', OTS '+fmt(t.tro)+')':' (OTS '+fmt(t.tro)+')'))});
-    h+='<tr><td class="num">'+esc(r.ino)+'</td><td>'+esc(r.inm)+'</td><td>'+(r.cons?'Consi':'Retail')+'</td><td class="num r">'+fmt(r.o)+'</td><td>'+esc(r.um)+'</td><td>'+esc(r.wms)+'</td><td>'+(ps.join('<br>')||'–')+'</td><td>'+esc(r.cm)+'</td></tr>';
+    var zs=stkOf(r);
+    h+='<tr><td class="num">'+esc(r.ino)+'</td><td>'+esc(r.inm)+'</td><td>'+(r.cons?'Consi':'Retail')+'</td><td class="num r">'+fmt(r.o)+'</td><td class="num r">'+(zs.sys==null?'–':fmt(zs.sys))+'</td><td class="num r">'+(zs.wh==null?'–':fmt(zs.wh))+'</td><td>'+esc(r.um)+'</td><td>'+esc(r.wms)+'</td><td>'+(ps.join('<br>')||'–')+'</td><td>'+esc(r.cm)+'</td></tr>';
   });
   return h+'</tbody></table></td></tr>';
 }
@@ -1798,9 +1798,9 @@ function exportDelivery(){
   [0,12,14].forEach(function(ci){for(var ri=1;ri<aoa.length;ri++){var c=ws[XLSX.utils.encode_cell({r:ri,c:ci})];if(c&&c.t==='n')c.z='dd-mmm-yy'}});
   ws['!cols']=[11,10,20,28,24,34,26,18,16,14,12,14,14,20,16,14,36,10,10].map(function(w){return {wch:w}});
   ws['!autofilter']={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:aoa.length-1,c:head.length-1}})};
-  var ih=['No. NP','Customer Name','Item No','Nama barang','Jenis','Qty OTS','UOM'],ix=[ih];
-  G.forEach(function(g){g.rows.forEach(function(r){ix.push([g.np,g.cu,r.ino||'',r.inm||'',r.cons?'Consi':'Retail',r.o,r.um||''])})});
-  var wi=XLSX.utils.aoa_to_sheet(ix);wi['!cols']=[20,28,14,44,9,9,8].map(function(w){return {wch:w}});wi['!autofilter']={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:ix.length-1,c:ih.length-1}})};
+  var ih=['No. NP','Customer Name','Item No','Nama barang','Jenis','Qty OTS','Stock NAV','Stock WMS','UOM'],ix=[ih];
+  G.forEach(function(g){g.rows.forEach(function(r){var zs=stkOf(r);ix.push([g.np,g.cu,r.ino||'',r.inm||'',r.cons?'Consi':'Retail',r.o,zs.sys==null?'':zs.sys,zs.wh==null?'':zs.wh,r.um||''])})});
+  var wi=XLSX.utils.aoa_to_sheet(ix);wi['!cols']=[20,28,14,44,9,9,10,10,8].map(function(w){return {wch:w}});wi['!autofilter']={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:ix.length-1,c:ih.length-1}})};
   var f=S.dt,fd=[];
   if(f.seg.length)fd.push('Tipe delivery: '+f.seg.map(function(v){return DTL[v]||v}).join(', '));
   if(f.doc.length)fd.push('Status PO/TR: '+f.doc.join(', '));
