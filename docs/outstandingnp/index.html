@@ -138,6 +138,7 @@ tr.det td{background:var(--surface2);padding:8px 10px 12px 22px}
 .mk{gap:8px;margin:10px 0 12px}
 .mk span{padding:6px 12px;border:1px solid #cfd8e6;border-radius:999px;background:#fff;white-space:nowrap;line-height:1.3}
 .mk span:first-child{background:var(--navy);border-color:var(--navy);color:#fff}.mk span:first-child b{color:#fff}
+.mk .mks{font-style:normal;color:var(--muted)}
 .mk b{font-family:inherit;font-weight:800;color:var(--navy);margin:0 2px;font-size:14px}
 @media(max-width:640px){.mk{display:grid;grid-template-columns:1fr 1fr;gap:6px}.mk span{border-radius:10px;white-space:normal;padding:8px 10px;text-align:left}.mk span:first-child{grid-column:1/-1}}
 .dh select{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 8px;max-width:100%}
@@ -1651,7 +1652,7 @@ function detailAll(rows){
     return '<button type="button" class="msb msbtop'+(n?' on':'')+'" data-ms="dq:'+q[0]+'" aria-haspopup="true" aria-expanded="'+(S.fopen==='dq:'+q[0])+'"><span>'+q[1]+': '+(n===0?'Semua':(one?esc(one.label):n+' dipilih'))+'</span><i>▾</i></button>';
   };
   var h='<section class="panel"><div class="mph"><div><h2>Detail Delivery</h2></div></div>';
-  h+='<div class="mk"><span><b>'+fmt(st.n)+'</b> NP OTS</span>'+DTQ.filter(function(q){return per[q[0]]}).map(function(q){return '<span>'+DTL[q[0]]+' <b>'+fmt(per[q[0]].size)+'</b></span>'}).join('')+'<span>punya nomor WA <b>'+fmt(G.filter(function(g){return g.wph||(FN['NP:'+g.np]||{}).k}).length)+'</b> NP</span><span>qty <b>'+fmt(st.q)+'</b></span><span>lewat PDD <b>'+fmt(st.late)+'</b> NP</span><span>telat &gt;14 hari <b>'+fmt(st.l14)+'</b> NP</span></div>';
+  h+='<div class="mk"><span><b>'+fmt(st.n)+'</b> NP OTS</span>'+(per.ga||per.gk?(function(){var u=new Set();['ga','gk'].forEach(function(k){if(per[k])per[k].forEach(function(v){u.add(v)})});return '<span>Gudang <b>'+fmt(u.size)+'</b> NP<em class="mks"> · Amsen <b>'+fmt(per.ga?per.ga.size:0)+'</b> · Kirim <b>'+fmt(per.gk?per.gk.size:0)+'</b></em></span>'})():'')+DTQ.filter(function(q){return q[0]!=='ga'&&q[0]!=='gk'&&per[q[0]]}).map(function(q){return '<span>'+DTL[q[0]]+' <b>'+fmt(per[q[0]].size)+'</b></span>'}).join('')+'<span>punya nomor WA <b>'+fmt(G.filter(function(g){return g.wph||(FN['NP:'+g.np]||{}).k}).length)+'</b> NP</span><span>qty <b>'+fmt(st.q)+'</b></span><span>lewat PDD <b>'+fmt(st.late)+'</b> NP</span><span>telat &gt;14 hari <b>'+fmt(st.l14)+'</b> NP</span></div>';
   var fs0=0,ds0={siap:0,belum_fb:0,belum_siap:0,'':0};
   G.forEach(function(g){var n=FN['NP:'+g.np]||{};if(n.f)fs0++;ds0[DST.some(function(x){return x[0]===n.d})?n.d:'']++});
   h+='<div class="fsw dsw"><div class="fsk"><span class="t">Follow up customer</span><span class="b ok">Sudah di-follow up <b>'+fmt(fs0)+'</b></span><span class="b no">Belum <b>'+fmt(G.length-fs0)+'</b></span><span class="b">dari '+fmt(G.length)+' NP</span></div>'+
