@@ -931,6 +931,7 @@ function waNorm(v){
   }
   return '';
 }
+function catList(g){var m={};g.rows.forEach(function(r){var c=String(r.ca||'').trim();if(c)m[c]=1});return Object.keys(m).sort()}
 function groupNota(rows){
   var m=new Map();
   rows.forEach(function(r){
@@ -1438,9 +1439,9 @@ function followup(rows){
 /* ---------- Detail Delivery (gabungan Gudang + Supplier + Another Site/DC) ---------- */
 var DTL={ga:'Gudang · Amsen',gk:'Gudang · Kirim',vs:'Supplier',vd:'Another Site/DC'};
 var DTQ=[['ga','Delivery via Gudang · Amsen'],['gk','Delivery via Gudang · Kirim'],['vs','Delivery via Supplier'],['vd','Delivery via Another Site/DC']];
-var DTC=[['pd','PDD'],['late','Telat'],['np','No. NP'],['cu','Customer Name'],['sp','Salesperson'],['ty','Tipe NP'],['dv','Delivery'],['wa','WA customer'],['stk','Stok inventory'],['fup','Status follow up'],['dst','Keterangan follow up'],['eta','Estimasi pengiriman'],['flags','Perlu perhatian']];
+var DTC=[['pd','PDD'],['late','Telat'],['np','No. NP'],['cu','Customer Name'],['sp','Salesperson'],['ty','Tipe NP'],['ca','Category'],['dv','Delivery'],['wa','WA customer'],['stk','Stok inventory'],['fup','Status follow up'],['dst','Keterangan follow up'],['eta','Estimasi pengiriman'],['flags','Perlu perhatian']];
 var DTG={fup:'dtg1',dst:'dtg2',eta:'dtg3'};
-var DTW={pd:92,late:100,np:172,cu:186,sp:172,dv:134,n:66,qty:82,cons:72,ret:72,flags:214,ty:250,wa:104,stk:118,fup:156,dst:168,eta:150};
+var DTW={pd:92,late:100,np:172,cu:186,sp:172,dv:134,n:66,qty:82,cons:72,ret:72,flags:214,ty:250,ca:200,wa:104,stk:118,fup:156,dst:168,eta:150};
 var DTNUM={pd:1,late:-1,n:1,qty:1,cons:1,ret:1};
 function dtKey(r){var s=segOf(r);return s==='gd'?(catOf(r)==='Amsen'?'ga':'gk'):s}
 function dtSegOf(sec,cat){return sec==='gd'?(cat==='Kirim'?['gk']:cat==='Amsen'?['ga']:['ga','gk']):[sec]}
@@ -1532,6 +1533,7 @@ function dtVals(g,k){
   else if(k==='dv')v=dtLabs(g);
   else if(k==='wa')v=[((FN['NP:'+g.np]||{}).k||g.wph)?((g.wp&&Object.keys(g.wp).length>1&&!(FN['NP:'+g.np]||{}).k)?'Nomor berbeda antar item':'Ada nomor'):'Belum ada nomor'];
   else if(k==='stk')v=[g.stk||''];
+  else if(k==='ca')v=g.cats&&g.cats.length?g.cats:[''];
   else if(k==='fup')v=[dnFu(g)];
   else if(k==='dst')v=[dnDst(g)];
   else if(k==='eta')v=[dnEta(g)];
@@ -1568,7 +1570,7 @@ function dtNpItems(g,ncols){
 }
 function detailAll(rows){
   var f=S.dt,rd=dtRows(rows),G0=groupNota(rd);
-  G0.forEach(function(g){g.dv=dtLabs(g).join(' / ');g.stk=dnStk(g)});S.dtG=G0;
+  G0.forEach(function(g){g.dv=dtLabs(g).join(' / ');g.stk=dnStk(g);g.cats=catList(g);g.ca=g.cats.join(', ')});S.dtG=G0;
   var k=S.sort.k,d=S.sort.d;
   if(!DTC.some(function(c){return c[0]===k})){k='pd';d=1}
   var G=dtColFilter(G0,'');
@@ -1603,7 +1605,7 @@ function detailAll(rows){
   vis.forEach(function(g,gi){
     var fl=Object.keys(g.flags).map(function(x){return '<span class="flag'+(x==='Tidak ada di NAV'||x==='Cek komentar'||x.indexOf('Belum ada')===0?' warn':'')+'">'+x+'</span>'}).join('');
     var W=function(c){return ' style="min-width:'+DTW[c]+'px;max-width:'+DTW[c]+'px"'};
-    h+='<tr class="nota'+(gi%2?' alt':'')+'" data-np="'+esc(g.np)+'"><td class="c num"'+W('pd')+'>'+dstr(g.pd)+'</td><td class="c"'+W('late')+'>'+latePill(g.late)+'</td><td class="c num id"'+W('np')+'>'+esc(g.np)+'</td><td class="c" title="'+esc(g.cu)+'"'+W('cu')+'>'+esc(g.cu)+'</td><td class="c" title="'+esc(g.sp)+'"'+W('sp')+'>'+esc(g.sp)+'</td><td class="c" title="'+esc(g.ty)+'"'+W('ty')+'>'+esc(g.ty)+'</td><td class="c" title="'+esc(g.dv)+'"'+W('dv')+'>'+esc(g.dv)+'</td>'+dnCells(g,W)+'<td class="c" title="'+esc(Object.keys(g.flags).join(', '))+'"'+W('flags')+'>'+fl+'</td></tr>';
+    h+='<tr class="nota'+(gi%2?' alt':'')+'" data-np="'+esc(g.np)+'"><td class="c num"'+W('pd')+'>'+dstr(g.pd)+'</td><td class="c"'+W('late')+'>'+latePill(g.late)+'</td><td class="c num id"'+W('np')+'>'+esc(g.np)+'</td><td class="c" title="'+esc(g.cu)+'"'+W('cu')+'>'+esc(g.cu)+'</td><td class="c" title="'+esc(g.sp)+'"'+W('sp')+'>'+esc(g.sp)+'</td><td class="c" title="'+esc(g.ty)+'"'+W('ty')+'>'+esc(g.ty)+'</td><td class="c" title="'+esc(g.ca)+'"'+W('ca')+'>'+esc(g.ca)+'</td><td class="c" title="'+esc(g.dv)+'"'+W('dv')+'>'+esc(g.dv)+'</td>'+dnCells(g,W)+'<td class="c" title="'+esc(Object.keys(g.flags).join(', '))+'"'+W('flags')+'>'+fl+'</td></tr>';
     if(S.open[g.np])h+=dtNpItems(g,DTC.length);
   });
   if(!vis.length)h+='<tr><td colspan="'+DTC.length+'" class="empty">Tidak ada NP.</td></tr>';
@@ -1705,14 +1707,14 @@ function exportDelivery(){
   var G=S.dtX||[];
   if(!G.length){msg.className='err';msg.textContent='Tidak ada NP untuk diunduh.';return}
   var dt=function(day){return day==null?'':day+25569},iso=function(v){return v?dt(Math.round(Date.parse(v+'T00:00:00Z')/864e5)):''};
-  var head=['PDD','Telat (hari)','No. NP','Customer Name','Salesperson','Tipe NP','Delivery','No. WA customer','Stok inventory','Status follow up','Tanggal follow up','Keterangan follow up','Estimasi pengiriman','Diisi oleh','Perlu perhatian','Jumlah item','Qty OTS'];
+  var head=['PDD','Telat (hari)','No. NP','Customer Name','Salesperson','Tipe NP','Category','Delivery','No. WA customer','Stok inventory','Status follow up','Tanggal follow up','Keterangan follow up','Estimasi pengiriman','Diisi oleh','Perlu perhatian','Jumlah item','Qty OTS'];
   var rowsX=G.map(function(g){
     var n=FN['NP:'+g.np]||{},ph=n.k||g.wph||'';
-    return [dt(g.pd),g.late==null?'':g.late,g.np,g.cu,g.sp,g.ty,g.dv,ph?'+'+ph:'',g.stk||'',n.f?'Sudah':'Belum',iso(n.f),dnDst(g),iso(n.e),n.by||'',Object.keys(g.flags).join('; '),g.rows.length,g.qty]
+    return [dt(g.pd),g.late==null?'':g.late,g.np,g.cu,g.sp,g.ty,g.ca||'',g.dv,ph?'+'+ph:'',g.stk||'',n.f?'Sudah':'Belum',iso(n.f),dnDst(g),iso(n.e),n.by||'',Object.keys(g.flags).join('; '),g.rows.length,g.qty]
   });
   var aoa=[head].concat(rowsX),ws=XLSX.utils.aoa_to_sheet(aoa);
-  [0,10,12].forEach(function(ci){for(var ri=1;ri<aoa.length;ri++){var c=ws[XLSX.utils.encode_cell({r:ri,c:ci})];if(c&&c.t==='n')c.z='dd-mmm-yy'}});
-  ws['!cols']=[11,10,20,28,24,34,18,16,14,14,14,20,16,14,36,10,10].map(function(w){return {wch:w}});
+  [0,11,13].forEach(function(ci){for(var ri=1;ri<aoa.length;ri++){var c=ws[XLSX.utils.encode_cell({r:ri,c:ci})];if(c&&c.t==='n')c.z='dd-mmm-yy'}});
+  ws['!cols']=[11,10,20,28,24,34,26,18,16,14,14,14,20,16,14,36,10,10].map(function(w){return {wch:w}});
   ws['!autofilter']={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:aoa.length-1,c:head.length-1}})};
   var ih=['No. NP','Customer Name','Item No','Nama barang','Jenis','Qty OTS','UOM'],ix=[ih];
   G.forEach(function(g){g.rows.forEach(function(r){ix.push([g.np,g.cu,r.ino||'',r.inm||'',r.cons?'Consi':'Retail',r.o,r.um||''])})});
