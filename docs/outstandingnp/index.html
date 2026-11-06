@@ -397,6 +397,8 @@ body.shot .datapanel{display:none!important}
 .pdb{font:inherit;font-size:13px;font-weight:600;padding:7px 12px;border:1px solid #c9d3e3;border-radius:6px;background:#fff;color:var(--ink2);cursor:pointer}
 .pdb:hover{border-color:#8ea3c4}.pdb.on{background:var(--navy);border-color:var(--navy);color:#fff}
 .pdb .num{font-weight:500;opacity:.75;margin-left:3px;font-size:12px}
+.sgm{display:none}
+@media(max-width:640px){.sgd{display:none}.sgm{display:inline-block}}
 .pgk{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
 .pgk>div{border:1px solid #d8e0ec;border-radius:8px;padding:10px 12px;background:#fff}
 .pgk>div>span{display:block;font-size:12px;color:var(--ink2)}.pgk b{font-size:22px}.pgk i{display:block;font-style:normal;font-size:12px;color:var(--ink2)}
@@ -1407,7 +1409,7 @@ function followup(rows){
   h+='<div class="dh"><h3>Daftar item</h3></div>';
   var pdd='<div class="fupdd" role="group" aria-label="Filter PDD"><button type="button" class="pdb'+((f.hd.length||!S.fall)?'':' on')+'" data-hd="0">Semua PDD</button>'+[1,2,3,4,5,6,7].map(function(n){return '<button type="button" class="pdb'+(f.hd.indexOf(n)>-1?' on':'')+'" data-hd="'+n+'" title="PDD '+n+' hari lagi (hari kalender)">H-'+n+' <span class="num">'+fmt(hdCnt[n])+'</span></button>'}).join('')+'</div>';
   var ak='<div class="fupdd" role="group" aria-label="Filter Amsen / Kirim">'+['Amsen','Kirim'].map(function(v){return '<button type="button" class="pdb'+(f.ak.indexOf(v)>-1?' on':'')+'" data-ak="'+v+'" title="Hanya Delivery via Gudang. Dibaca dari komentar NP">'+v+' <span class="num">'+fmt(akCnt[v])+'</span></button>'}).join('')+'</div>';
-  var sg='<div class="fupdd" role="group" aria-label="Filter Tipe NP">'+FQ[0][2].map(function(o){return '<button type="button" class="pdb'+(f.seg.indexOf(o[0])>-1?' on':'')+'" data-fk="seg" data-fv="'+o[0]+'" title="Tipe NP: '+esc(o[1])+'">'+esc(o[1])+' <span class="num">'+fmt(fqCount(FQ[0],o))+'</span></button>'}).join('')+'</div>';
+  var sg='<span class="sgm">'+fqBtn(FQ[0])+'</span><div class="fupdd sgd" role="group" aria-label="Filter Tipe NP">'+FQ[0][2].map(function(o){return '<button type="button" class="pdb'+(f.seg.indexOf(o[0])>-1?' on':'')+'" data-fk="seg" data-fv="'+o[0]+'" title="Tipe NP: '+esc(o[1])+'">'+esc(o[1])+' <span class="num">'+fmt(fqCount(FQ[0],o))+'</span></button>'}).join('')+'</div>';
   var chips=FQ.filter(function(q){return q[0]!=='seg'&&(f[q[0]].length||S.fopen==='q:'+q[0])}).map(fqBtn).join('')+(((S.fcol.mon||[]).length||S.fopen==='mon')?monthMulti():'');
   var addBtn='<button type="button" class="msb msbtop addf" data-ms="q:add" aria-haspopup="true" aria-expanded="'+(S.fopen==='q:add')+'"><span>+ Filter</span></button>';
   h+='<div class="futool"><div class="fuf">'+pdd+'<span class="fuvr"></span>'+ak+'<span class="fuvr"></span>'+sg+'<span class="fuvr"></span>'+chips+addBtn+fhMenu('fu')+'</div><div class="fusum"><span class="num">'+fmt(itemsN)+' item · '+fmt(L.length)+' baris</span><button class="btn" type="button" data-fxl="1" title="Unduh seluruh hasil filter ke Excel">Unduh Excel</button><button class="btn" type="button" data-fxl="2" title="Unduh Excel dengan satu baris per PO/TR (tidak digabung)">Excel pisah PO/TR</button><button class="btn wabtn" type="button" data-wadlg="1" title="WhatsApp ke PIC supplier, rekap item sesuai filter">'+WAI+' WhatsApp Vendor</button>'+((anyF||S.fall)?'<button class="btn ghost" type="button" data-fclear="1">Reset filter</button>':'')+'</div></div>';
