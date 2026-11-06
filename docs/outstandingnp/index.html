@@ -1508,12 +1508,12 @@ function dnCells(g,W){
     '<td class="c dnc dtg"'+W('dst')+'><select class="fns dst '+(n.d||'')+'" data-fn="d" data-fnk="'+key+'" aria-label="Keterangan follow up"><option value="">–</option>'+DST.map(function(x){return '<option value="'+x[0]+'"'+(n.d===x[0]?' selected':'')+'>'+x[1]+'</option>'}).join('')+'</select></td>'+
     '<td class="c dnc dtg dtg3"'+W('eta')+'><input type="date" class="fnd'+(late?' late':'')+'" data-fn="e" data-fnk="'+key+'" value="'+esc(n.e||'')+'" aria-label="Estimasi pengiriman"'+(late?' title="Estimasi pengiriman sudah lewat"':'')+'></td>';
 }
-function waNorm(v){var d=String(v||'').replace(/\D/g,'');if(d){if(d.indexOf('0')===0)d='62'+d.slice(1);else if(d.indexOf('8')===0)d='62'+d}return d}
+function waKet(v){var d=String(v||'').replace(/\D/g,'');if(d){if(d.indexOf('0')===0)d='62'+d.slice(1);else if(d.indexOf('8')===0)d='62'+d}return d}
 function dnWa(np,edit){
   var key='NP:'+np,n=FN[key]||{},g0=(S.dtG||[]).filter(function(x){return x.np===np})[0],ph=n.k||(g0&&g0.wph)||'';
   if(!ph||edit){
-    fnAsk({t:'Nomor WA customer',p:'NP '+np+'. Contoh 0812xxxxxxxx.'+(n.k?' Kosongkan untuk kembali ke nomor dari laporan.':''),l:'Nomor WA',v:ph?('0'+ph.replace(/^62/,'')):'',chk:function(v){var d=waNorm(v);return d&&(d.length<10||d.length>15)?'Nomor WA tidak valid.':''}},function(v){
-      var d=waNorm(v);if(!d&&!n.k)return;fnSet(key,'k',d);
+    fnAsk({t:'Nomor WA customer',p:'NP '+np+'. Contoh 0812xxxxxxxx.'+(n.k?' Kosongkan untuk kembali ke nomor dari laporan.':''),l:'Nomor WA',v:ph?('0'+ph.replace(/^62/,'')):'',chk:function(v){var d=waKet(v);return d&&(d.length<10||d.length>15)?'Nomor WA tidak valid.':''}},function(v){
+      var d=waKet(v);if(!d&&!n.k)return;fnSet(key,'k',d);
       if(edit)return;if(d)ph=d;if(!ph)return;dnWaGo(np,n,ph)});
     return;
   }
