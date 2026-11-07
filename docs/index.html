@@ -328,6 +328,47 @@ async function xlsxBlobFromSheets(sheets){
   return await z.generateAsync({type:'blob',mimeType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
 }
 function xlsxDownload(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+function greyExportImage(){
+  greyMsg('');const B=DATA&&DATA.greyBefore,A=(DATA&&DATA.greySummary)||[];
+  if(!B||!Array.isArray(B.rows)){greyMsg('Belum ada data Before untuk dijadikan gambar.');return}
+  const af=greySnapAfter(),same=!!B.date&&B.date===af.date,bl=greySide(B,same),al=greySide(af,same),sel=greyLocSel||'';
+  const itN=its=>{const m=new Map();for(const a of (its||[])){const k=String(a[1]||'').toUpperCase()+'|'+(a[0]||'(Kosong)');if(!m.has(k))m.set(k,new Set());m.get(k).add(a[2])}return m},nB=itN(B.items),nA=itN(DATA.greyItems);
+  const M=new Map();let okB=true,okA=true;
+  const add=(r,sd)=>{const l=String(r.location||'').toUpperCase(),c=r.category||'(Kosong)';if(!M.has(l))M.set(l,new Map());const cm=M.get(l);if(!cm.has(c))cm.set(c,{bn:0,bq:0,an:0,aq:0});const o=cm.get(c);o[sd+'q']+=Number(r.qty)||0;if(typeof r.n==='number')o[sd+'n']+=r.n;else{const f=(sd==='b'?nB:nA).get(l+'|'+c);if(f)o[sd+'n']+=f.size;else if(sd==='b')okB=false;else okA=false}};
+  B.rows.forEach(r=>add(r,'b'));A.forEach(r=>add(r,'a'));
+  const locs=[...M.keys()].filter(l=>!sel||l===sel).sort((x,y)=>(GREY_CODES.indexOf(x)<0?99:GREY_CODES.indexOf(x))-(GREY_CODES.indexOf(y)<0?99:GREY_CODES.indexOf(y))||x.localeCompare(y));
+  const rows=[];let T={bn:0,bq:0,an:0,aq:0};
+  for(const l of locs){const cats=[...M.get(l)].filter(([,o])=>o.bn||o.bq||o.an||o.aq).sort((x,y)=>x[0].localeCompare(y[0]));if(!cats.length)continue;const S={bn:0,bq:0,an:0,aq:0};cats.forEach(([c,o],i)=>{rows.push({t:'r',l:i?'':l,c,o});for(const k in S){S[k]+=o[k];T[k]+=o[k]}});rows.push({t:'s',l:l+' Total',c:'',o:S})}
+  if(!rows.length){greyMsg('Tidak ada qty di lokasi Grey untuk dijadikan gambar.');return}
+  if(locs.length>1)rows.push({t:'g',l:'Grand Total',c:'',o:T});
+  const sc=2,W=1000,P=28,rh=30,cw=[120,314,90,110,90,110,110],hdrH=64,top=P+150,H=top+hdrH+rows.length*rh+P+(okB&&okA?0:26);
+  const cv=document.createElement('canvas');cv.width=W*sc;cv.height=H*sc;const g=cv.getContext('2d');g.scale(sc,sc);
+  const F='"Segoe UI",Arial,Helvetica,sans-serif',fm=v=>fmt.format(v);
+  g.fillStyle='#fff';g.fillRect(0,0,W,H);
+  const txt=(t,x,y,o={})=>{g.font=(o.w||'400')+' '+(o.s||13)+'px '+F;g.fillStyle=o.c||'#1f2a3c';g.textAlign=o.a||'left';g.textBaseline='middle';g.fillText(String(t),x,y)};
+  const rr=(x,y,w,h,r,f)=>{g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath();g.fillStyle=f;g.fill()};
+  txt('Progress lokasi Grey: Before vs After',P,P+12,{w:'700',s:20,c:'#1f3864'});
+  txt((sel?'Lokasi '+sel:'Semua lokasi Grey')+' · '+GREY_CODES.join(', '),P,P+38,{s:12,c:'#5b6577'});
+  const dB=T.bq,dA=T.aq,dl=dA-dB,pc=dB?Math.round((dB-dA)/Math.abs(dB)*100):0;
+  const kp=[['Qty Before',fm(dB),bl,'#1f2a3c'],['Qty After',fm(dA),al,'#1f2a3c'],['Selisih',(dl>0?'+':'')+fm(dl),'After dikurangi Before',dl<0?'#17744a':dl>0?'#b42318':'#5b6577'],['Progres',(pc>0?pc:0)+'%','qty berkurang dari Before','#1f3864']],kw=(W-2*P-3*12)/4;
+  kp.forEach((k,i)=>{const x=P+i*(kw+12),y=P+58;rr(x,y,kw,76,10,'#f2f6fc');txt(k[0],x+14,y+16,{s:11,c:'#5b6577',w:'600'});txt(k[1],x+14,y+42,{s:24,w:'700',c:k[3]});txt(k[2],x+14,y+64,{s:10,c:'#7a8496'})});
+  let x0=P;const xs=cw.map(w=>{const x=x0;x0+=w;return x});const tw=x0-P;
+  g.fillStyle='#1f3864';g.fillRect(P,top,tw,hdrH);
+  txt('LOKASI',xs[0]+8,top+hdrH/2,{w:'700',s:11,c:'#fff'});txt('CATEGORY',xs[1]+8,top+hdrH/2,{w:'700',s:11,c:'#fff'});
+  txt('BEFORE',xs[2]+(cw[2]+cw[3])/2,top+16,{w:'700',s:11,c:'#fff',a:'center'});txt(bl,xs[2]+(cw[2]+cw[3])/2,top+31,{s:10,c:'#c9d4ea',a:'center'});
+  txt('AFTER',xs[4]+(cw[4]+cw[5])/2,top+16,{w:'700',s:11,c:'#fff',a:'center'});txt(al,xs[4]+(cw[4]+cw[5])/2,top+31,{s:10,c:'#c9d4ea',a:'center'});
+  txt('PROGRES',xs[6]+cw[6]/2,top+hdrH/2,{w:'700',s:11,c:'#fff',a:'center'});
+  [['ITEM',2],['QTY',3],['ITEM',4],['QTY',5]].forEach(([t,i])=>txt(t,xs[i]+cw[i]-10,top+hdrH-14,{w:'700',s:10,c:'#fff',a:'right'}));
+  rows.forEach((r,i)=>{const y=top+hdrH+i*rh,o=r.o,tot=r.t!=='r';g.fillStyle=r.t==='g'?'#dde7f5':r.t==='s'?'#eaf0fa':(i%2?'#f7f9fd':'#fff');g.fillRect(P,y,tw,rh);g.fillStyle='#d5dbe6';g.fillRect(P,y+rh-1,tw,1);
+    const w=tot?'700':'400',cy=y+rh/2;
+    if(tot){txt(r.l,xs[0]+8,cy,{w:'700',c:'#1f3864'})}else{txt(r.l,xs[0]+8,cy,{w:'700'});txt(r.c,xs[1]+8,cy)}
+    txt(okB?fm(o.bn):'-',xs[2]+cw[2]-10,cy,{a:'right',w});txt(fm(o.bq),xs[3]+cw[3]-10,cy,{a:'right',w});txt(okA?fm(o.an):'-',xs[4]+cw[4]-10,cy,{a:'right',w});txt(fm(o.aq),xs[5]+cw[5]-10,cy,{a:'right',w});
+    const p=o.bq?Math.round((o.bq-o.aq)/Math.abs(o.bq)*100):null;
+    if(p===null)txt('-',xs[6]+cw[6]/2,cy,{a:'center',c:'#7a8496'});else{const col=p>0?'#17744a':p<0?'#b42318':'#5b6577';if(p>0)rr(xs[6]+8,y+5,Math.max(6,(cw[6]-16)*Math.min(100,p)/100),rh-10,5,'#bfe6cd');txt(p+'%',xs[6]+cw[6]/2,cy,{a:'center',w:'700',c:col})}
+  });
+  if(!(okB&&okA))txt('Kolom Item belum tersedia pada data lama (tanda -). Upload ulang laporan Stok per lokasi untuk menampilkannya.',P,H-P+2,{s:10.5,c:'#7a8496'});
+  cv.toBlob(b=>{if(!b){greyMsg('Gagal membuat gambar.');return}xlsxDownload(b,'Progress_Lokasi_Grey'+(sel?'_'+sel:'')+'.png')},'image/png');
+}
 async function greyExportExcel(){
   greyMsg('');
   const sel=greyLocSel||'',set=new Set(sel?[sel]:GREY_CODES),desc=new Map();
@@ -371,7 +412,7 @@ function greyTime(iso){const x=new Date(iso||'');return isNaN(x)?'':new Intl.Dat
 function greySide(o,same){const day=greyDay(o.date),tm=o.time||(same||!day?greyTime(o.at):'');return day?(day+(tm?' · '+tm:'')):(greyStamp(o.at)||'Data awal')}
 function greyPct(b,a){if(!b)return'<td class="num gpq">-</td>';const p=Math.round((b-a)/Math.abs(b)*100);if(p<=0)return'<td class="num gpq'+(p<0?' neg':'')+'">'+p+'%</td>';return'<td class="num gpq" style="background:linear-gradient(90deg,#7fcf9b '+Math.min(100,p)+'%,transparent '+Math.min(100,p)+'%)">'+p+'%</td>'}
 function renderGreyProg(){const root=document.getElementById('greyProgPanel');if(!root)return;const B=DATA&&DATA.greyBefore,A=(DATA&&DATA.greySummary)||[],af=greySnapAfter();let h='<div class="sectionhead"><div><h2>Progress lokasi Grey: Before vs After</h2><div class="small">Item = jumlah item unik (lot digabung), Qty = Available Qty per lokasi Grey. Progres = (Before - After) ÷ Before; hijau berarti qty berkurang.</div></div></div>';
-const set='<div class="gpset"><button type="button" class="secondary" id="greyXls" title="Unduh detail item lokasi Grey (data aktif), satu sheet per category">Unduh Excel detail item</button><button type="button" class="secondary" id="greySetFile" title="Pilih laporan Stok per lokasi dan lot (.xlsx) untuk dijadikan data Before">Ganti data Before...</button><button type="button" class="secondary" id="greySetNow" title="Jadikan data lokasi Grey yang sedang aktif sebagai Before">Jadikan data saat ini sebagai Before</button><input type="file" id="greyFile" accept=".xlsx" hidden></div><div class="gperr" id="greyErr" hidden></div>';
+const set='<div class="gpset"><button type="button" class="secondary" id="greyImg" title="Simpan tampilan progres lokasi Grey sebagai gambar PNG">Simpan gambar (PNG)</button><button type="button" class="secondary" id="greyXls" title="Unduh detail item lokasi Grey (data aktif), satu sheet per category">Unduh Excel detail item</button><button type="button" class="secondary" id="greySetFile" title="Pilih laporan Stok per lokasi dan lot (.xlsx) untuk dijadikan data Before">Ganti data Before...</button><button type="button" class="secondary" id="greySetNow" title="Jadikan data lokasi Grey yang sedang aktif sebagai Before">Jadikan data saat ini sebagai Before</button><input type="file" id="greyFile" accept=".xlsx" hidden></div><div class="gperr" id="greyErr" hidden></div>';
 if(!B||!Array.isArray(B.rows)){root.innerHTML=h+'<div class="empty">Belum ada data Before. Pilih laporan Stok per lokasi dan lot yang lama lewat tombol di bawah, atau jadikan data saat ini sebagai Before lalu upload data terbaru.</div>'+set;return}
 const same=!!B.date&&B.date===af.date,bl=greySide(B,same),al=greySide(af,same);
 const M=new Map(),hasN=r=>typeof r.n==='number';let nOkB=true,nOkA=true;const itN=(its)=>{const m=new Map();for(const a of (its||[])){const k=String(a[1]||'').toUpperCase()+'|'+(a[0]||'(Kosong)');if(!m.has(k))m.set(k,new Set());m.get(k).add(a[2])}return m},nB=itN(B.items),nA=itN(DATA.greyItems);const add=(r,side)=>{const l=String(r.location||'').toUpperCase(),c=r.category||'(Kosong)';if(!M.has(l))M.set(l,new Map());const cm=M.get(l);if(!cm.has(c))cm.set(c,{bn:0,bq:0,an:0,aq:0});const o=cm.get(c);o[side+'q']+=Number(r.qty)||0;if(hasN(r))o[side+'n']+=r.n;else{const f=(side==='b'?nB:nA).get(l+'|'+c);if(f)o[side+'n']+=f.size;else if(side==='b')nOkB=false;else nOkA=false}};
@@ -392,7 +433,7 @@ root.innerHTML=h}
 async function greySave(msg){await sbAsk(async()=>{await saveSharedData()});renderGreyProg();if(msg)greyMsg(msg)}
 async function greySetFromFile(file){greyMsg('');try{const rows=await readUploadedWorkbook(file),g=greyFromRows(rows),af=greySnapAfter();if(g.date&&af.date&&g.date>af.date)throw new Error('Laporan ini ('+greyDay(g.date)+') lebih baru dari data After ('+greyDay(af.date)+'). Pilih laporan yang lebih lama.');DATA.greyBefore={rows:g.rows,items:g.items,date:g.date,time:g.time,at:new Date().toISOString(),name:file.name};renderGreyProg();await greySave()}catch(e){greyMsg(e?.message||String(e))}}
 function greySetNow(){const A=(DATA&&DATA.greySummary)||[];if(!A.length){greyMsg('Belum ada data lokasi Grey yang aktif.');return}if(!confirm('Jadikan data lokasi Grey saat ini sebagai Before? Before lama akan diganti untuk semua pengguna.'))return;const af=greySnapAfter();DATA.greyBefore={rows:A.map(x=>({category:x.category,location:x.location,qty:x.qty,n:x.n})),items:DATA.greyItems||[],date:af.date,time:af.time,at:af.at||new Date().toISOString(),name:af.name};renderGreyProg();greySave()}
-document.getElementById('greyProgPanel').addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;if(t.hasAttribute('data-gl')){greyLocSel=t.getAttribute('data-gl');renderGreyProg();return}if(t.id==='greyXls'){greyExportExcel().catch(err=>greyMsg('Gagal membuat Excel: '+(err&&err.message||err)));return}if(t.id==='greySetFile')document.getElementById('greyFile').click();else if(t.id==='greySetNow')greySetNow()});
+document.getElementById('greyProgPanel').addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;if(t.hasAttribute('data-gl')){greyLocSel=t.getAttribute('data-gl');renderGreyProg();return}if(t.id==='greyImg'){try{greyExportImage()}catch(err){greyMsg('Gagal membuat gambar: '+(err&&err.message||err))}return}if(t.id==='greyXls'){greyExportExcel().catch(err=>greyMsg('Gagal membuat Excel: '+(err&&err.message||err)));return}if(t.id==='greySetFile')document.getElementById('greyFile').click();else if(t.id==='greySetNow')greySetNow()});
 document.getElementById('greyProgPanel').addEventListener('change',e=>{if(e.target.id==='greyFile'){const f=e.target.files[0];e.target.value='';if(f)greySetFromFile(f)}});
 function switchPage(mode){const d=mode===true||mode==='details',g=mode==='grey',main=!d&&!g;document.getElementById('accuracyPanel').hidden=!main;document.getElementById('adjustmentPanel').hidden=!main;document.getElementById('minusPanel').hidden=!main;document.getElementById('detailsPanel').hidden=!d;document.getElementById('greyProgPanel').hidden=!g;document.getElementById('tabMain').classList.toggle('active',main);document.getElementById('tabDetails').classList.toggle('active',d);document.getElementById('tabGrey').classList.toggle('active',g);if(d)renderDetailRows();if(g)renderGreyProg()}
 
