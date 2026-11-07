@@ -1562,11 +1562,12 @@ function fuSum(){
     '<div class="fsk"><span class="t">MS</span><span class="b ok" title="Semua PO/TR di MS ini sudah di-follow up">Sudah <b>'+fmt(s1)+'</b></span><span class="b pt" title="Dalam satu MS ada PO/TR yang sudah dan yang belum di-follow up">Partial <b>'+fmt(p1)+'</b></span><span class="b no" title="Belum ada PO/TR di MS ini yang di-follow up">Belum <b>'+fmt(b1)+'</b></span><span class="b">dari '+fmt(ms.length)+' MS</span></div></div>';
 }
 function dnStkSrc(r,z){return (z.ref==='vs'||z.ref==='vd'||!z.ref)?'':(z.ref==='wh'?'WMS':'NAV')}
-function dnStkQ(r,z){
+function dnStkQ(r,z,col){
   var src=dnStkSrc(r,z);
-  if(!src)return '<span title="'+(z.ref==='vs'?'Dikirim langsung dari supplier, tidak perlu cek stok':(z.ref==='vd'?'Dikirim dari Another Site/DC, tidak perlu cek stok':'Data stok belum diupload'))+'">–</span>';
-  var v=src==='WMS'?z.wh:z.sys;
-  return v==null?'–':fmt(v)+' <span class="dnsrc" title="'+(src==='WMS'?'Barang konsinyasi: acuan Stock WMS':'Barang retail: acuan Stock NAV (Inventory Movement)')+'">'+src+'</span>';
+  if(!src){return col==='NAV'?'<span title="'+(z.ref==='vs'?'Dikirim langsung dari supplier, tidak perlu cek stok':(z.ref==='vd'?'Dikirim dari Another Site/DC, tidak perlu cek stok':'Data stok belum diupload'))+'">–</span>':'–'}
+  if(src!==col)return '<span style="opacity:.35" title="'+(src==='WMS'?'Barang konsinyasi: acuan Stock WMS':'Barang retail: acuan Stock NAV')+'">–</span>';
+  var v=col==='WMS'?z.wh:z.sys;
+  return v==null?'–':fmt(v);
 }
 function dnStk(g){
   if(!STK.hasSys&&!STK.hasWh)return '';
@@ -1643,11 +1644,11 @@ function dtPopup(title,opts,sel,cbAttr,noneAttr,withSearch){
     '</div><div class="mfoot"><button type="button" class="btn ghost" '+noneAttr+'>Hapus pilihan</button><button type="button" class="btn" data-msclose="1">Selesai</button></div></div>';
 }
 function dtNpItems(g,ncols){
-  var h='<tr class="det"><td colspan="'+ncols+'"><table class="items dti"><thead><tr><th>Item</th><th>Nama barang</th><th>Jenis</th><th class="r">Qty OTS</th><th class="r">Stok inventory</th><th>UOM</th><th>WMS</th><th>PO/TR</th><th>Comment</th></tr></thead><tbody>';
+  var h='<tr class="det"><td colspan="'+ncols+'"><table class="items dti"><thead><tr><th>Item</th><th>Nama barang</th><th>Jenis</th><th class="r">Qty OTS</th><th class="r">Stok NAV</th><th class="r">Stok WMS</th><th>UOM</th><th>WMS</th><th>PO/TR</th><th>Comment</th></tr></thead><tbody>';
   g.rows.forEach(function(r){
     var ps=[];if(r.noDoc)ps.push('<span class="flag warn">Belum ada '+r.need+'</span>');if(r.cons&&!r.pos.length&&!r.trs.length)ps.push('<span class="flag">Konsinyasi, tidak perlu PO/TR</span>');r.pos.forEach(function(p){ps.push('PO '+esc(p.pon)+' '+esc(p.vn)+(p.st?' · '+esc(p.st):'')+(p.viaC?' · dari komentar':'')+(p.ord!=null?' (Base Qty '+fmt(p.ord)+', Rcv '+fmt(p.rec)+', OTS '+fmt(p.poo)+')':' (OTS '+fmt(p.poo)+')'))});r.trs.forEach(function(t){ps.push('TR '+esc(t.trn)+' dari '+esc(t.tfrom)+(t.st?' · '+esc(t.st):'')+(t.viaC?' · dari komentar':'')+(t.trq!=null?' (Base Qty '+fmt(t.trq)+', TI '+fmt(t.tiq)+', OTS '+fmt(t.tro)+')':' (OTS '+fmt(t.tro)+')'))});
     var zs=stkOf(r);
-    h+='<tr><td class="num" data-l="Item">'+esc(r.ino)+'</td><td data-l="Nama barang">'+esc(r.inm)+'</td><td data-l="Jenis">'+(r.cons?'Consi':'Retail')+'</td><td class="num r" data-l="Qty OTS">'+fmt(r.o)+'</td><td class="num r" data-l="Stok inventory">'+dnStkQ(r,zs)+'</td><td data-l="UOM">'+esc(r.um)+'</td><td data-l="WMS">'+esc(r.wms)+'</td><td data-l="PO/TR">'+(ps.join('<br>')||'–')+'</td><td data-l="Comment">'+esc(r.cm)+'</td></tr>';
+    h+='<tr><td class="num" data-l="Item">'+esc(r.ino)+'</td><td data-l="Nama barang">'+esc(r.inm)+'</td><td data-l="Jenis">'+(r.cons?'Consi':'Retail')+'</td><td class="num r" data-l="Qty OTS">'+fmt(r.o)+'</td><td class="num r" data-l="Stok NAV">'+dnStkQ(r,zs,'NAV')+'</td><td class="num r" data-l="Stok WMS">'+dnStkQ(r,zs,'WMS')+'</td><td data-l="UOM">'+esc(r.um)+'</td><td data-l="WMS">'+esc(r.wms)+'</td><td data-l="PO/TR">'+(ps.join('<br>')||'–')+'</td><td data-l="Comment">'+esc(r.cm)+'</td></tr>';
   });
   return h+'</tbody></table></td></tr>';
 }
@@ -1816,9 +1817,9 @@ function exportDelivery(){
   [0,12,14].forEach(function(ci){for(var ri=1;ri<aoa.length;ri++){var c=ws[XLSX.utils.encode_cell({r:ri,c:ci})];if(c&&c.t==='n')c.z='dd-mmm-yy'}});
   ws['!cols']=[11,10,20,28,24,34,26,18,16,14,12,14,14,20,16,14,36,10,10].map(function(w){return {wch:w}});
   ws['!autofilter']={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:aoa.length-1,c:head.length-1}})};
-  var ih=['No. NP','Customer Name','Item No','Nama barang','Jenis','Qty OTS','Stok inventory','Sumber stok','UOM'],ix=[ih];
-  G.forEach(function(g){g.rows.forEach(function(r){var zs=stkOf(r),sc=dnStkSrc(r,zs);ix.push([g.np,g.cu,r.ino||'',r.inm||'',r.cons?'Consi':'Retail',r.o,sc==='WMS'?(zs.wh==null?'':zs.wh):(sc==='NAV'?(zs.sys==null?'':zs.sys):''),sc,r.um||''])})});
-  var wi=XLSX.utils.aoa_to_sheet(ix);wi['!cols']=[20,28,14,44,9,9,12,10,8].map(function(w){return {wch:w}});wi['!autofilter']={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:ix.length-1,c:ih.length-1}})};
+  var ih=['No. NP','Customer Name','Item No','Nama barang','Jenis','Qty OTS','Stok NAV','Stok WMS','UOM'],ix=[ih];
+  G.forEach(function(g){g.rows.forEach(function(r){var zs=stkOf(r),sc=dnStkSrc(r,zs);ix.push([g.np,g.cu,r.ino||'',r.inm||'',r.cons?'Consi':'Retail',r.o,sc==='NAV'&&zs.sys!=null?zs.sys:'',sc==='WMS'&&zs.wh!=null?zs.wh:'',r.um||''])})});
+  var wi=XLSX.utils.aoa_to_sheet(ix);wi['!cols']=[20,28,14,44,9,9,10,10,8].map(function(w){return {wch:w}});wi['!autofilter']={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:ix.length-1,c:ih.length-1}})};
   var f=S.dt,fd=[];
   if(f.seg.length)fd.push('Tipe delivery: '+f.seg.map(function(v){return DTL[v]||v}).join(', '));
   if(f.doc.length)fd.push('Status PO/TR: '+f.doc.join(', '));
