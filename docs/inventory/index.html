@@ -24,7 +24,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",syste
 button{font:inherit;font-weight:700;font-size:13px;border:0;border-radius:8px;padding:9px 14px;cursor:pointer;color:#fff;background:#3b5ba5}
 button.g{background:#2f855a}button.x{background:#6b7280}
 .tw{overflow-x:auto}
-#cap1,#cap2,#cap3,#cap4{background:#fff;color:#111;padding:8px;display:inline-block;min-width:100%}
+#cap1,#cap2,#cap4{background:#fff;color:#111;padding:8px;display:inline-block;min-width:100%}
 table.sm{border-collapse:collapse;width:100%;font-size:12px;color:#111}
 table.sm th,table.sm td{border:1px solid #d6dbe4;padding:4px 5px;text-align:right;white-space:nowrap}
 table.sm th{white-space:normal;line-height:1.2}
@@ -88,31 +88,24 @@ table.dd td.n{text-align:right}
     <div class="tw"><div id="cap2" class="capbox"></div></div>
   </div>
 
-  <div class="card hide" id="main3">
-    <h2>4. Rekap per class by Value (SQV)</h2>
-    <div class="btns" style="margin-bottom:10px"><button id="bc3">🖼️ Capture tabel class by value</button></div>
-    <div class="tw"><div id="cap3" class="capbox"></div></div>
-  </div>
-
   <div class="card hide" id="main4">
-    <h2>5. Inventory per class (seluruh SQV): jumlah item dan nilai</h2>
+    <h2>4. Inventory per class (seluruh SQV): jumlah item dan nilai</h2>
     <div class="btns" style="margin-bottom:10px"><button id="bc4">🖼️ Capture tabel</button></div>
     <div class="tw"><div id="cap4" class="capbox"></div></div>
     <div class="note" id="n4"></div>
   </div>
 
   <div class="card hide" id="det">
-    <h2>6. Detail item <span id="dcount" style="font-weight:400;color:var(--mut)"></span></h2>
+    <h2>5. Detail item <span id="dcount" style="font-weight:400;color:var(--mut)"></span></h2>
     <div class="flt">
       <select id="fc"></select>
       <select id="fl" class="hide"></select>
-      <select id="fv" class="hide"></select>
       <select id="ft"><option value="">Semua (Assortment + Non)</option><option value="A">Assortment (repsys)</option><option value="N">Non Assortment</option></select>
       <select id="fs"><option value="">Semua status</option><option value="nol">Stock = Nol</option><option value="nos">Nol - tidak ada baris di file stok</option><option value="half">Stock &lt; Half Capacity</option><option value="neg">Stok Minus (kemungkinan ada penjualan)</option></select>
       <input id="fq" type="search" placeholder="Cari item no / deskripsi / fixture" style="min-width:220px">
       <button class="x" id="fr">Reset</button>
     </div>
-    <div class="dt"><table class="dd"><thead><tr><th>Category</th><th>Fixture</th><th>Item No</th><th>Deskripsi</th><th>Tipe</th><th>Class (Function)</th><th>Class by Value</th><th style="text-align:right">Capacity</th><th style="text-align:right">Stock</th><th style="text-align:right">Min</th><th style="text-align:right">ROP</th><th style="text-align:right">Max</th><th>Status</th></tr></thead><tbody id="db"></tbody></table></div>
+    <div class="dt"><table class="dd"><thead><tr><th>Category</th><th>Fixture</th><th>Item No</th><th>Deskripsi</th><th>Tipe</th><th>Class</th><th style="text-align:right">Capacity</th><th style="text-align:right">Stock</th><th style="text-align:right">Min</th><th style="text-align:right">ROP</th><th style="text-align:right">Max</th><th>Status</th></tr></thead><tbody id="db"></tbody></table></div>
     <div class="note" id="dn"></div>
   </div>
   </div>
@@ -121,7 +114,7 @@ table.dd td.n{text-align:right}
 
 <script>
 var KEY='qbig_inv_v1',H2C_URL='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-var S={plano:null,stk:null,rep:null,cls:null,sv:null,inv:null,meta:{}},R=[],F={c:'',l:'',v:'',t:'',s:'',q:''},LIM=600;
+var S={plano:null,stk:null,rep:null,cls:null,inv:null,meta:{}},R=[],F={c:'',l:'',t:'',s:'',q:''},LIM=600;
 function $(s){return document.querySelector(s)}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 function nf(n){return n.toLocaleString('id-ID')}
@@ -161,7 +154,7 @@ function ingest(name,buf){
   if(k==='plano'){
     S.plano=r.rows.map(function(o){return {c:String(o['Category']||'').trim(),n:String(o['Name']||'').replace(/^Name:\s*(\d+_)?/,''),fx:String(o['Fixture No.']||''),k:key(o['Item No']),d:String(o['Description']||''),cap:num(o['Capacity'])}}).filter(function(x){return x.c});
   }else if(k==='stk'){
-    var m={};r.rows.forEach(function(o){var q=num(o['Quantity']),kk=key(o['Item No']);m[kk]=(m[kk]||0)+q});S.stk=m;var cvm={},any=false;r.rows.forEach(function(o){var v=String(o['Item Class By Value']==null?'':o['Item Class By Value']).trim().toUpperCase();if(/^[A-D]$/.test(v)){cvm[key(o['Item No'])]=v;any=true}});S.sv=any?cvm:null;var vc=r.cols.filter(function(c){return c.indexOf('Value')===0})[0],inv=[];r.rows.forEach(function(o){var v=String(o['Item Class By Value']==null?'':o['Item Class By Value']).trim().toUpperCase();inv.push([key(o['Item No']),(function(t){return t==='RETAIL'?'R':t==='CATALOG'?'G':'K'})(String(o['Type']||'').trim().toUpperCase()),num(o['Quantity']),vc?num(o[vc]):0,/^[A-D]$/.test(v)?v:'-'])});S.inv=inv;
+    var m={};r.rows.forEach(function(o){var q=num(o['Quantity']),kk=key(o['Item No']);m[kk]=(m[kk]||0)+q});S.stk=m;var vc=r.cols.filter(function(c){return c.indexOf('Value')===0})[0],inv=[];r.rows.forEach(function(o){inv.push([key(o['Item No']),(function(t){return t==='RETAIL'?'R':t==='CATALOG'?'G':'K'})(String(o['Type']||'').trim().toUpperCase()),num(o['Quantity']),vc?num(o[vc]):0,'-'])});S.inv=inv;
   }else{
     var m2={},dt='';r.rows.forEach(function(o){m2[key(o['Item No'])]=[num(o['Minimum Stock']),num(o['Maximum Stock']),num(o['Reorder Point'])];if(!dt&&o['Date'])dt=parseDate(o['Date'])});S.rep=m2;S.meta.repDate=dt;
   }
@@ -183,27 +176,24 @@ function onFiles(files){
 }
 document.querySelectorAll('input[type=file]').forEach(function(i){i.addEventListener('change',function(){onFiles(i.files);i.value=''})});
 
-function persist(){try{localStorage.setItem(KEY,JSON.stringify({plano:S.plano,stk:S.stk,rep:S.rep,cls:S.cls,sv:S.sv,inv:S.inv,meta:S.meta}))}catch(e){}}
-function restore(){try{var d=JSON.parse(localStorage.getItem(KEY)||'null');if(d&&d.plano&&d.stk&&d.rep){S.plano=d.plano;S.stk=d.stk;S.rep=d.rep;S.cls=d.cls||null;S.sv=d.sv||null;S.inv=d.inv||null;S.meta=d.meta||{};labelFiles();build();say('Memakai data terakhir yang Anda unggah.')}}catch(e){}}
+function persist(){try{localStorage.setItem(KEY,JSON.stringify({plano:S.plano,stk:S.stk,rep:S.rep,cls:S.cls,inv:S.inv,meta:S.meta}))}catch(e){}}
+function restore(){try{var d=JSON.parse(localStorage.getItem(KEY)||'null');if(d&&d.plano&&d.stk&&d.rep){S.plano=d.plano;S.stk=d.stk;S.rep=d.rep;S.cls=d.cls||null;S.inv=d.inv||null;S.meta=d.meta||{};labelFiles();build();say('Memakai data terakhir yang Anda unggah.')}}catch(e){}}
 
 /* ---------- hitung ---------- */
-var CATS=[],CLS=[],CLV=[];
+var CATS=[],CLS=[];
 function build(){
   R=S.plano.map(function(p){
     var rp=S.rep[p.k],soh=Object.prototype.hasOwnProperty.call(S.stk,p.k)?S.stk[p.k]:null;
-    return {c:p.c,n:p.n,fx:p.fx,k:p.k,d:p.d,cap:p.cap,soh:soh,a:!!rp,mn:rp?rp[0]:null,mx:rp?rp[1]:null,rop:rp?rp[2]:null,cl:S.cls?(S.cls[p.k]||'-'):'',cv:S.sv?(S.sv[p.k]||'-'):'',
+    return {c:p.c,n:p.n,fx:p.fx,k:p.k,d:p.d,cap:p.cap,soh:soh,a:!!rp,mn:rp?rp[0]:null,mx:rp?rp[1]:null,rop:rp?rp[2]:null,cl:S.cls?(S.cls[p.k]||'-'):'',
       nol:soh===null||soh===0,nos:soh===null,neg:soh!==null&&soh<0,half:soh!==null&&soh>0&&soh<p.cap/2};
   });
   var seen={};CATS=[];R.forEach(function(r){if(!seen[r.c]){seen[r.c]=1;CATS.push(r.c)}});CATS.sort();
   CLS=S.cls?['A','B','C','D'].concat(R.some(function(r){return r.cl==='-'})?['-']:[]):[];
   $('#fc').innerHTML='<option value="">Semua category</option>'+CATS.map(function(c){return '<option>'+esc(c)+'</option>'}).join('');
-  CLV=S.sv?['A','B','C','D'].concat(R.some(function(r){return r.cv==='-'})?['-']:[]):[];
-  $('#fv').innerHTML='<option value="">Semua class by value</option>'+CLV.map(function(c){return '<option value="'+c+'">'+clName(c)+'</option>'}).join('');
-  $('#fv').classList.toggle('hide',!CLV.length);$('#main3').classList.toggle('hide',!CLV.length);
   $('#fl').innerHTML='<option value="">Semua class</option>'+CLS.map(function(c){return '<option value="'+c+'">'+clName(c)+'</option>'}).join('');
   $('#fl').classList.toggle('hide',!CLS.length);
   $('#main').classList.remove('hide');$('#det').classList.remove('hide');$('#main2').classList.toggle('hide',!CLS.length);
-  F={c:'',l:'',v:'',t:'',s:'',q:''};syncF();renderSum();renderDet();
+  F={c:'',l:'',t:'',s:'',q:''};syncF();renderSum();renderDet();
 }
 function clName(c){return c==='-'?'Non Class':'Class '+c}
 function agg(rows){
@@ -216,7 +206,6 @@ function sumBy(fn,vals,lab){
 }
 function sumData(){return sumBy(function(r){return r.c},CATS)}
 function sumClass(){return sumBy(function(r){return r.cl},CLS,clName)}
-function sumClassV(){return sumBy(function(r){return r.cv},CLV,clName)}
 function cellsFor(o,g){
   var red=(g!=='N')&&o.n&&o.nol/o.n>0.07;
   return [{v:o.n,f:g+'|'},{v:o.nol,f:g+'|nol'},{v:o.n?o.nol/o.n:0,p:1,cls:red?'pr':'pg'},{v:o.half,f:g+'|half'},{v:o.n?o.half/o.n:0,p:1,cls:'pg'}];
@@ -242,10 +231,9 @@ function renderSum(){
   $('#cap1').innerHTML=tableHTML(sumData(),'Category','STOCK OUT vs PLANO vs REPLENISMENT','c');
   renderInv();
   if(CLS.length)$('#cap2').innerHTML=tableHTML(sumClass(),'Class','STOCK OUT PLANO vs REPLENISMENT PER CLASS (FUNCTION CLASS)','cl');
-  if(CLV.length)$('#cap3').innerHTML=tableHTML(sumClassV(),'Class by Value','STOCK OUT PLANO vs REPLENISMENT PER CLASS BY VALUE (SQV)','cv');
   var nos=R.filter(function(r){return r.nos}).length,nocl=R.filter(function(r){return r.cl==='-'}).length;
   $('#notes').innerHTML='Σ Item dihitung per baris lokasi plano (satu item di dua lokasi dihitung dua kali), sama seperti template Excel. <b>Assortment</b> = item ada di Replenishment (repsys); <b>Non Assortment</b> = tidak ada di Replenishment. <b>Stock = Nol</b> mencakup '+nf(nos)+' baris yang tidak punya baris di file stok. <b>Stok minus</b> ('+nf(R.filter(function(r){return r.neg}).length)+' baris) tidak dihitung di Stock = Nol maupun Half Capacity karena kemungkinan ada penjualan; lihat lewat filter status di Detail. <b>Stock &lt; Half Capacity</b> = stok lebih dari nol dan kurang dari Capacity/2 (stok minus tidak ikut). % merah bila Stock=Nol lebih dari 7% (Assortment dan ALL). Klik angka untuk melihat detail item.'
-   +(CLS.length?'<br><b>Class by Value</b> memakai kolom Item Class By Value di SQV (item tanpa class di SQV atau tanpa baris stok masuk Non Class). <b>Class</b> memakai kolom Function Class dari Report ABCD Class; '+nf(nocl)+' baris plano tidak ada di file class (Non Class).':'<br>Class belum tampil: unggah Report ABCD Class (.csv) untuk rekap per class.')
+   +(CLS.length?'<br><b>Class</b> memakai kolom Function Class dari Report ABCD Class; '+nf(nocl)+' baris plano tidak ada di file class (Non Class).':'<br>Class belum tampil: unggah Report ABCD Class (.csv) untuk rekap per class.')
    +'<br>Data: '+esc(S.meta.plano||'')+' · '+esc(S.meta.stk||'')+' · '+esc(S.meta.rep||'')+(S.meta.cls?' · '+esc(S.meta.cls):'')+(S.meta.repDate?' (tanggal replenishment '+S.meta.repDate+')':'');
 }
 function rp(n){return Math.round(n).toLocaleString('id-ID')}
@@ -260,31 +248,29 @@ function invHTML(D,first,title){
   var row=function(r,tot){return '<tr'+(tot?' class="tot"':'')+'><td class="l" '+(tot?'':'style="font-weight:600"')+'>'+esc(r.c)+'</td><td>'+nf(r.n)+'</td><td>'+pf(r.n,tn)+'</td><td>'+nf(Math.round(r.q))+'</td><td>'+rp(r.v)+'</td><td>'+pf(r.v,tv)+'</td><td>'+rp(r.R)+'</td><td>'+rp(r.K)+'</td><td>'+rp(r.C)+'</td></tr>'};
   D.rows.forEach(function(r){h+=row(r,0)});return h+row(D.tot,1)+'</table>';
 }
-function invData(){return {v:invAgg(function(x){return x[4]},['A','B','C','D','-'],clName),f:S.cls?invAgg(function(x){return S.cls[x[0]]||'-'},['A','B','C','D','-'],clName):null}}
+function invData(){return S.cls?invAgg(function(x){return S.cls[x[0]]||'-'},['A','B','C','D','-'],clName):null}
 function renderInv(){
-  var ok=!!(S.inv&&S.inv.length);$('#main4').classList.toggle('hide',!ok);if(!ok)return;
-  var D=invData(),h=invHTML(D.v,'Class by Value (SQV)','INVENTORY PER CLASS BY VALUE (SQV)');
-  if(D.f)h+='<div style="height:14px"></div>'+invHTML(D.f,'Function Class','INVENTORY PER FUNCTION CLASS (ABCD CLASS)');
-  $('#cap4').innerHTML=h;
+  var ok=!!(S.inv&&S.inv.length&&S.cls);$('#main4').classList.toggle('hide',!ok);if(!ok)return;
+  var D=invData();
+  $('#cap4').innerHTML=invHTML(D,'Function Class','INVENTORY PER CLASS (FUNCTION CLASS) - NILAI STOK DARI SQV');
   var neg=S.inv.filter(function(x){return x[3]<0});
-  $('#n4').innerHTML='Seluruh isi file SQV ('+nf(S.inv.length)+' baris item), bukan hanya item plano. Nilai = Cost Amount Actual + Expected. Ada '+nf(neg.length)+' baris bernilai minus (total Rp '+rp(neg.reduce(function(a,x){return a+x[3]},0))+'), kebanyakan konsinyasi, sehingga % Nilai dihitung terhadap nilai bersih. Non Class by Value = item tanpa class di SQV. '+(D.f?'Function Class hanya ada untuk item di Report ABCD Class, jadi sisanya (termasuk banyak item konsinyasi) masuk Non Class.':'Unggah Report ABCD Class untuk rekap per Function Class.');
+  $('#n4').innerHTML='Class dari Report ABCD Class (Function Class). Nilai stok dari file SQV (Cost Amount Actual + Expected) untuk seluruh isi SQV ('+nf(S.inv.length)+' baris item), bukan hanya item plano. Ada '+nf(neg.length)+' baris bernilai minus (total Rp '+rp(neg.reduce(function(a,x){return a+x[3]},0))+'), kebanyakan konsinyasi. Item konsinyasi hampir semuanya tidak ada di file class sehingga masuk Non Class dan membuat nilainya minus; % Nilai dihitung terhadap nilai bersih.';
 }
 function drill(e){
   var td=e.target.closest('td[data-f]');if(!td)return;
   var f=td.getAttribute('data-f').split('|'),c=td.getAttribute('data-c')||'',g=td.closest('table').getAttribute('data-g');
-  F={c:g==='c'?c:'',l:g==='cl'?c:'',v:g==='cv'?c:'',t:f[0]==='A'?'A':f[0]==='N'?'N':'',s:f[1]||'',q:''};syncF();renderDet();
+  F={c:g==='c'?c:'',l:g==='cl'?c:'',t:f[0]==='A'?'A':f[0]==='N'?'N':'',s:f[1]||'',q:''};syncF();renderDet();
   $('#det').scrollIntoView({behavior:'smooth',block:'start'});
 }
-$('#cap1').addEventListener('click',drill);$('#cap2').addEventListener('click',drill);$('#cap3').addEventListener('click',drill);
+$('#cap1').addEventListener('click',drill);$('#cap2').addEventListener('click',drill);
 
 /* ---------- detail ---------- */
-function syncF(){$('#fc').value=F.c;$('#fl').value=F.l||'';$('#fv').value=F.v||'';$('#ft').value=F.t;$('#fs').value=F.s;$('#fq').value=F.q}
+function syncF(){$('#fc').value=F.c;$('#fl').value=F.l||'';$('#ft').value=F.t;$('#fs').value=F.s;$('#fq').value=F.q}
 function filtered(){
   var q=F.q.toLowerCase();
   return R.filter(function(r){
     if(F.c&&r.c!==F.c)return false;
     if(F.l&&r.cl!==F.l)return false;
-    if(F.v&&r.cv!==F.v)return false;
     if(F.t==='A'&&!r.a)return false;if(F.t==='N'&&r.a)return false;
     if(F.s==='nol'&&!r.nol)return false;if(F.s==='nos'&&!r.nos)return false;if(F.s==='half'&&!r.half)return false;if(F.s==='neg'&&!r.neg)return false;
     if(q&&(r.k+' '+r.d+' '+r.n+' '+r.fx).toLowerCase().indexOf(q)<0)return false;
@@ -295,15 +281,15 @@ function stat(r){return r.neg?['Stok Minus','o']:r.nos?['Nol (tidak ada di stok)
 function renderDet(){
   var rows=filtered(),h='';
   rows.slice(0,LIM).forEach(function(r){var s=stat(r);
-    h+='<tr><td>'+esc(r.c)+'</td><td>'+esc(r.n)+' #'+esc(r.fx)+'</td><td>'+esc(r.k)+'</td><td>'+esc(r.d)+'</td><td><span class="tg '+(r.a?'k':'o')+'">'+(r.a?'Assortment':'Non')+'</span></td><td>'+(r.cl&&r.cl!=='-'?esc(r.cl):'-')+'</td><td>'+(r.cv&&r.cv!=='-'?esc(r.cv):'-')+'</td><td class="n">'+nf(r.cap)+'</td><td class="n">'+(r.soh===null?'-':nf(r.soh))+'</td><td class="n">'+(r.mn===null?'-':nf(r.mn))+'</td><td class="n">'+(r.rop===null?'-':nf(r.rop))+'</td><td class="n">'+(r.mx===null?'-':nf(r.mx))+'</td><td><span class="tg '+s[1]+'">'+s[0]+'</span></td></tr>';
+    h+='<tr><td>'+esc(r.c)+'</td><td>'+esc(r.n)+' #'+esc(r.fx)+'</td><td>'+esc(r.k)+'</td><td>'+esc(r.d)+'</td><td><span class="tg '+(r.a?'k':'o')+'">'+(r.a?'Assortment':'Non')+'</span></td><td>'+(r.cl&&r.cl!=='-'?esc(r.cl):'-')+'</td><td class="n">'+nf(r.cap)+'</td><td class="n">'+(r.soh===null?'-':nf(r.soh))+'</td><td class="n">'+(r.mn===null?'-':nf(r.mn))+'</td><td class="n">'+(r.rop===null?'-':nf(r.rop))+'</td><td class="n">'+(r.mx===null?'-':nf(r.mx))+'</td><td><span class="tg '+s[1]+'">'+s[0]+'</span></td></tr>';
   });
-  $('#db').innerHTML=h||'<tr><td colspan="13" style="padding:18px;color:var(--mut)">Tidak ada data.</td></tr>';
+  $('#db').innerHTML=h||'<tr><td colspan="12" style="padding:18px;color:var(--mut)">Tidak ada data.</td></tr>';
   $('#dcount').textContent='· '+nf(rows.length)+' baris';
   $('#dn').textContent=rows.length>LIM?'Layar menampilkan '+nf(LIM)+' baris pertama. Unduh Excel untuk semua '+nf(rows.length)+' baris sesuai filter.':'';
 }
-$('#fc').onchange=function(){F.c=this.value;renderDet()};$('#fl').onchange=function(){F.l=this.value;renderDet()};$('#fv').onchange=function(){F.v=this.value;renderDet()};$('#ft').onchange=function(){F.t=this.value;renderDet()};$('#fs').onchange=function(){F.s=this.value;renderDet()};
+$('#fc').onchange=function(){F.c=this.value;renderDet()};$('#fl').onchange=function(){F.l=this.value;renderDet()};$('#ft').onchange=function(){F.t=this.value;renderDet()};$('#fs').onchange=function(){F.s=this.value;renderDet()};
 var _qt;$('#fq').oninput=function(){var v=this.value;clearTimeout(_qt);_qt=setTimeout(function(){F.q=v;renderDet()},200)};
-$('#fr').onclick=function(){F={c:'',l:'',v:'',t:'',s:'',q:''};syncF();renderDet()};
+$('#fr').onclick=function(){F={c:'',l:'',t:'',s:'',q:''};syncF();renderDet()};
 
 /* ---------- Excel berstyle ---------- */
 function u8(s){return new TextEncoder().encode(s)}
@@ -385,12 +371,11 @@ function exportExcel(){
   var T=function(v,st){return {v:v,s:st}},sheets=[sumSheet('Rekap',sumData(),'Category','STOCK OUT vs PLANO vs REPLENISMENT')];
   if(CLS.length)sheets.push(sumSheet('Rekap Class',sumClass(),'Class','STOCK OUT PLANO vs REPLENISMENT PER CLASS (FUNCTION CLASS)'));
   var fr=filtered().sort(function(a,b){return a.c<b.c?-1:a.c>b.c?1:(a.n+a.fx)<(b.n+b.fx)?-1:1});
-  var dr=[['Category','Fixture','Item No','Deskripsi','Tipe','Class (Function)','Class by Value','Capacity','Stock','Min Stock','Reorder Point','Max Stock','Status'].map(function(t){return T(t,1)})];
-  fr.forEach(function(r){dr.push([T(r.c,2),T(r.n+' #'+r.fx,2),T(r.k,2),T(r.d,2),T(r.a?'Assortment':'Non Assortment',2),T(r.cl&&r.cl!=='-'?r.cl:'-',2),T(r.cv&&r.cv!=='-'?r.cv:'-',2),T(r.cap,3),r.soh===null?T('-',2):T(r.soh,3),r.mn===null?T('-',2):T(r.mn,3),r.rop===null?T('-',2):T(r.rop,3),r.mx===null?T('-',2):T(r.mx,3),T(stat(r)[0],2)])});
-  var fdesc=[F.c||'Semua category',F.l?clName(F.l):'Semua class',F.v?'Value '+clName(F.v):'Semua class by value',F.t==='A'?'Assortment':F.t==='N'?'Non Assortment':'Assortment + Non',F.s==='nol'?'Stock = Nol':F.s==='nos'?'Nol tanpa baris stok':F.s==='half'?'< Half Capacity':F.s==='neg'?'Stok Minus':'Semua status'].join(' · ');
-  if(CLV.length)sheets.splice(CLS.length?2:1,0,sumSheet('Rekap Class by Value',sumClassV(),'Class by Value','STOCK OUT PLANO vs REPLENISMENT PER CLASS BY VALUE (SQV)'));
-  if(S.inv&&S.inv.length){var ID=invData();sheets.push(invSheet('Inventory Class by Value',ID.v,'Class by Value (SQV)','INVENTORY PER CLASS BY VALUE (SQV)'));if(ID.f)sheets.push(invSheet('Inventory Function Class',ID.f,'Function Class','INVENTORY PER FUNCTION CLASS (ABCD CLASS)'))}
-  sheets.push({name:'Detail',w:[24,40,13,46,15,12,12,10,10,11,13,11,24],fz:1,af:'A1:M'+dr.length,rows:dr,h:{0:30}});
+  var dr=[['Category','Fixture','Item No','Deskripsi','Tipe','Class','Capacity','Stock','Min Stock','Reorder Point','Max Stock','Status'].map(function(t){return T(t,1)})];
+  fr.forEach(function(r){dr.push([T(r.c,2),T(r.n+' #'+r.fx,2),T(r.k,2),T(r.d,2),T(r.a?'Assortment':'Non Assortment',2),T(r.cl&&r.cl!=='-'?r.cl:'-',2),T(r.cap,3),r.soh===null?T('-',2):T(r.soh,3),r.mn===null?T('-',2):T(r.mn,3),r.rop===null?T('-',2):T(r.rop,3),r.mx===null?T('-',2):T(r.mx,3),T(stat(r)[0],2)])});
+  var fdesc=[F.c||'Semua category',F.l?clName(F.l):'Semua class',F.t==='A'?'Assortment':F.t==='N'?'Non Assortment':'Assortment + Non',F.s==='nol'?'Stock = Nol':F.s==='nos'?'Nol tanpa baris stok':F.s==='half'?'< Half Capacity':F.s==='neg'?'Stok Minus':'Semua status'].join(' · ');
+  if(S.inv&&S.inv.length&&S.cls)sheets.push(invSheet('Inventory per Class',invData(),'Function Class','INVENTORY PER CLASS (FUNCTION CLASS) - NILAI STOK DARI SQV'));
+  sheets.push({name:'Detail',w:[24,40,13,46,15,10,10,10,11,13,11,24],fz:1,af:'A1:L'+dr.length,rows:dr,h:{0:30}});
   xsave(xbuild(sheets),'Inventory_PlanoStock_'+today()+'.xlsx');
   say('✔ Excel diunduh. Sheet Detail mengikuti filter: '+fdesc+' ('+nf(fr.length)+' baris).');
 }
@@ -427,7 +412,6 @@ function capBtn(btn,sel,name,title,label){
 }
 capBtn($('#bc'),'#cap1','Inventory_PlanoStock','Stock Out vs Plano','🖼️ Capture tabel');
 capBtn($('#bc4'),'#cap4','Inventory_PlanoStock_inventory_per_class','Inventory per Class','🖼️ Capture tabel');
-capBtn($('#bc3'),'#cap3','Inventory_PlanoStock_class_by_value','Class by Value','🖼️ Capture tabel class by value');
 capBtn($('#bc2'),'#cap2','Inventory_PlanoStock_per_Class','Per Class','🖼️ Capture tabel class');
 restore();
 </script>
