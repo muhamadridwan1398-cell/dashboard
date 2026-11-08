@@ -203,6 +203,12 @@
         .tab-panel { display: none; }
         .tab-panel.active { display: block; }
 
+        .quick-view { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 12px; }
+        .quick-label { font-size: 12px; font-weight: 700; color: var(--text-muted); }
+        .quick-btn { border: 1px solid #cbd5e1; background: #fff; color: #1f4e78; border-radius: 999px; padding: 7px 14px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+        .quick-btn:hover { background: #eef3ff; }
+        .quick-btn.active { background: #1f4e78; border-color: #1f4e78; color: #fff; }
+        .quick-info { font-size: 12px; color: var(--text-muted); }
         .kpi-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -620,6 +626,12 @@
 
     <div id="tab-dash" class="tab-panel active">
         <div id="captureArea">
+            <div class="quick-view" id="quickView">
+                <span class="quick-label">Tampilan data:</span>
+                <button type="button" class="quick-btn active" data-q="ALL" onclick="setQuickView('ALL')">Semua Data</button>
+                <button type="button" class="quick-btn" data-q="WHCC" onclick="setQuickView('WHCC')">WH Area · Cash &amp; Carry Gudang</button>
+                <span class="quick-info" id="quickInfo"></span>
+            </div>
             <div class="kpi-grid">
                 <div class="kpi-card">
                     <div class="kpi-title">Total MS</div>
@@ -1047,7 +1059,29 @@
     /* Bangun ringkasan, filter tanggal, dan filter tipe nota dari daftar item (dari Excel atau dari data bersama di server) */
     /* Batas AWT: nota dihitung AWT (late) bila durasi tunggu lebih dari AWT_LIMIT menit. Berlaku untuk semua item, termasuk data yang tersimpan di server. */
     const AWT_LIMIT = 30;
-    function buildFromItems(items) {
+    let fullItems = [];
+    let quickView = 'ALL';
+    function isCcGudang(t) { return String(t || '').toLowerCase().replace(/[^a-z]/g, '').indexOf('cashcarrygudang') > -1; }
+    function isWhArea(a) { return String(a || '').toUpperCase().indexOf('WH') > -1; }
+    function setQuickView(q) {
+        if (q === 'WHCC' && !fullItems.some(function (it) { return isCcGudang(it.notaType); })) {
+            let tp = Array.from(new Set(fullItems.map(function (d) { return d.notaType; }))).join(', ') || '(belum ada data)';
+            showToast('Tipe Cash & Carry Gudang tidak ditemukan di data. Tipe yang ada: ' + tp);
+            return;
+        }
+        quickView = q;
+        buildFromItems(fullItems);
+    }
+    function buildFromItems(allItems) {
+        fullItems = allItems;
+        allItems.forEach(function (it) {
+            it.late = (Number(it.diffMin) || 0) > AWT_LIMIT;
+            it.status = it.late ? 'AWT' : 'NO AWT';
+        });
+        let items = quickView === 'WHCC' ? allItems.filter(function (it) { return isWhArea(it.area) && isCcGudang(it.notaType); }) : allItems;
+        document.querySelectorAll('#quickView .quick-btn').forEach(function (b) { b.classList.toggle('active', b.dataset.q === quickView); });
+        let qi = document.getElementById('quickInfo');
+        if (qi) qi.textContent = quickView === 'WHCC' ? 'Menampilkan WH Area dan tipe Cash & Carry Gudang saja (' + items.length + ' dari ' + allItems.length + ' item)' : '';
         items.forEach(function (it) {
             it.late = (Number(it.diffMin) || 0) > AWT_LIMIT;
             it.status = it.late ? 'AWT' : 'NO AWT';
@@ -1937,7 +1971,7 @@
     function shSave(fileName) {
         if (location.protocol === 'file:') return;
         if (typeof CompressionStream === 'undefined') { showToast('Browser ini belum mendukung simpan online. Gunakan Chrome atau Edge terbaru.'); return; }
-        const items = globalData;
+        const items = fullItems;
         const run = function (tok) {
             shMsg('Menyimpan data untuk semua pengguna…');
             const stream = new Blob([JSON.stringify({ items: items, fileName: fileName || '', uploadedAt: new Date().toISOString() })]).stream().pipeThrough(new CompressionStream('gzip'));
