@@ -20,6 +20,21 @@ body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);f
 .bar-in{max-width:1320px;margin:0 auto;padding:14px 20px 0;display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
 .brand h1{margin:0;font-family:var(--cond);font-weight:700;font-size:30px;line-height:1;letter-spacing:.2px}
 .brand p{margin:3px 0 0;font-size:13px;color:#a9bdd1}
+.bar-r{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+#sbpill{display:flex;align-items:center;gap:8px;font:600 13px/1 var(--body);color:#fff;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);border-radius:3px;padding:5px 5px 5px 11px}
+#sbpill i{width:8px;height:8px;border-radius:50%;background:#4ade80;display:inline-block}
+#sbpill button{font:600 13px/1 var(--body);border:0;border-radius:2px;padding:7px 11px;cursor:pointer;background:var(--sig);color:var(--navy)}
+#sbpill button:hover{background:#ffd23d}
+#sbpill button.o{background:transparent;color:#cfe0f0;border:1px solid rgba(255,255,255,.3)}
+.lgbg{position:fixed;inset:0;z-index:2000;background:rgba(15,23,42,.6);display:flex;align-items:center;justify-content:center;padding:16px}
+.lgbox{background:#fff;color:var(--ink);border-top:4px solid var(--sig);border-radius:3px;width:min(390px,100%);padding:20px;box-shadow:0 20px 50px rgba(0,0,0,.35);font-family:var(--body)}
+.lgbox h3{margin:0 0 4px;font:700 24px/1.1 var(--cond);color:var(--navy)}.lgbox p{margin:0 0 12px;font-size:13.5px;color:var(--mut)}
+.lgbox label{display:block;font-size:13px;font-weight:600;margin:10px 0 4px}
+.lgbox input{width:100%;padding:10px;border:1.5px solid var(--line);border-radius:3px;font:500 15px var(--body)}
+.lgerr{color:var(--red);font-size:13px;min-height:18px;margin-top:8px}
+.lgact{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+.lgact button{border:1.5px solid var(--line);background:#fff;color:var(--mut);border-radius:3px;padding:10px 16px;font:600 14px var(--body);cursor:pointer}
+.lgact button.ok{background:var(--navy);border-color:var(--navy);color:#fff}
 .bar a.back{color:#cfe0f0;text-decoration:none;font-size:13.5px;padding:6px 0}
 .bar a.back:hover{color:#fff;text-decoration:underline}
 .tabs{display:flex;gap:2px;max-width:1320px;margin:10px auto 0;padding:0 20px;overflow-x:auto}
@@ -141,7 +156,7 @@ table.dd td.n{text-align:right}
 <header class="bar">
   <div class="bar-in">
     <div class="brand"><h1>Inventory</h1><p>MITRA10 Q-BIG · Toko 10038</p></div>
-    <a class="back" href="../">Menu dashboard</a>
+    <div class="bar-r"><div id="sbpill"></div><a class="back" href="../">Menu dashboard</a></div>
   </div>
   <div class="tabs" role="tablist"><button class="tab on" role="tab" aria-selected="true" data-tab="plano">Plano Stock</button><button class="tab" role="tab" aria-selected="false" data-tab="detail">Detail Item</button></div>
 </header>
@@ -271,7 +286,7 @@ function onFiles(files){
   say('Membaca '+list.length+' file...');
   var chain=Promise.resolve(),done=[];
   list.forEach(function(f){chain=chain.then(function(){return f.arrayBuffer()}).then(function(b){return new Promise(function(res){setTimeout(function(){res(ingest(f.name,b))},20)})}).then(function(k){done.push(k)})});
-  chain.then(function(){labelFiles();if(S.plano&&S.stk&&S.rep){build();persist();say('✔ Data dihitung: '+nf(R.length)+' baris plano.');$('#dataBox').open=false}else say('Tersimpan. Masih menunggu: '+[!S.plano?'ITEM PLANO':'',!S.stk?'SQV':'',!S.rep?'Replenishment':''].filter(Boolean).join(', ')+'.')})
+  chain.then(function(){labelFiles();if(S.plano&&S.stk&&S.rep){build();persist();say('✔ Data dihitung: '+nf(R.length)+' baris plano.');$('#dataBox').open=false;shSave()}else say('Tersimpan. Masih menunggu: '+[!S.plano?'ITEM PLANO':'',!S.stk?'SQV':'',!S.rep?'Replenishment':''].filter(Boolean).join(', ')+'.')})
    .catch(function(e){say(e.message||String(e),1)});
 }
 document.querySelectorAll('input[type=file]').forEach(function(i){i.addEventListener('change',function(){onFiles(i.files);i.value=''})});
@@ -552,7 +567,83 @@ function capBtn(btn,sel,name,title,label){
 capBtn($('#bc'),'#cap1','Inventory_StockOutPlano','Stock Out Plano','🖼️ Capture tabel');
 capBtn($('#bc4'),'#cap4','Inventory_StockInventory','Stock Inventory','🖼️ Capture tabel');
 capBtn($('#bc2'),'#cap2','Inventory_StockOutPlano_Class','Stock Out Plano Class','🖼️ Capture tabel class');
-restore();
+/* ===== Data bersama (Supabase): semua orang melihat data terakhir, hanya akun editor yang boleh menyimpan ===== */
+var SB_URL='https://igkdetuufvcczmiluvqd.supabase.co',SB_KEY='sb_publishable_RUgz--hm3bwPBx75hzfrzA_C13Vm34h',SHURL=SB_URL+'/functions/v1/shared-data?name=inventory',SB_LS='qbig_sb_session';
+var _tok=null,_tokExp=0,_who='';
+function sbOk(){return !!_tok&&Date.now()<_tokExp-60000}
+function sbUser(u){u=String(u||'').trim().toLowerCase();return u.indexOf('@')>-1?u:u+'@qbig.example.com'}
+function sbSet(j,email){_tok=j.access_token;_tokExp=Date.now()+(j.expires_in||3600)*1000;_who=email||_who;try{localStorage.setItem(SB_LS,JSON.stringify({rt:j.refresh_token,em:_who}))}catch(e){}sbPill()}
+async function sbLogin(email,pw){
+  email=sbUser(email);
+  var r=await fetch(SB_URL+'/auth/v1/token?grant_type=password',{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({email:email,password:pw})});
+  var j=await r.json().catch(function(){return {}});
+  if(!r.ok||!j.access_token)throw new Error('Username atau password salah.');
+  sbSet(j,email);return _tok;
+}
+async function sbRefresh(){
+  var s=null;try{s=JSON.parse(localStorage.getItem(SB_LS)||'null')}catch(e){}
+  if(!s||!s.rt)return false;
+  try{
+    var r=await fetch(SB_URL+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:s.rt})});
+    var j=await r.json().catch(function(){return {}});
+    if(!r.ok||!j.access_token){if(r.status>=400&&r.status<500){try{localStorage.removeItem(SB_LS)}catch(e){}}return false}
+    sbSet(j,s.em||'');return true;
+  }catch(e){return false}
+}
+function sbOut(){_tok=null;_tokExp=0;_who='';try{localStorage.removeItem(SB_LS)}catch(e){}sbPill()}
+function sbLogged(){return sbOk()||(function(){try{return !!JSON.parse(localStorage.getItem(SB_LS)||'null')}catch(e){return false}})()}
+var _pillBound=false;
+function sbPill(){
+  var p=$('#sbpill');if(!p)return;
+  if(!_pillBound){_pillBound=true;p.addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;if(b.dataset.a==='out')sbOut();else sbAsk(function(){})})}
+  var nm=String(_who||'').split('@')[0],on=sbLogged();
+  p.innerHTML=on?'<i></i><span>Editor'+(nm?' · '+esc(nm):'')+'</span><button type="button" class="o" data-a="out">Keluar</button>':'<button type="button" data-a="in">Login Editor</button>';
+  if(on)p.style.paddingLeft='11px';else p.style.paddingLeft='5px';
+}
+function sbAsk(cb,onCancel){
+  if(sbOk()){cb(_tok);return}
+  sbRefresh().then(function(ok){if(ok){cb(_tok);return}sbDlg(cb,onCancel)});
+}
+function sbDlg(cb,onCancel){
+  var old=document.getElementById('lgdlg');if(old)old.remove();
+  document.body.insertAdjacentHTML('beforeend','<div class="lgbg" id="lgdlg" role="dialog" aria-modal="true" aria-label="Login editor"><form class="lgbox" id="lgform"><h3>Login Editor</h3><p>Hanya editor yang boleh memperbarui data. Setelah login, data otomatis tersimpan untuk semua pengguna.</p><label for="lgem">Username</label><input id="lgem" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required><label for="lgpw">Password</label><input id="lgpw" type="password" autocomplete="current-password" required><div class="lgerr" id="lgerr" role="alert"></div><div class="lgact"><button type="button" id="lgx">Batal</button><button type="submit" class="ok" id="lgok">Masuk</button></div></form></div>');
+  var d=document.getElementById('lgdlg'),f=document.getElementById('lgform'),er=document.getElementById('lgerr');
+  document.getElementById('lgem').focus();
+  document.getElementById('lgx').addEventListener('click',function(){d.remove();if(onCancel)onCancel()});
+  f.addEventListener('submit',async function(e){
+    e.preventDefault();var b=document.getElementById('lgok');b.disabled=true;er.textContent='Masuk...';
+    try{await sbLogin(document.getElementById('lgem').value.trim(),document.getElementById('lgpw').value);d.remove();cb(_tok)}
+    catch(x){er.textContent=x.message||'Login gagal.';b.disabled=false}
+  });
+}
+function shStamp(iso){try{return new Intl.DateTimeFormat('id-ID',{dateStyle:'long',timeStyle:'short',timeZone:'Asia/Jakarta'}).format(new Date(iso))+' WIB'}catch(x){return iso}}
+async function shLoad(){
+  if(location.protocol==='file:'){return}
+  try{
+    var r=await fetch(SHURL,{cache:'no-store'});
+    if(r.status===404){return}
+    if(!r.ok)throw new Error('Data tidak dapat dimuat ('+r.status+').');
+    var sh=await r.json(),d=sh&&sh.data;
+    if(!d||!Array.isArray(d.plano)||!d.plano.length||!d.stk||!d.rep)return;
+    S.plano=d.plano;S.stk=d.stk;S.rep=d.rep;S.cls=d.cls||null;S.inv=d.inv||null;S.meta=d.meta||{};S.meta.savedAt=sh.savedAt;S.meta.by=sh.by||'';
+    labelFiles();build();persist();$('#dataBox').open=false;
+    say('Data terakhir disimpan: '+shStamp(sh.savedAt)+(sh.by?' oleh '+String(sh.by).split('@')[0]:'')+'. Semua pengguna melihat data ini.');
+  }catch(e){say((e&&e.message)||'Data online belum tersedia.',1)}
+}
+function shSave(){
+  if(location.protocol==='file:')return;
+  if(typeof CompressionStream==='undefined'){say('Browser ini belum mendukung simpan online. Gunakan Chrome atau Edge terbaru.',1);return}
+  var run=function(tok){
+    say('Menyimpan data untuk semua pengguna...');
+    var stream=new Blob([JSON.stringify({plano:S.plano,stk:S.stk,rep:S.rep,cls:S.cls,inv:S.inv,meta:S.meta,uploadedAt:new Date().toISOString()})]).stream().pipeThrough(new CompressionStream('gzip'));
+    new Response(stream).arrayBuffer().then(function(body){return fetch(SHURL,{method:'PUT',headers:{'Content-Type':'application/gzip','Authorization':'Bearer '+tok},body:body})})
+     .then(function(r){return r.json().catch(function(){return {}}).then(function(j){if(!r.ok)throw new Error(j.error||('Simpan gagal ('+r.status+').'));say('✔ Data tersimpan untuk semua pengguna ('+shStamp(j.savedAt)+').')})})
+     .catch(function(e){say((e&&e.message)||'Data gagal disimpan.',1)});
+  };
+  sbAsk(run,function(){say('Data hanya tampil di perangkat ini (belum disimpan untuk semua pengguna). Login Editor untuk menyimpan.',1)});
+}
+sbPill();sbRefresh();
+restore();shLoad();
 try{var _t=sessionStorage.getItem('qbig_inv_tab');if(_t==='detail')showTab('detail')}catch(e){}
 </script>
 </body>
