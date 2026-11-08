@@ -641,6 +641,11 @@
                     <div class="kpi-value" id="kpi-pct-val">0.0%</div>
                     <div class="kpi-subtext">Tingkat keterlambatan MS</div>
                 </div>
+                <div class="kpi-card danger">
+                    <div class="kpi-title">AWT >30 Min</div>
+                    <div class="kpi-value" id="kpi-awt30-val">0</div>
+                    <div class="kpi-subtext" id="kpi-awt30-sub">Nota MS menunggu lebih dari 30 menit</div>
+                </div>
                 <div class="kpi-card success">
                     <div class="kpi-title">Persentase &lt;10 Min</div>
                     <div class="kpi-value" id="kpi-pct-noawt-val">0.0%</div>
@@ -751,6 +756,30 @@
                             </table>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top: 16px; border-left: 4px solid var(--danger);">
+                <div class="card-header">
+                    <span>⏱️ AWT Lebih dari 30 Menit Per Tanggal</span>
+                    <span style="font-size: 11px; font-weight: normal; color: var(--text-muted);">Nota MS dengan durasi tunggu &gt; 30 menit</span>
+                </div>
+                <div class="rekap-scroll-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Tanggal Order</th>
+                                <th>Selling Area >30 Min</th>
+                                <th>WH Area >30 Min</th>
+                                <th>Total AWT >30 Min</th>
+                                <th>Total MS</th>
+                                <th>% dari Total MS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="awt30Body">
+                            <tr><td colspan="6" class="empty-placeholder">Belum ada data.</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
@@ -873,6 +902,7 @@
                         <select id="durationTierFilter" onchange="applyDetailFilters()">
                             <option value="ALL">Semua Tier</option>
                             <option value="gt10">> 10 Min</option>
+                            <option value="gt30">> 30 Min</option>
                             <option value="lt10">&lt; 10 Min</option>
                         </select>
                     </div>
@@ -1463,6 +1493,34 @@
         if (!keys.length) chart.innerHTML = '<div class="empty-placeholder" style="border: none; width: 100%;">Belum ada data.</div>';
     }
 
+    function renderAwt30() {
+        let g = {};
+        globalUniqueDNs.forEach(d => {
+            let k = d.date;
+            if (!g[k]) g[k] = { total: 0, sell: 0, wh: 0, n: 0 };
+            g[k].total++;
+            if (d.maxDiff > 30) {
+                g[k].n++;
+                let a = (d.area || '').toUpperCase();
+                if (a.includes('SELLING')) g[k].sell++;
+                else if (a.includes('WH')) g[k].wh++;
+            }
+        });
+        let tb = document.getElementById('awt30Body');
+        let keys = Object.keys(g).sort();
+        if (!keys.length) { tb.innerHTML = '<tr><td colspan="6" class="empty-placeholder">Belum ada data.</td></tr>'; return; }
+        let T = { total: 0, sell: 0, wh: 0, n: 0 };
+        let html = '';
+        keys.forEach(k => {
+            let r = g[k];
+            T.total += r.total; T.sell += r.sell; T.wh += r.wh; T.n += r.n;
+            let b = function (v, area) { return v ? `<span class="clickable-val badge badge-danger" onclick="filterDetailFromClick('${k}', '${area}', 'gt30')" title="Klik untuk lihat detail tanggal ${k}">${v}</span>` : '<span style="color: var(--text-muted);">0</span>'; };
+            html += `<tr><td><strong>${k}</strong></td><td>${b(r.sell, 'SELLINGAREA')}</td><td>${b(r.wh, 'WHAREA')}</td><td>${b(r.n, 'ALL')}</td><td>${r.total}</td><td style="color: var(--danger); font-weight: bold;">${r.total ? ((r.n / r.total) * 100).toFixed(1) : '0.0'}%</td></tr>`;
+        });
+        html += `<tr style="background-color: #edf2f7; font-weight: bold;"><td style="text-align: center;">TOTAL</td><td>${T.sell}</td><td>${T.wh}</td><td style="color: var(--danger);">${T.n}</td><td>${T.total}</td><td style="color: var(--danger);">${T.total ? ((T.n / T.total) * 100).toFixed(1) : '0.0'}%</td></tr>`;
+        tb.innerHTML = html;
+    }
+
     function updateDashboardSummary() {
         let totalCount = globalUniqueDNs.length;
         let awtCount = globalUniqueDNs.filter(d => d.late).length;
@@ -1475,6 +1533,10 @@
         document.getElementById('kpi-pct-val').innerText = pctOverall;
         document.getElementById('kpi-pct-noawt-val').innerText = totalCount > 0 ? ((noAwtCount / totalCount) * 100).toFixed(1) + "%" : "0.0%";
 
+        let n30 = globalUniqueDNs.filter(d => d.maxDiff > 30).length;
+        document.getElementById('kpi-awt30-val').innerText = n30;
+        document.getElementById('kpi-awt30-sub').innerText = totalCount > 0 ? ((n30 / totalCount) * 100).toFixed(1) + '% dari total MS (>30 menit)' : 'Nota MS menunggu lebih dari 30 menit';
+        renderAwt30();
         renderRekapTable(false);
         renderRekapBulan();
         renderCategoryLate();
@@ -1546,6 +1608,7 @@
 
             let matchesTier = true;
             if (tierVal === 'gt10') matchesTier = d.late;
+            else if (tierVal === 'gt30') matchesTier = d.diffMin > 30;
             else if (tierVal === 'lt10') matchesTier = !d.late;
 
             return matchesSearch && matchesDate && matchesStatus && matchesArea && matchesType && matchesTier;
@@ -1639,7 +1702,7 @@
                 tPaid: row.tPaid,
                 tReady: row.tReady,
                 diffMin: Math.round(row.diffMin * 100) / 100,
-                status: isAwt ? 'AWT (>10 Min)' : 'NO AWT (≤10 Min)'
+                status: isAwt ? (row.diffMin > 30 ? 'AWT (>30 Min)' : 'AWT (>10 Min)') : 'NO AWT (≤10 Min)'
             });
 
             addedRow.height = 20;
