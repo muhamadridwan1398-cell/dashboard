@@ -592,7 +592,7 @@
     <div class="header">
         <div>
             <h1>Dashboard Monitoring AWT (Average Waiting Time)</h1>
-            <p>Mitra10 Qbig | SLA: Time Ready Actual - Time Paid ≤ 10 Menit</p>
+            <p>Mitra10 Qbig | SLA: Time Ready Actual - Time Paid ≤ 30 Menit</p>
             <p style="margin-top: 4px; font-size: 12px; font-style: italic;">Remarks: Ridwan Qbig</p>
         </div>
     </div>
@@ -627,27 +627,22 @@
                     <div class="kpi-subtext">Total No DN unik diproses</div>
                 </div>
                 <div class="kpi-card danger">
-                    <div class="kpi-title">AWT >10 Min</div>
+                    <div class="kpi-title">AWT >30 Min</div>
                     <div class="kpi-value" id="kpi-awt-val">0</div>
                     <div class="kpi-subtext" id="kpi-awt-sub">Nota MS melebihi SLA</div>
                 </div>
                 <div class="kpi-card success">
-                    <div class="kpi-title">AWT &lt;10 Min</div>
+                    <div class="kpi-title">AWT &lt;30 Min</div>
                     <div class="kpi-value" id="kpi-noawt-val">0</div>
                     <div class="kpi-subtext">Nota MS memenuhi SLA</div>
                 </div>
                 <div class="kpi-card danger">
-                    <div class="kpi-title">Persentase >10 Min</div>
+                    <div class="kpi-title">Persentase >30 Min</div>
                     <div class="kpi-value" id="kpi-pct-val">0.0%</div>
                     <div class="kpi-subtext">Tingkat keterlambatan MS</div>
                 </div>
-                <div class="kpi-card danger">
-                    <div class="kpi-title">AWT >30 Min</div>
-                    <div class="kpi-value" id="kpi-awt30-val">0</div>
-                    <div class="kpi-subtext" id="kpi-awt30-sub">Nota MS menunggu lebih dari 30 menit</div>
-                </div>
                 <div class="kpi-card success">
-                    <div class="kpi-title">Persentase &lt;10 Min</div>
+                    <div class="kpi-title">Persentase &lt;30 Min</div>
                     <div class="kpi-value" id="kpi-pct-noawt-val">0.0%</div>
                     <div class="kpi-subtext">Tingkat ketepatan waktu MS</div>
                 </div>
@@ -674,9 +669,9 @@
                             <thead>
                                 <tr>
                                     <th>Tanggal Order</th>
-                                    <th>Selling Area >10 Min</th>
-                                    <th>WH Area >10 Min</th>
-                                    <th>Total AWT >10 Min</th>
+                                    <th>Selling Area >30 Min</th>
+                                    <th>WH Area >30 Min</th>
+                                    <th>Total AWT >30 Min</th>
                                     <th>Total MS</th>
                                     <th>% AWT Late</th>
                                     <th>% AWT On Time</th>
@@ -723,8 +718,8 @@
                             <table>
                                 <thead>
                                     <tr>
-                                        <th>> 10 Min</th>
-                                        <th>&lt;10 Min</th>
+                                        <th>> 30 Min</th>
+                                        <th>&lt;30 Min</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -743,8 +738,8 @@
                             <table>
                                 <thead>
                                     <tr>
-                                        <th>> 10 Min</th>
-                                        <th>&lt;10 Min</th>
+                                        <th>> 30 Min</th>
+                                        <th>&lt;30 Min</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -756,30 +751,6 @@
                             </table>
                         </div>
                     </div>
-                </div>
-            </div>
-
-            <div class="card" style="margin-top: 16px; border-left: 4px solid var(--danger);">
-                <div class="card-header">
-                    <span>⏱️ AWT Lebih dari 30 Menit Per Tanggal</span>
-                    <span style="font-size: 11px; font-weight: normal; color: var(--text-muted);">Nota MS dengan durasi tunggu &gt; 30 menit</span>
-                </div>
-                <div class="rekap-scroll-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Tanggal Order</th>
-                                <th>Selling Area >30 Min</th>
-                                <th>WH Area >30 Min</th>
-                                <th>Total AWT >30 Min</th>
-                                <th>Total MS</th>
-                                <th>% dari Total MS</th>
-                            </tr>
-                        </thead>
-                        <tbody id="awt30Body">
-                            <tr><td colspan="6" class="empty-placeholder">Belum ada data.</td></tr>
-                        </tbody>
-                    </table>
                 </div>
             </div>
 
@@ -797,9 +768,9 @@
                     <thead>
                         <tr>
                             <th>Bulan</th>
-                            <th>Selling Area >10 Min</th>
-                            <th>WH Area >10 Min</th>
-                            <th>Total AWT >10 Min</th>
+                            <th>Selling Area >30 Min</th>
+                            <th>WH Area >30 Min</th>
+                            <th>Total AWT >30 Min</th>
                             <th>Total MS</th>
                             <th>% AWT Late</th>
                             <th>% AWT On Time</th>
@@ -816,11 +787,11 @@
 
             <div class="card" style="margin-top: 20px;">
                 <div class="card-header">
-                    <span>📊 Grafik Persentase Per Bulan (&gt;10 Min vs &lt;10 Min)</span>
+                    <span>📊 Grafik Persentase Per Bulan (&gt;30 Min vs &lt;30 Min)</span>
                 </div>
                 <div class="chart-legend">
-                    <span><i style="background: var(--danger);"></i> Persentase &gt;10 Min</span>
-                    <span><i style="background: var(--success);"></i> Persentase &lt;10 Min</span>
+                    <span><i style="background: var(--danger);"></i> Persentase &gt;30 Min</span>
+                    <span><i style="background: var(--success);"></i> Persentase &lt;30 Min</span>
                 </div>
                 <div class="chart-scroll">
                     <div class="bar-chart" id="rekapBulanChart">
@@ -831,7 +802,7 @@
 
             <div class="card" style="margin-bottom: 20px;">
                 <div class="card-header">
-                    <span>📦 Item Category Late (&gt;10 Min)</span>
+                    <span>📦 Item Category Late (&gt;30 Min)</span>
                     <span style="font-size: 11px; font-weight: normal; color: var(--text-muted);" id="categoryLateInfo">Dihitung per baris item</span>
                 </div>
                 <div id="categoryLateNote" style="display: none; font-size: 12px; color: #b7791f; margin-bottom: 8px;">⚠️ Kolom kategori tidak ditemukan di file Excel (dicari header yang mengandung "Category" / "Kategori"), sehingga semua item masuk "Tanpa Kategori".</div>
@@ -839,8 +810,8 @@
                     <thead>
                         <tr>
                             <th>Item Category</th>
-                            <th>Selling Area >10 Min</th>
-                            <th>WH Area >10 Min</th>
+                            <th>Selling Area >30 Min</th>
+                            <th>WH Area >30 Min</th>
                             <th>Total Item Late</th>
                             <th>% dari Total Late</th>
                         </tr>
@@ -884,8 +855,8 @@
                         <label>Status:</label>
                         <select id="statusFilter" onchange="applyDetailFilters()">
                             <option value="ALL">Semua Status</option>
-                            <option value="AWT">AWT (>10 Min)</option>
-                            <option value="no awt">No AWT (≤10 Min)</option>
+                            <option value="AWT">AWT (>30 Min)</option>
+                            <option value="no awt">No AWT (≤30 Min)</option>
                         </select>
                     </div>
 
@@ -901,9 +872,8 @@
                     <div class="filter-group" style="display:none;">
                         <select id="durationTierFilter" onchange="applyDetailFilters()">
                             <option value="ALL">Semua Tier</option>
-                            <option value="gt10">> 10 Min</option>
-                            <option value="gt30">> 30 Min</option>
-                            <option value="lt10">&lt; 10 Min</option>
+                            <option value="gt10">> 30 Min</option>
+                            <option value="lt10">&lt; 30 Min</option>
                         </select>
                     </div>
 
@@ -1075,7 +1045,13 @@
     }
 
     /* Bangun ringkasan, filter tanggal, dan filter tipe nota dari daftar item (dari Excel atau dari data bersama di server) */
+    /* Batas AWT: nota dihitung AWT (late) bila durasi tunggu lebih dari AWT_LIMIT menit. Berlaku untuk semua item, termasuk data yang tersimpan di server. */
+    const AWT_LIMIT = 30;
     function buildFromItems(items) {
+        items.forEach(function (it) {
+            it.late = (Number(it.diffMin) || 0) > AWT_LIMIT;
+            it.status = it.late ? 'AWT' : 'NO AWT';
+        });
         globalData = items;
         hasCategoryCol = items.some(function(d){ return d.category && d.category !== 'Tanpa Kategori'; });
         let dnMap = {};
@@ -1373,7 +1349,7 @@
         let keys = Object.keys(groups).sort((a, b) => groups[b].total - groups[a].total);
         document.getElementById('categoryLateInfo').innerText = `${keys.length} kategori | ${totalLate} item late (dihitung per baris item)`;
         if (!keys.length) {
-            tbody.innerHTML = '<tr><td colspan="5" class="empty-placeholder">Tidak ada item late (>10 Min).</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" class="empty-placeholder">Tidak ada item late (>30 Min).</td></tr>';
             return;
         }
 
@@ -1493,34 +1469,6 @@
         if (!keys.length) chart.innerHTML = '<div class="empty-placeholder" style="border: none; width: 100%;">Belum ada data.</div>';
     }
 
-    function renderAwt30() {
-        let g = {};
-        globalUniqueDNs.forEach(d => {
-            let k = d.date;
-            if (!g[k]) g[k] = { total: 0, sell: 0, wh: 0, n: 0 };
-            g[k].total++;
-            if (d.maxDiff > 30) {
-                g[k].n++;
-                let a = (d.area || '').toUpperCase();
-                if (a.includes('SELLING')) g[k].sell++;
-                else if (a.includes('WH')) g[k].wh++;
-            }
-        });
-        let tb = document.getElementById('awt30Body');
-        let keys = Object.keys(g).sort();
-        if (!keys.length) { tb.innerHTML = '<tr><td colspan="6" class="empty-placeholder">Belum ada data.</td></tr>'; return; }
-        let T = { total: 0, sell: 0, wh: 0, n: 0 };
-        let html = '';
-        keys.forEach(k => {
-            let r = g[k];
-            T.total += r.total; T.sell += r.sell; T.wh += r.wh; T.n += r.n;
-            let b = function (v, area) { return v ? `<span class="clickable-val badge badge-danger" onclick="filterDetailFromClick('${k}', '${area}', 'gt30')" title="Klik untuk lihat detail tanggal ${k}">${v}</span>` : '<span style="color: var(--text-muted);">0</span>'; };
-            html += `<tr><td><strong>${k}</strong></td><td>${b(r.sell, 'SELLINGAREA')}</td><td>${b(r.wh, 'WHAREA')}</td><td>${b(r.n, 'ALL')}</td><td>${r.total}</td><td style="color: var(--danger); font-weight: bold;">${r.total ? ((r.n / r.total) * 100).toFixed(1) : '0.0'}%</td></tr>`;
-        });
-        html += `<tr style="background-color: #edf2f7; font-weight: bold;"><td style="text-align: center;">TOTAL</td><td>${T.sell}</td><td>${T.wh}</td><td style="color: var(--danger);">${T.n}</td><td>${T.total}</td><td style="color: var(--danger);">${T.total ? ((T.n / T.total) * 100).toFixed(1) : '0.0'}%</td></tr>`;
-        tb.innerHTML = html;
-    }
-
     function updateDashboardSummary() {
         let totalCount = globalUniqueDNs.length;
         let awtCount = globalUniqueDNs.filter(d => d.late).length;
@@ -1533,10 +1481,6 @@
         document.getElementById('kpi-pct-val').innerText = pctOverall;
         document.getElementById('kpi-pct-noawt-val').innerText = totalCount > 0 ? ((noAwtCount / totalCount) * 100).toFixed(1) + "%" : "0.0%";
 
-        let n30 = globalUniqueDNs.filter(d => d.maxDiff > 30).length;
-        document.getElementById('kpi-awt30-val').innerText = n30;
-        document.getElementById('kpi-awt30-sub').innerText = totalCount > 0 ? ((n30 / totalCount) * 100).toFixed(1) + '% dari total MS (>30 menit)' : 'Nota MS menunggu lebih dari 30 menit';
-        renderAwt30();
         renderRekapTable(false);
         renderRekapBulan();
         renderCategoryLate();
@@ -1608,7 +1552,6 @@
 
             let matchesTier = true;
             if (tierVal === 'gt10') matchesTier = d.late;
-            else if (tierVal === 'gt30') matchesTier = d.diffMin > 30;
             else if (tierVal === 'lt10') matchesTier = !d.late;
 
             return matchesSearch && matchesDate && matchesStatus && matchesArea && matchesType && matchesTier;
@@ -1702,7 +1645,7 @@
                 tPaid: row.tPaid,
                 tReady: row.tReady,
                 diffMin: Math.round(row.diffMin * 100) / 100,
-                status: isAwt ? (row.diffMin > 30 ? 'AWT (>30 Min)' : 'AWT (>10 Min)') : 'NO AWT (≤10 Min)'
+                status: isAwt ? 'AWT (>30 Min)' : 'NO AWT (≤30 Min)'
             });
 
             addedRow.height = 20;
