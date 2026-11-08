@@ -71,7 +71,7 @@ table.dd td.n{text-align:right}
     <div class="msg" id="msg">Pilih file sekaligus. Wajib: ITEM PLANO, SQV, Replenishment. Class A/B/C/D memakai Report ABCD Class (kolom Function Class). Jenis file dikenali otomatis dari kolomnya, jadi boleh dipilih sekaligus di kotak mana pun.</div>
   </div>
 
-  <div class="tabs" role="tablist"><button class="tab on" role="tab" aria-selected="true" data-tab="plano">Plano Stock</button></div>
+  <div class="tabs" role="tablist"><button class="tab on" role="tab" aria-selected="true" data-tab="plano">Plano Stock</button><button class="tab" role="tab" aria-selected="false" data-tab="detail">Detail Item</button></div>
   <div id="tab-plano">
   <div class="card hide" id="main">
     <h2>2. Rekap per category</h2>
@@ -96,8 +96,10 @@ table.dd td.n{text-align:right}
     <div class="note" id="n4"></div>
   </div>
 
+  </div>
+  <div id="tab-detail" class="hide">
   <div class="card hide" id="det">
-    <h2>5. Detail item <span id="dcount" style="font-weight:400;color:var(--mut)"></span></h2>
+    <h2>Detail item <span id="dcount" style="font-weight:400;color:var(--mut)"></span></h2>
     <div class="flt">
       <select id="fc"></select>
       <select id="fl" class="hide"></select>
@@ -233,7 +235,7 @@ function renderSum(){
   renderInv();
   if(CLS.length)$('#cap2').innerHTML=tableHTML(sumClass(),'Class','STOCK OUT PLANO vs REPLENISMENT PER CLASS (FUNCTION CLASS)','cl');
   var nos=R.filter(function(r){return r.nos}).length,nocl=R.filter(function(r){return r.cl==='-'}).length;
-  $('#notes').innerHTML='Σ Item dihitung per baris lokasi plano (satu item di dua lokasi dihitung dua kali), sama seperti template Excel. <b>Assortment</b> = item ada di Replenishment (repsys); <b>Non Assortment</b> = tidak ada di Replenishment. <b>Stock = Nol</b> mencakup '+nf(nos)+' baris yang tidak punya baris di file stok. <b>Stok minus</b> ('+nf(R.filter(function(r){return r.neg}).length)+' baris) tidak dihitung di Stock = Nol maupun Half Capacity karena kemungkinan ada penjualan; lihat lewat filter status di Detail. <b>Stock &lt; Half Capacity</b> = stok lebih dari nol dan kurang dari Capacity/2 (stok minus tidak ikut). % merah bila Stock=Nol lebih dari 7% (Assortment dan ALL). Klik angka untuk melihat detail item.'
+  $('#notes').innerHTML='Σ Item dihitung per baris lokasi plano (satu item di dua lokasi dihitung dua kali), sama seperti template Excel. <b>Assortment</b> = item ada di Replenishment (repsys); <b>Non Assortment</b> = tidak ada di Replenishment. <b>Stock = Nol</b> mencakup '+nf(nos)+' baris yang tidak punya baris di file stok. <b>Stok minus</b> ('+nf(R.filter(function(r){return r.neg}).length)+' baris) tidak dihitung di Stock = Nol maupun Half Capacity karena kemungkinan ada penjualan; lihat lewat filter status di Detail. <b>Stock &lt; Half Capacity</b> = stok lebih dari nol dan kurang dari Capacity/2 (stok minus tidak ikut). % merah bila Stock=Nol lebih dari 7% (Assortment dan ALL). Klik angka untuk melihat detail item di tab Detail Item.'
    +(CLS.length?'<br><b>Class</b> memakai kolom Function Class dari Report ABCD Class; '+nf(nocl)+' baris plano tidak ada di file class (Non Class).':'<br>Class belum tampil: unggah Report ABCD Class (.csv) untuk rekap per class.')
    +'<br>Data: '+esc(S.meta.plano||'')+' · '+esc(S.meta.stk||'')+' · '+esc(S.meta.rep||'')+(S.meta.cls?' · '+esc(S.meta.cls):'')+(S.meta.repDate?' (tanggal replenishment '+S.meta.repDate+')':'');
 }
@@ -266,10 +268,17 @@ function drill(e){
   var td=e.target.closest('td[data-f]');if(!td)return;
   var f=td.getAttribute('data-f').split('|'),c=td.getAttribute('data-c')||'',g=td.closest('table').getAttribute('data-g');
   F={c:g==='c'?c:'',l:g==='cl'?c:'',t:f[0]==='A'?'A':f[0]==='N'?'N':'',s:f[1]||'',q:''};syncF();renderDet();
-  $('#det').scrollIntoView({behavior:'smooth',block:'start'});
+  showTab('detail');window.scrollTo({top:0,behavior:'smooth'});
 }
 $('#cap1').addEventListener('click',drill);$('#cap2').addEventListener('click',drill);
 
+/* ---------- tab ---------- */
+function showTab(t){
+  document.querySelectorAll('.tab').forEach(function(b){var on=b.getAttribute('data-tab')===t;b.classList.toggle('on',on);b.setAttribute('aria-selected',on?'true':'false')});
+  $('#tab-plano').classList.toggle('hide',t!=='plano');$('#tab-detail').classList.toggle('hide',t!=='detail');
+  try{sessionStorage.setItem('qbig_inv_tab',t)}catch(e){}
+}
+document.querySelectorAll('.tab').forEach(function(b){b.addEventListener('click',function(){showTab(b.getAttribute('data-tab'))})});
 /* ---------- detail ---------- */
 function syncF(){$('#fc').value=F.c;$('#fl').value=F.l||'';$('#ft').value=F.t;$('#fs').value=F.s;$('#fq').value=F.q}
 function filtered(){
@@ -422,6 +431,7 @@ capBtn($('#bc'),'#cap1','Inventory_PlanoStock','Stock Out vs Plano','🖼️ Cap
 capBtn($('#bc4'),'#cap4','Inventory_PlanoStock_inventory_per_category','Inventory per Category','🖼️ Capture tabel');
 capBtn($('#bc2'),'#cap2','Inventory_PlanoStock_per_Class','Per Class','🖼️ Capture tabel class');
 restore();
+try{var _t=sessionStorage.getItem('qbig_inv_tab');if(_t==='detail')showTab('detail')}catch(e){}
 </script>
 </body>
 </html>
