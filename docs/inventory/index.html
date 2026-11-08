@@ -313,7 +313,7 @@ function build(){
   $('#fl').innerHTML='<option value="">Semua class</option>'+CLS.map(function(c){return '<option value="'+c+'">'+clName(c)+'</option>'}).join('');
   $('#fl').classList.toggle('hide',!CLS.length);
   $('#main').classList.remove('hide');$('#det').classList.remove('hide');$('#main2').classList.toggle('hide',!CLS.length);
-  F={c:'',l:'',t:'',s:'',q:''};syncF();renderSum();renderDet();
+  F={c:'',l:'',t:'',s:'',q:''};syncF();renderSum();renderDet();fitTables();
 }
 function clName(c){return c==='-'?'Non Class':'Class '+c}
 function agg(rows){
@@ -360,6 +360,7 @@ function renderKpi(){
   $('#kpi').classList.remove('hide');
 }
 $('#kpi').addEventListener('click',function(e){var b=e.target.closest('button');if(!b||b.getAttribute('data-x'))return;F={c:'',l:b.getAttribute('data-l')||'',t:b.getAttribute('data-t')||'',s:b.getAttribute('data-s')||'',q:''};syncF();renderDet();showTab('detail');window.scrollTo({top:0,behavior:'smooth'})});
+document.addEventListener('toggle',function(){setTimeout(fitTables,50)},true);
 function dataSummary(){
   var n=[S.plano,S.stk,S.rep,S.cls].filter(Boolean).length;
   $('#dsum').textContent=n+' dari 4 file dimuat'+(S.meta.repDate?' · replenishment tanggal '+S.meta.repDate:'')+(S.plano&&S.stk&&S.rep?' · '+nf(R.length)+' baris plano dihitung':'');
@@ -410,10 +411,21 @@ function drill(e){
 $('#cap1').addEventListener('click',drill);$('#cap2').addEventListener('click',drill);
 
 /* ---------- tab ---------- */
+/* Tabel rekap otomatis dikecilkan agar pas di lebar layar (di ponsel tetap bisa digeser) */
+function fitTables(){
+  ['#cap1','#cap2','#cap4'].forEach(function(id){
+    var el=$(id),tw=el&&el.parentElement;if(!el||!tw||!el.firstElementChild)return;
+    el.style.zoom='';var avail=tw.clientWidth;if(!avail)return;
+    var need=el.firstElementChild.scrollWidth;
+    if(need>avail+1&&avail>=640){el.style.zoom=Math.max(0.5,Math.floor(avail/need*1000)/1000)}
+  });
+}
+var _fitT;window.addEventListener('resize',function(){clearTimeout(_fitT);_fitT=setTimeout(fitTables,120)});
 function showTab(t){
   document.querySelectorAll('.tab').forEach(function(b){var on=b.getAttribute('data-tab')===t;b.classList.toggle('on',on);b.setAttribute('aria-selected',on?'true':'false')});
   $('#tab-plano').classList.toggle('hide',t!=='plano');$('#tab-detail').classList.toggle('hide',t!=='detail');
   try{sessionStorage.setItem('qbig_inv_tab',t)}catch(e){}
+  if(t==='plano')fitTables();
 }
 document.querySelectorAll('.tab').forEach(function(b){b.addEventListener('click',function(){showTab(b.getAttribute('data-tab'))})});
 /* ---------- detail ---------- */
@@ -561,7 +573,7 @@ function capPreview(items,title){
 }
 function capBtn(btn,sel,name,title,label){
   btn.onclick=function(){var b=this;b.disabled=true;b.textContent='Menyiapkan...';
-    loadH2C().then(function(){var el=$(sel),w0=el.style.width;el.classList.add('cap-on');el.style.width='max-content';var done=function(){el.classList.remove('cap-on');el.style.width=w0};return html2canvas(el,{scale:2,backgroundColor:'#ffffff'}).then(function(cv){done();return cv},function(e){done();throw e})}).then(function(cv){capPreview([{canvas:cv,name:name+'_'+today()+'.png'}],title)})
+    loadH2C().then(function(){var el=$(sel),w0=el.style.width,z0=el.style.zoom;el.classList.add('cap-on');el.style.width='max-content';el.style.zoom='';var done=function(){el.classList.remove('cap-on');el.style.width=w0;el.style.zoom=z0};return html2canvas(el,{scale:2,backgroundColor:'#ffffff'}).then(function(cv){done();return cv},function(e){done();throw e})}).then(function(cv){capPreview([{canvas:cv,name:name+'_'+today()+'.png'}],title)})
      .catch(function(e){say(e.message||String(e),1)}).then(function(){b.disabled=false;b.textContent=label});};
 }
 capBtn($('#bc'),'#cap1','Inventory_StockOutPlano','Stock Out Plano','🖼️ Capture tabel');
