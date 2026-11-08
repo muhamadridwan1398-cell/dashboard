@@ -24,7 +24,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",syste
 button{font:inherit;font-weight:700;font-size:13px;border:0;border-radius:8px;padding:9px 14px;cursor:pointer;color:#fff;background:#3b5ba5}
 button.g{background:#2f855a}button.x{background:#6b7280}
 .tw{overflow-x:auto}
-#cap1,#cap2,#cap3{background:#fff;color:#111;padding:8px;display:inline-block;min-width:100%}
+#cap1,#cap2,#cap3,#cap4{background:#fff;color:#111;padding:8px;display:inline-block;min-width:100%}
 table.sm{border-collapse:collapse;width:100%;font-size:12px;color:#111}
 table.sm th,table.sm td{border:1px solid #d6dbe4;padding:4px 5px;text-align:right;white-space:nowrap}
 table.sm th{white-space:normal;line-height:1.2}
@@ -94,8 +94,15 @@ table.dd td.n{text-align:right}
     <div class="tw"><div id="cap3" class="capbox"></div></div>
   </div>
 
+  <div class="card hide" id="main4">
+    <h2>5. Inventory per class (seluruh SQV): jumlah item dan nilai</h2>
+    <div class="btns" style="margin-bottom:10px"><button id="bc4">🖼️ Capture tabel</button></div>
+    <div class="tw"><div id="cap4" class="capbox"></div></div>
+    <div class="note" id="n4"></div>
+  </div>
+
   <div class="card hide" id="det">
-    <h2>5. Detail item <span id="dcount" style="font-weight:400;color:var(--mut)"></span></h2>
+    <h2>6. Detail item <span id="dcount" style="font-weight:400;color:var(--mut)"></span></h2>
     <div class="flt">
       <select id="fc"></select>
       <select id="fl" class="hide"></select>
@@ -114,7 +121,7 @@ table.dd td.n{text-align:right}
 
 <script>
 var KEY='qbig_inv_v1',H2C_URL='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-var S={plano:null,stk:null,rep:null,cls:null,sv:null,meta:{}},R=[],F={c:'',l:'',v:'',t:'',s:'',q:''},LIM=600;
+var S={plano:null,stk:null,rep:null,cls:null,sv:null,inv:null,meta:{}},R=[],F={c:'',l:'',v:'',t:'',s:'',q:''},LIM=600;
 function $(s){return document.querySelector(s)}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 function nf(n){return n.toLocaleString('id-ID')}
@@ -154,7 +161,7 @@ function ingest(name,buf){
   if(k==='plano'){
     S.plano=r.rows.map(function(o){return {c:String(o['Category']||'').trim(),n:String(o['Name']||'').replace(/^Name:\s*(\d+_)?/,''),fx:String(o['Fixture No.']||''),k:key(o['Item No']),d:String(o['Description']||''),cap:num(o['Capacity'])}}).filter(function(x){return x.c});
   }else if(k==='stk'){
-    var m={};r.rows.forEach(function(o){var q=num(o['Quantity']),kk=key(o['Item No']);m[kk]=(m[kk]||0)+q});S.stk=m;var cvm={},any=false;r.rows.forEach(function(o){var v=String(o['Item Class By Value']==null?'':o['Item Class By Value']).trim().toUpperCase();if(/^[A-D]$/.test(v)){cvm[key(o['Item No'])]=v;any=true}});S.sv=any?cvm:null;
+    var m={};r.rows.forEach(function(o){var q=num(o['Quantity']),kk=key(o['Item No']);m[kk]=(m[kk]||0)+q});S.stk=m;var cvm={},any=false;r.rows.forEach(function(o){var v=String(o['Item Class By Value']==null?'':o['Item Class By Value']).trim().toUpperCase();if(/^[A-D]$/.test(v)){cvm[key(o['Item No'])]=v;any=true}});S.sv=any?cvm:null;var vc=r.cols.filter(function(c){return c.indexOf('Value')===0})[0],inv=[];r.rows.forEach(function(o){var v=String(o['Item Class By Value']==null?'':o['Item Class By Value']).trim().toUpperCase();inv.push([key(o['Item No']),(function(t){return t==='RETAIL'?'R':t==='CATALOG'?'G':'K'})(String(o['Type']||'').trim().toUpperCase()),num(o['Quantity']),vc?num(o[vc]):0,/^[A-D]$/.test(v)?v:'-'])});S.inv=inv;
   }else{
     var m2={},dt='';r.rows.forEach(function(o){m2[key(o['Item No'])]=[num(o['Minimum Stock']),num(o['Maximum Stock']),num(o['Reorder Point'])];if(!dt&&o['Date'])dt=parseDate(o['Date'])});S.rep=m2;S.meta.repDate=dt;
   }
@@ -176,8 +183,8 @@ function onFiles(files){
 }
 document.querySelectorAll('input[type=file]').forEach(function(i){i.addEventListener('change',function(){onFiles(i.files);i.value=''})});
 
-function persist(){try{localStorage.setItem(KEY,JSON.stringify({plano:S.plano,stk:S.stk,rep:S.rep,cls:S.cls,sv:S.sv,meta:S.meta}))}catch(e){}}
-function restore(){try{var d=JSON.parse(localStorage.getItem(KEY)||'null');if(d&&d.plano&&d.stk&&d.rep){S.plano=d.plano;S.stk=d.stk;S.rep=d.rep;S.cls=d.cls||null;S.sv=d.sv||null;S.meta=d.meta||{};labelFiles();build();say('Memakai data terakhir yang Anda unggah.')}}catch(e){}}
+function persist(){try{localStorage.setItem(KEY,JSON.stringify({plano:S.plano,stk:S.stk,rep:S.rep,cls:S.cls,sv:S.sv,inv:S.inv,meta:S.meta}))}catch(e){}}
+function restore(){try{var d=JSON.parse(localStorage.getItem(KEY)||'null');if(d&&d.plano&&d.stk&&d.rep){S.plano=d.plano;S.stk=d.stk;S.rep=d.rep;S.cls=d.cls||null;S.sv=d.sv||null;S.inv=d.inv||null;S.meta=d.meta||{};labelFiles();build();say('Memakai data terakhir yang Anda unggah.')}}catch(e){}}
 
 /* ---------- hitung ---------- */
 var CATS=[],CLS=[],CLV=[];
@@ -233,12 +240,34 @@ function tableHTML(D,first,title,gk){
 }
 function renderSum(){
   $('#cap1').innerHTML=tableHTML(sumData(),'Category','STOCK OUT vs PLANO vs REPLENISMENT','c');
+  renderInv();
   if(CLS.length)$('#cap2').innerHTML=tableHTML(sumClass(),'Class','STOCK OUT PLANO vs REPLENISMENT PER CLASS (FUNCTION CLASS)','cl');
   if(CLV.length)$('#cap3').innerHTML=tableHTML(sumClassV(),'Class by Value','STOCK OUT PLANO vs REPLENISMENT PER CLASS BY VALUE (SQV)','cv');
   var nos=R.filter(function(r){return r.nos}).length,nocl=R.filter(function(r){return r.cl==='-'}).length;
   $('#notes').innerHTML='Σ Item dihitung per baris lokasi plano (satu item di dua lokasi dihitung dua kali), sama seperti template Excel. <b>Assortment</b> = item ada di Replenishment (repsys); <b>Non Assortment</b> = tidak ada di Replenishment. <b>Stock = Nol</b> mencakup '+nf(nos)+' baris yang tidak punya baris di file stok. <b>Stok minus</b> ('+nf(R.filter(function(r){return r.neg}).length)+' baris) tidak dihitung di Stock = Nol maupun Half Capacity karena kemungkinan ada penjualan; lihat lewat filter status di Detail. <b>Stock &lt; Half Capacity</b> = stok lebih dari nol dan kurang dari Capacity/2 (stok minus tidak ikut). % merah bila Stock=Nol lebih dari 7% (Assortment dan ALL). Klik angka untuk melihat detail item.'
    +(CLS.length?'<br><b>Class by Value</b> memakai kolom Item Class By Value di SQV (item tanpa class di SQV atau tanpa baris stok masuk Non Class). <b>Class</b> memakai kolom Function Class dari Report ABCD Class; '+nf(nocl)+' baris plano tidak ada di file class (Non Class).':'<br>Class belum tampil: unggah Report ABCD Class (.csv) untuk rekap per class.')
    +'<br>Data: '+esc(S.meta.plano||'')+' · '+esc(S.meta.stk||'')+' · '+esc(S.meta.rep||'')+(S.meta.cls?' · '+esc(S.meta.cls):'')+(S.meta.repDate?' (tanggal replenishment '+S.meta.repDate+')':'');
+}
+function rp(n){return Math.round(n).toLocaleString('id-ID')}
+function invAgg(fn,vals,lab){
+  var mk=function(label,rows){var o={c:label,n:rows.length,q:0,v:0,R:0,K:0,C:0};rows.forEach(function(x){o.q+=x[2];o.v+=x[3];if(x[1]==='R')o.R+=x[3];else if(x[1]==='C'&&false)o.C+=x[3]});return o};
+  var T=function(label,rows){var o={c:label,n:rows.length,q:0,v:0,R:0,K:0,C:0};rows.forEach(function(x){o.q+=x[2];o.v+=x[3];var t=x[1];if(t==='R')o.R+=x[3];else if(t==='G')o.C+=x[3];else o.K+=x[3]});return o};
+  return {rows:vals.map(function(v){return T(lab?lab(v):v,S.inv.filter(function(x){return fn(x)===v}))}),tot:T('Total',S.inv)};
+}
+function invHTML(D,first,title){
+  var tv=D.tot.v||1,tn=D.tot.n||1;
+  var h='<table class="sm"><tr><td class="ttl" colspan="9">'+title+'</td></tr><tr><th class="cat">'+first+'</th><th class="hl">Σ Item</th><th class="hl">% Item</th><th class="hl">Qty</th><th class="hl">Nilai Stok (Rp)</th><th class="hl">% Nilai</th><th class="ha">Nilai Retail (Rp)</th><th class="hn">Nilai Consignment (Rp)</th><th class="hl">Nilai Catalog (Rp)</th></tr>';
+  var row=function(r,tot){return '<tr'+(tot?' class="tot"':'')+'><td class="l" '+(tot?'':'style="font-weight:600"')+'>'+esc(r.c)+'</td><td>'+nf(r.n)+'</td><td>'+pf(r.n,tn)+'</td><td>'+nf(Math.round(r.q))+'</td><td>'+rp(r.v)+'</td><td>'+pf(r.v,tv)+'</td><td>'+rp(r.R)+'</td><td>'+rp(r.K)+'</td><td>'+rp(r.C)+'</td></tr>'};
+  D.rows.forEach(function(r){h+=row(r,0)});return h+row(D.tot,1)+'</table>';
+}
+function invData(){return {v:invAgg(function(x){return x[4]},['A','B','C','D','-'],clName),f:S.cls?invAgg(function(x){return S.cls[x[0]]||'-'},['A','B','C','D','-'],clName):null}}
+function renderInv(){
+  var ok=!!(S.inv&&S.inv.length);$('#main4').classList.toggle('hide',!ok);if(!ok)return;
+  var D=invData(),h=invHTML(D.v,'Class by Value (SQV)','INVENTORY PER CLASS BY VALUE (SQV)');
+  if(D.f)h+='<div style="height:14px"></div>'+invHTML(D.f,'Function Class','INVENTORY PER FUNCTION CLASS (ABCD CLASS)');
+  $('#cap4').innerHTML=h;
+  var neg=S.inv.filter(function(x){return x[3]<0});
+  $('#n4').innerHTML='Seluruh isi file SQV ('+nf(S.inv.length)+' baris item), bukan hanya item plano. Nilai = Cost Amount Actual + Expected. Ada '+nf(neg.length)+' baris bernilai minus (total Rp '+rp(neg.reduce(function(a,x){return a+x[3]},0))+'), kebanyakan konsinyasi, sehingga % Nilai dihitung terhadap nilai bersih. Non Class by Value = item tanpa class di SQV. '+(D.f?'Function Class hanya ada untuk item di Report ABCD Class, jadi sisanya (termasuk banyak item konsinyasi) masuk Non Class.':'Unggah Report ABCD Class untuk rekap per Function Class.');
 }
 function drill(e){
   var td=e.target.closest('td[data-f]');if(!td)return;
@@ -302,8 +331,8 @@ function xstyles(){
   /* fonts: 0 normal,1 bold putih,2 bold 20,3 bold,4 abu kecil,5 bold hijau tua,6 bold merah tua,7 bold putih 14 */
   return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="2"><numFmt numFmtId="165" formatCode="0.0%"/><numFmt numFmtId="166" formatCode="#,##0;\\-#,##0;&quot;-&quot;"/></numFmts><fonts count="8">'+
    F('<sz val="11"/>')+F('<b/><sz val="11"/><color rgb="FFFFFFFF"/>')+F('<b/><sz val="20"/><color rgb="FF111111"/>')+F('<b/><sz val="11"/><color rgb="FF111111"/>')+F('<sz val="10"/><color rgb="FF5B6577"/>')+F('<sz val="11"/><color rgb="FF006100"/>')+F('<sz val="11"/><color rgb="FF9C0006"/>')+F('<b/><sz val="14"/><color rgb="FFFFFFFF"/>')+
-   '</fonts><fills count="12"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill>'+FL('FF1F3864')+FL('FF92D050')+FL('FF000000')+FL('FFECCDF0')+FL('FFFBE1D0')+FL('FFD5D5FB')+FL('FFC6EFCE')+FL('FFFFC7CE')+FL('FFFFFF00')+FL('FFF2F6FC')+'</fills><borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border>'+bd+'</borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="20">'+
-   X(0,0,0,0)+X(0,1,2,1,C)+X(0,0,0,1,V)+X(166,0,0,1,R2)+X(0,2,3,1,C)+X(0,1,4,1,C)+X(0,3,5,1,C)+X(0,3,6,1,C)+X(0,3,7,1,C)+X(0,3,5,1,C)+X(0,3,6,1,C)+X(0,3,7,1,C)+X(165,5,8,1,R2)+X(165,6,9,1,R2)+X(166,3,10,1,R2)+X(165,3,10,1,R2)+X(0,3,10,1,L)+X(0,3,0,1,L)+X(0,4,0,0)+X(0,7,4,1,L)+
+   '</fonts><fills count="12"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill>'+FL('FF1F3864')+FL('FF92D050')+FL('FF000000')+FL('FFECCDF0')+FL('FFFBE1D0')+FL('FFD5D5FB')+FL('FFC6EFCE')+FL('FFFFC7CE')+FL('FFFFFF00')+FL('FFF2F6FC')+'</fills><borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border>'+bd+'</borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="21">'+
+   X(0,0,0,0)+X(0,1,2,1,C)+X(0,0,0,1,V)+X(166,0,0,1,R2)+X(0,2,3,1,C)+X(0,1,4,1,C)+X(0,3,5,1,C)+X(0,3,6,1,C)+X(0,3,7,1,C)+X(0,3,5,1,C)+X(0,3,6,1,C)+X(0,3,7,1,C)+X(165,5,8,1,R2)+X(165,6,9,1,R2)+X(166,3,10,1,R2)+X(165,3,10,1,R2)+X(0,3,10,1,L)+X(0,3,0,1,L)+X(0,4,0,0)+X(0,7,4,1,L)+X(165,0,0,1,R2)+
    '</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';
 }
 function xbuild(sheets){
@@ -343,6 +372,15 @@ function sumSheet(name,D,first,title){
   rows.push([T('Data: '+(S.meta.plano||'')+' | '+(S.meta.stk||'')+' | '+(S.meta.rep||'')+(S.meta.cls?' | '+S.meta.cls:'')+(S.meta.repDate?' (replenishment '+S.meta.repDate+')':''),18)]);
   return {name:name,grid:0,w:[26,14,10,11,8,14,8,10,11,8,14,8,10,11,8,14,8],h:{0:34,3:32},rows:rows,m:['A1:Q1','A3:B3','C3:G3','H3:L3','M3:Q3']};
 }
+function invSheet(name,D,first,title){
+  var T=function(v,st){return {v:v,s:st}},tv=D.tot.v||1,tn=D.tot.n||1,rows=[];
+  rows.push([T(title,4)].concat([1,2,3,4,5,6,7,8].map(function(){return T('',4)})));rows.push(['','','','','','','','','']);
+  rows.push([T(first,19),T('Σ Item',1),T('% Item',1),T('Qty',1),T('Nilai Stok (Rp)',1),T('% Nilai',1),T('Nilai Retail (Rp)',1),T('Nilai Consignment (Rp)',1),T('Nilai Catalog (Rp)',1)]);
+  var ln=function(r,tot){return [T(r.c,tot?16:17),T(r.n,tot?14:3),T(r.n/tn,tot?15:20),T(Math.round(r.q),tot?14:3),T(Math.round(r.v),tot?14:3),T(r.v/tv,tot?15:20),T(Math.round(r.R),tot?14:3),T(Math.round(r.K),tot?14:3),T(Math.round(r.C),tot?14:3)]};
+  D.rows.forEach(function(r){rows.push(ln(r,0))});rows.push(ln(D.tot,1));
+  rows.push(['','','','','','','','','']);rows.push([T('Seluruh isi file SQV. Nilai = Cost Amount Actual + Expected. % Nilai terhadap nilai bersih (nilai konsinyasi minus ikut mengurangi).',18)]);
+  return {name:name,grid:0,w:[26,11,10,12,20,10,20,22,20],h:{0:34,2:30},rows:rows,m:['A1:I1']};
+}
 function exportExcel(){
   var T=function(v,st){return {v:v,s:st}},sheets=[sumSheet('Rekap',sumData(),'Category','STOCK OUT vs PLANO vs REPLENISMENT')];
   if(CLS.length)sheets.push(sumSheet('Rekap Class',sumClass(),'Class','STOCK OUT PLANO vs REPLENISMENT PER CLASS (FUNCTION CLASS)'));
@@ -351,6 +389,7 @@ function exportExcel(){
   fr.forEach(function(r){dr.push([T(r.c,2),T(r.n+' #'+r.fx,2),T(r.k,2),T(r.d,2),T(r.a?'Assortment':'Non Assortment',2),T(r.cl&&r.cl!=='-'?r.cl:'-',2),T(r.cv&&r.cv!=='-'?r.cv:'-',2),T(r.cap,3),r.soh===null?T('-',2):T(r.soh,3),r.mn===null?T('-',2):T(r.mn,3),r.rop===null?T('-',2):T(r.rop,3),r.mx===null?T('-',2):T(r.mx,3),T(stat(r)[0],2)])});
   var fdesc=[F.c||'Semua category',F.l?clName(F.l):'Semua class',F.v?'Value '+clName(F.v):'Semua class by value',F.t==='A'?'Assortment':F.t==='N'?'Non Assortment':'Assortment + Non',F.s==='nol'?'Stock = Nol':F.s==='nos'?'Nol tanpa baris stok':F.s==='half'?'< Half Capacity':F.s==='neg'?'Stok Minus':'Semua status'].join(' · ');
   if(CLV.length)sheets.splice(CLS.length?2:1,0,sumSheet('Rekap Class by Value',sumClassV(),'Class by Value','STOCK OUT PLANO vs REPLENISMENT PER CLASS BY VALUE (SQV)'));
+  if(S.inv&&S.inv.length){var ID=invData();sheets.push(invSheet('Inventory Class by Value',ID.v,'Class by Value (SQV)','INVENTORY PER CLASS BY VALUE (SQV)'));if(ID.f)sheets.push(invSheet('Inventory Function Class',ID.f,'Function Class','INVENTORY PER FUNCTION CLASS (ABCD CLASS)'))}
   sheets.push({name:'Detail',w:[24,40,13,46,15,12,12,10,10,11,13,11,24],fz:1,af:'A1:M'+dr.length,rows:dr,h:{0:30}});
   xsave(xbuild(sheets),'Inventory_PlanoStock_'+today()+'.xlsx');
   say('✔ Excel diunduh. Sheet Detail mengikuti filter: '+fdesc+' ('+nf(fr.length)+' baris).');
@@ -387,6 +426,7 @@ function capBtn(btn,sel,name,title,label){
      .catch(function(e){say(e.message||String(e),1)}).then(function(){b.disabled=false;b.textContent=label});};
 }
 capBtn($('#bc'),'#cap1','Inventory_PlanoStock','Stock Out vs Plano','🖼️ Capture tabel');
+capBtn($('#bc4'),'#cap4','Inventory_PlanoStock_inventory_per_class','Inventory per Class','🖼️ Capture tabel');
 capBtn($('#bc3'),'#cap3','Inventory_PlanoStock_class_by_value','Class by Value','🖼️ Capture tabel class by value');
 capBtn($('#bc2'),'#cap2','Inventory_PlanoStock_per_Class','Per Class','🖼️ Capture tabel class');
 restore();
