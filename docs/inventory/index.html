@@ -107,6 +107,7 @@ table.dd td.n{text-align:right}
       <select id="fs"><option value="">Semua status</option><option value="nol">Stock = Nol</option><option value="nos">Nol - tidak ada baris di file stok</option><option value="half">Stock &lt; Half Capacity</option><option value="neg">Stok Minus (kemungkinan ada penjualan)</option></select>
       <input id="fq" type="search" placeholder="Cari item no / deskripsi / fixture" style="min-width:220px">
       <button class="x" id="fr">Reset</button>
+      <button class="g" id="bx2">⬇️ Unduh Excel</button>
     </div>
     <div class="dt"><table class="dd"><thead><tr><th>Category</th><th>Fixture</th><th>Item No</th><th>Deskripsi</th><th>Tipe</th><th>Class</th><th style="text-align:right">Capacity</th><th style="text-align:right">Stock</th><th style="text-align:right">Min</th><th style="text-align:right">ROP</th><th style="text-align:right">Max</th><th>Status</th></tr></thead><tbody id="db"></tbody></table></div>
     <div class="note" id="dn"></div>
@@ -396,7 +397,7 @@ function exportExcel(){
   xsave(xbuild(sheets),'Inventory_PlanoStock_'+today()+'.xlsx');
   say('✔ Excel diunduh. Sheet Detail mengikuti filter: '+fdesc+' ('+nf(fr.length)+' baris).');
 }
-$('#bx').onclick=exportExcel;
+$('#bx').onclick=exportExcel;$('#bx2').onclick=exportExcel;
 
 /* ---------- capture ---------- */
 function loadH2C(){return new Promise(function(res,rej){if(window.html2canvas)return res();var sc=document.createElement('script');sc.src=H2C_URL;sc.onload=function(){window.html2canvas?res():rej(new Error('Pustaka gambar tidak tersedia.'))};sc.onerror=function(){rej(new Error('Pustaka gambar belum termuat. Periksa koneksi internet lalu coba lagi.'))};document.head.appendChild(sc)})}
