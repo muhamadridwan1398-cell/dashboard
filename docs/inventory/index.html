@@ -331,8 +331,8 @@ function renderKpi(){
   if(hasInv){var I=invCat().tot;k.push({l:'Stock Inventory toko',n:rpM(I.v),s:nf(I.n)+' item · Retail + Catalog',x:1})}
   else k.push({l:'Stock Inventory toko',n:'-',s:'Unggah SQV dan Report ABCD Class',x:1});
   k.push({l:'Stock out Assortment',n:pf(T.A.nol,T.A.n),s:nf(T.A.nol)+' dari '+nf(T.A.n)+' baris',y:1,t:'A',st:'nol'});
-  if(S.cls){var C=sumClass().rows,g=function(v){return C.filter(function(r){return r.v===v})[0]};
-    [['A','Stock out Class A'],['D','Stock out Class D'],['-','Stock out Non Class']].forEach(function(x){var r=g(x[0]);if(r)k.push({l:x[1],n:pf(r.L.nol,r.L.n),s:nf(r.L.nol)+' dari '+nf(r.L.n)+' baris',y:1,cl:x[0],st:'nol'})})}
+  if(hasInv){var I2=invCat().tot;
+    [['A','Inventory Class A'],['D','Inventory Class D'],['-','Inventory Non Class']].forEach(function(x){var e=I2.k[x[0]];k.push({l:x[1],n:pf(e.v,I2.v),s:rpM(e.v)+' · '+nf(e.n)+' item',y:1,x:1})})}
   $('#kpi').style.gridTemplateColumns=k.length>1?'1.5fr repeat('+(k.length-1)+',1fr)':'1fr';
   $('#kpi').innerHTML=k.map(function(x,i){return '<button type="button"'+(x.x?' data-x="1" tabindex="-1" style="cursor:default"':'')+' data-s="'+(x.st||'')+'" data-t="'+(x.t||'')+'" data-l="'+(x.cl||'')+'"><span class="l">'+x.l+'</span><span class="n'+(x.y?' y':'')+'">'+x.n+'</span><span class="s">'+x.s+'</span></button>'}).join('');
   $('#kpi').classList.remove('hide');
