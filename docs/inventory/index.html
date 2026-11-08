@@ -113,8 +113,12 @@ th.cat{background:var(--navy);color:#fff;font:700 17px/1 var(--cond);text-align:
 table.sm th.cat{text-align:left}
 th.cat,table.sm td:first-child{position:sticky;left:0;z-index:2}
 table.sm td:first-child{background:#fff;z-index:1;box-shadow:1px 0 0 #e6ebf0}
-table.inv th,table.inv td{padding:8px 5px;font-size:13px}
-table.inv td.pc2{color:#475569}
+table.inv th,table.inv td{padding:8px 4px;font-size:13px}
+table.inv td.vv{padding-right:8px}
+table.inv td.pcg{text-align:center;font-weight:700;color:var(--navy);min-width:52px;border-left:1px solid #cfd8e3}
+table.inv td.pcg0{background:#e9f2f9}table.inv td.pcg1{background:#fbf1dc}table.inv td.pcg2{background:#eceff3}table.inv td.pcg3{background:#e6f3ec}table.inv td.pcg4{background:#f0f1f4}
+table.inv tr.tot td.pcg{background:#fff6cc!important}
+table.inv tr:hover td.pcg{background:#dbe8f5}
 tr.pct td{background:#eef3f8!important;font-weight:700;color:var(--navy);border-top:2px solid var(--navy);border-bottom:0}
 table.inv td:first-child,table.inv th.cat{padding-left:12px;padding-right:10px}
 table.inv th{font-size:12px}
@@ -381,11 +385,11 @@ function invHTML(D){
   var h='<table class="sm inv"><tr><td class="ttl" colspan="14">STOCK INVENTORY PER CATEGORY BY CLASS (FUNCTION CLASS)</td></tr><tr><th class="gb" rowspan="2" style="text-align:left;font-size:15px">Category</th>';
   CKEYS.forEach(function(k,i){h+='<th class="'+CGRP[i][0]+'" colspan="2">'+clName(k)+'</th>'});
   h+='<th class="gb" colspan="3">Total category</th></tr><tr>';
-  CKEYS.forEach(function(k,i){h+='<th class="'+CGRP[i][1]+'">Nilai (Rp)</th><th class="'+CGRP[i][1]+'">%</th>'});
+  CKEYS.forEach(function(k,i){h+='<th class="'+CGRP[i][1]+'" style="text-align:right;padding-right:12px">Nilai (Rp)</th><th class="'+CGRP[i][1]+'">%</th>'});
   var st=' style="font:600 12.5px/1.15 var(--body)!important;letter-spacing:0"';
   h+='<th class="gb"'+st+'>Item</th><th class="gb"'+st+'>Qty</th><th class="gb"'+st+'>Nilai (Rp)</th></tr>';
   var row=function(r,tot){var s='<tr'+(tot?' class="tot"':'')+'><td class="l" '+(tot?'':'style="font-weight:600"')+'>'+esc(r.c)+'</td>';
-    CKEYS.forEach(function(k){var e=r.k[k];s+='<td>'+(e.n?rp(e.v):'-')+'</td><td class="pc2">'+(r.v&&e.n?pf(e.v,r.v):'-')+'</td>'});
+    CKEYS.forEach(function(k){var e=r.k[k];s+='<td class="vv">'+(e.n?rp(e.v):'-')+'</td><td class="pcg pcg'+CKEYS.indexOf(k)+'">'+(r.v&&e.n?pf(e.v,r.v):'-')+'</td>'});
     return s+'<td>'+nf(r.n)+'</td><td>'+nf(Math.round(r.q))+'</td><td>'+rp(r.v)+'</td></tr>'};
   D.rows.forEach(function(r){h+=row(r,0)});h+=row(D.tot,1);
   return h+'</table>';
@@ -556,7 +560,7 @@ function capPreview(items,title){
 }
 function capBtn(btn,sel,name,title,label){
   btn.onclick=function(){var b=this;b.disabled=true;b.textContent='Menyiapkan...';
-    loadH2C().then(function(){var el=$(sel);el.classList.add('cap-on');return html2canvas(el,{scale:2,backgroundColor:'#ffffff'}).then(function(cv){el.classList.remove('cap-on');return cv},function(e){el.classList.remove('cap-on');throw e})}).then(function(cv){capPreview([{canvas:cv,name:name+'_'+today()+'.png'}],title)})
+    loadH2C().then(function(){var el=$(sel),w0=el.style.width;el.classList.add('cap-on');el.style.width='max-content';var done=function(){el.classList.remove('cap-on');el.style.width=w0};return html2canvas(el,{scale:2,backgroundColor:'#ffffff'}).then(function(cv){done();return cv},function(e){done();throw e})}).then(function(cv){capPreview([{canvas:cv,name:name+'_'+today()+'.png'}],title)})
      .catch(function(e){say(e.message||String(e),1)}).then(function(){b.disabled=false;b.textContent=label});};
 }
 capBtn($('#bc'),'#cap1','Inventory_StockOutPlano','Stock Out Plano','🖼️ Capture tabel');
