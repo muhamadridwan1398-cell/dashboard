@@ -1,0 +1,1960 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Monitoring AWT (Average Waiting Time) - Mitra10 Qbig</title>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --primary: #000B76;
+            --primary-light: #1A28A8;
+            --accent-red: #D00000;
+            --accent-yellow: #FFD100;
+            --bg-body: #f4f7fa;
+            --card-bg: #ffffff;
+            --text-main: #2d3748;
+            --text-muted: #718096;
+            --danger: #D00000;
+            --danger-bg: #fff0f0;
+            --success: #27ae60;
+            --success-bg: #f0fff4;
+            --border: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            padding: 20px;
+        }
+
+        body.drag-over {
+            background-color: #ebf8ff;
+        }
+
+        body.drag-over .drop-zone-global {
+            display: flex !important;
+        }
+
+        .drop-zone-global {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(31, 78, 120, 0.88);
+            z-index: 9999;
+            color: white;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 15px;
+            border: 4px dashed #ffffff;
+            pointer-events: none;
+        }
+
+        .drop-zone-global h2 {
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .container {
+            max-width: 1450px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: var(--primary);
+            color: white;
+            padding: 16px 20px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-top: 2px;
+        }
+
+        .drop-box-area {
+            background: var(--card-bg);
+            border: 2px dashed #a0aec0;
+            border-radius: 8px;
+            padding: 10px 16px;
+            text-align: center;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .drop-box-area:hover {
+            border-color: var(--primary);
+            background-color: #f0f7ff;
+        }
+
+        .drop-box-left {
+            text-align: left;
+        }
+
+        .drop-box-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .drop-box-sub {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .upload-btn-compact {
+            background-color: var(--primary);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 12px;
+            cursor: pointer;
+            border: none;
+            white-space: nowrap;
+        }
+
+        .btn-action {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .btn-capture { background-color: #4a5568; color: white; }
+        .btn-capture:hover { background-color: #2d3748; }
+
+        .btn-export { background-color: #38a169; color: white; }
+        .btn-export:hover { background-color: #2f855a; }
+
+        .nav-tabs {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            background: white;
+            border: 1px solid var(--border);
+            padding: 10px 20px;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .nav-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            box-shadow: 0 3px 8px rgba(31,78,120,0.2);
+        }
+
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 14px;
+            margin-bottom: 16px;
+        }
+
+        .kpi-card {
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 16px;
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background-color: var(--primary);
+        }
+
+        .kpi-card.danger::before { background-color: var(--danger); }
+        .kpi-card.success::before { background-color: var(--success); }
+
+        .kpi-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .kpi-value {
+            font-size: 28px;
+            font-weight: 800;
+            margin-top: 4px;
+            color: var(--text-main);
+        }
+
+        .kpi-card.danger .kpi-value { color: var(--danger); }
+        .kpi-card.success .kpi-value { color: var(--success); }
+
+        .kpi-subtext {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .dash-grid {
+            display: grid;
+            grid-template-columns: 3.2fr 2.6fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        @media (max-width: 1100px) {
+            .dash-grid { grid-template-columns: 1fr; }
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 16px;
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .card-header {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 10px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            table-layout: fixed;
+        }
+
+        th {
+            background-color: #edf2f7;
+            color: var(--primary);
+            font-weight: 700;
+            padding: 8px 4px;
+            text-align: center;
+            border-bottom: 2px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 5;
+        }
+
+        td {
+            padding: 7px 4px;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+            word-wrap: break-word;
+        }
+
+        tr:hover td { background-color: #f8fafc; }
+
+        .rekap-scroll-container {
+            max-height: 310px;
+            overflow-y: auto;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 4px;
+        }
+
+        .chart-scroll { overflow-x: auto; padding: 4px 0 2px; }
+        .chart-legend { display: flex; gap: 16px; justify-content: center; font-size: 12px; margin-bottom: 10px; }
+        .chart-legend span { display: inline-flex; align-items: center; gap: 6px; }
+        .chart-legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+        .bar-chart { display: flex; align-items: flex-end; gap: 28px; justify-content: center; min-width: min-content; padding: 0 10px; border-bottom: 2px solid #cbd5e0; }
+        .bar-group { display: flex; flex-direction: column; align-items: center; }
+        .bar-pair { display: flex; align-items: flex-end; gap: 6px; height: 220px; }
+        .bar-col { display: flex; flex-direction: column; justify-content: flex-end; align-items: center; width: 46px; }
+        .bar-val { font-size: 11px; font-weight: bold; margin-bottom: 3px; white-space: nowrap; }
+        .bar-fill { width: 100%; border-radius: 4px 4px 0 0; min-height: 2px; }
+        .bar-label { font-size: 12px; font-weight: bold; color: #1f4e78; margin: 8px 0 6px; text-align: center; white-space: nowrap; }
+        .breakdown-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .clickable-val {
+            cursor: pointer;
+            padding: 3px 6px;
+            border-radius: 10px;
+            transition: all 0.2s ease;
+            text-decoration: underline;
+            text-decoration-style: dotted;
+            display: inline-block;
+            font-weight: bold;
+        }
+
+        .clickable-val:hover {
+            transform: scale(1.1);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+            background-color: #ebf8ff !important;
+            color: #2b6cb0 !important;
+        }
+
+        .badge {
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 11px;
+            display: inline-block;
+        }
+
+        .badge-danger { background-color: var(--danger-bg); color: var(--danger); }
+        .badge-success { background-color: var(--success-bg); color: var(--success); }
+
+        .filter-bar {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            background: #f8fafc;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .filter-left {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .filter-bar input, .filter-bar select {
+            padding: 6px 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 12px;
+            outline: none;
+        }
+
+        .filter-bar input:focus, .filter-bar select:focus {
+            border-color: var(--primary);
+        }
+
+        .active-filter-badge {
+            background-color: #e2e8f0;
+            color: #2d3748;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .empty-placeholder {
+            text-align: center;
+            padding: 30px;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            max-width: 1100px;
+            width: 100%;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .modal-header {
+            padding: 16px 20px;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 { font-size: 16px; font-weight: 700; }
+
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            text-align: center;
+            background: #f8fafc;
+            flex: 1;
+        }
+
+        .modal-body img {
+            max-width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border: 1px solid var(--border);
+        }
+
+        .modal-footer {
+            padding: 15px 20px;
+            background: white;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .btn-copy { background-color: #2b6cb0; color: white; }
+        .btn-download { background-color: #38a169; color: white; }
+        .btn-close { background-color: #e53e3e; color: white; }
+
+        .toast-msg {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #2d3748;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 10001;
+            display: none;
+        }
+    
+        .multiselect-container {
+            position: relative;
+            display: inline-block;
+        }
+        .multiselect-btn {
+            padding: 6px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 12px;
+            background: white;
+            cursor: pointer;
+            text-align: left;
+            min-width: 160px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+        }
+        .multiselect-btn:hover { border-color: var(--primary); }
+        .multiselect-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            z-index: 1000;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            min-width: 280px;
+            max-height: 250px;
+            overflow-y: auto;
+            padding: 8px;
+            margin-top: 4px;
+        }
+        .multiselect-dropdown.show { display: block; }
+        .multiselect-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 8px;
+            font-size: 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+        .multiselect-option:hover { background-color: #f0f7ff; }
+        .multiselect-option.header-opt {
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 4px;
+            padding-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="toast-msg" id="toastMsg"></div>
+
+<div class="modal-overlay" id="captureModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>🖼️ Preview Hasil Capture Dashboard Utama</h3>
+            <span style="font-size: 12px; opacity: 0.9;">Periksa hasil sebelum disalin atau diunduh</span>
+        </div>
+        <div class="modal-body">
+            <img id="previewImage" src="" alt="Hasil Capture Dashboard">
+        </div>
+        <div class="modal-footer">
+            <button class="btn-action btn-copy" onclick="copyCapturedImage()">📋 Salin Gambar Ke Clipboard</button>
+            <button class="btn-action btn-download" onclick="downloadCapturedImage()">💾 Unduh Gambar (PNG)</button>
+            <button class="btn-action btn-close" onclick="closeModal()">❌ Tutup</button>
+        </div>
+    </div>
+</div>
+
+<div class="drop-zone-global" id="dropOverlay">
+    <h2>📂 LEPASKAN FILE EXCEL DISINI</h2>
+    <p>Sistem akan otomatis membaca & menghitung data AWT Nota Penjualan</p>
+</div>
+
+<div class="container">
+    <div class="header">
+        <div>
+            <h1>Dashboard Monitoring AWT (Average Waiting Time)</h1>
+            <p>Mitra10 Qbig | SLA: Time Ready Actual - Time Paid ≤ 10 Menit</p>
+            <p style="margin-top: 4px; font-size: 12px; font-style: italic;">Remarks: Ridwan Qbig</p>
+        </div>
+    </div>
+
+    <div class="drop-box-area" id="dropBox" onclick="document.getElementById('excelInput').click()">
+        <div class="drop-box-left">
+            <div class="drop-box-title">📁 Tarik & Lepas File Excel Disini (Drag & Drop)</div>
+            <div class="drop-box-sub">Atau klik untuk memilih file Nota Penjualan (.xlsx / .xls)</div>
+        </div>
+        <button class="upload-btn-compact">Pilih File Excel</button>
+        <input type="file" id="excelInput" accept=".xlsx, .xls" style="display: none;" onchange="handleExcelUpload(this.files[0])">
+    </div>
+
+    <div class="nav-tabs">
+        <div class="tab-buttons">
+            <button class="nav-btn active" id="btn-tab-dash" onclick="switchTab('tab-dash')">📊 1. Dashboard Utama</button>
+            <button class="nav-btn" id="btn-tab-detail" onclick="switchTab('tab-detail')">📋 2. Detail Data Transaksi & Item Barang</button>
+            <button class="nav-btn" id="btn-tab-bulan" onclick="switchTab('tab-bulan')">🗓️ 3. AWT Per Bulan & Item Category Late</button>
+        </div>
+
+        <button class="btn-action btn-capture" onclick="captureDashboardWithPreview()">
+            📸 Capture / Preview Gambar Dashboard
+        </button>
+    </div>
+
+    <div id="tab-dash" class="tab-panel active">
+        <div id="captureArea">
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-title">Total MS</div>
+                    <div class="kpi-value" id="kpi-total-val">0</div>
+                    <div class="kpi-subtext">Total No DN unik diproses</div>
+                </div>
+                <div class="kpi-card danger">
+                    <div class="kpi-title">AWT >10 Min</div>
+                    <div class="kpi-value" id="kpi-awt-val">0</div>
+                    <div class="kpi-subtext" id="kpi-awt-sub">Nota MS melebihi SLA</div>
+                </div>
+                <div class="kpi-card success">
+                    <div class="kpi-title">AWT &lt;10 Min</div>
+                    <div class="kpi-value" id="kpi-noawt-val">0</div>
+                    <div class="kpi-subtext">Nota MS memenuhi SLA</div>
+                </div>
+                <div class="kpi-card danger">
+                    <div class="kpi-title">Persentase >10 Min</div>
+                    <div class="kpi-value" id="kpi-pct-val">0.0%</div>
+                    <div class="kpi-subtext">Tingkat keterlambatan MS</div>
+                </div>
+                <div class="kpi-card success">
+                    <div class="kpi-title">Persentase &lt;10 Min</div>
+                    <div class="kpi-value" id="kpi-pct-noawt-val">0.0%</div>
+                    <div class="kpi-subtext">Tingkat ketepatan waktu MS</div>
+                </div>
+            </div>
+
+            <div class="dash-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <span>📅 Rekap AWT Per Tanggal</span>
+                        <span style="font-size: 11px; font-weight: normal; color: var(--text-muted);" id="status-text">Silakan upload data</span>
+                    </div>
+
+                    <div class="rekap-scroll-container" id="rekapScrollContainer">
+                        <table>
+                            <colgroup>
+                                <col style="width: 16%;">
+                                <col style="width: 14%;">
+                                <col style="width: 14%;">
+                                <col style="width: 14%;">
+                                <col style="width: 13%;">
+                                <col style="width: 15%;">
+                                <col style="width: 14%;">
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <th>Tanggal Order</th>
+                                    <th>Selling Area >10 Min</th>
+                                    <th>WH Area >10 Min</th>
+                                    <th>Total AWT >10 Min</th>
+                                    <th>Total MS</th>
+                                    <th>% AWT Late</th>
+                                    <th>% AWT On Time</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rekapTableBody">
+                                <tr>
+                                    <td colspan="7" class="empty-placeholder">Tarik/Drag file Excel ke kotak di atas untuk memuat data.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <table style="background-color: #edf2f7; font-weight: bold; border-radius: 6px; overflow: hidden;">
+                        <colgroup>
+                            <col style="width: 16%;">
+                            <col style="width: 14%;">
+                            <col style="width: 14%;">
+                            <col style="width: 14%;">
+                            <col style="width: 13%;">
+                            <col style="width: 15%;">
+                            <col style="width: 14%;">
+                        </colgroup>
+                        <tbody id="rekapTableFoot" style="display: none;">
+                            <tr>
+                                <td style="text-align: center;">TOTAL</td>
+                                <td id="foot-sell-awt">0</td>
+                                <td id="foot-wh-awt">0</td>
+                                <td id="foot-tot-awt" style="color: var(--danger);">0</td>
+                                <td id="foot-tot-trans">0</td>
+                                <td id="foot-pct-kontribusi" style="color: var(--danger);">0.0%</td>
+                                <td id="foot-pct-achv" style="color: var(--success);">0.0%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div>
+                    <div class="breakdown-stack">
+                        <div class="card" style="border-left: 4px solid #d69e2e; padding: 12px;">
+                            <div class="card-header" style="font-size: 12px; margin-bottom: 6px; padding-bottom: 4px;">
+                                <span>🏷️ Detail Durasi WH Area</span>
+                            </div>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>> 10 Min</th>
+                                        <th>&lt;10 Min</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><span class="clickable-val badge badge-danger" id="breakdown-wh-gt10" onclick="filterDetailFromClick('ALL', 'WHAREA', 'gt10')">0</span></td>
+                                        <td><span class="clickable-val badge badge-success" id="breakdown-wh-lt10" onclick="filterDetailFromClick('ALL', 'WHAREA', 'lt10')">0</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="card" style="border-left: 4px solid #3182ce; padding: 12px;">
+                            <div class="card-header" style="font-size: 12px; margin-bottom: 6px; padding-bottom: 4px;">
+                                <span>🏷️ Detail Durasi Selling Area</span>
+                            </div>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>> 10 Min</th>
+                                        <th>&lt;10 Min</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><span class="clickable-val badge badge-danger" id="breakdown-sell-gt10" onclick="filterDetailFromClick('ALL', 'SELLINGAREA', 'gt10')">0</span></td>
+                                        <td><span class="clickable-val badge badge-success" id="breakdown-sell-lt10" onclick="filterDetailFromClick('ALL', 'SELLINGAREA', 'lt10')">0</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="remarks-footer" style="text-align: right; font-size: 11px; font-style: italic; color: var(--text-muted); margin-top: 8px;">Remarks: Ridwan Qbig</div>
+        </div>
+    </div>
+
+    <div id="tab-bulan" class="tab-panel">
+        <div id="captureAreaBulan">
+            <div class="card" style="margin-bottom: 20px;">
+                <div class="card-header">
+                    <span>🗓️ Rekap AWT Per Bulan</span>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Bulan</th>
+                            <th>Selling Area >10 Min</th>
+                            <th>WH Area >10 Min</th>
+                            <th>Total AWT >10 Min</th>
+                            <th>Total MS</th>
+                            <th>% AWT Late</th>
+                            <th>% AWT On Time</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rekapBulanBody">
+                        <tr>
+                            <td colspan="7" class="empty-placeholder">Tarik/Drag file Excel ke kotak di atas untuk memuat data.</td>
+                        </tr>
+                    </tbody>
+                    <tbody id="rekapBulanFoot" style="display: none;"></tbody>
+                </table>
+            </div>
+
+            <div class="card" style="margin-top: 20px;">
+                <div class="card-header">
+                    <span>📊 Grafik Persentase Per Bulan (&gt;10 Min vs &lt;10 Min)</span>
+                </div>
+                <div class="chart-legend">
+                    <span><i style="background: var(--danger);"></i> Persentase &gt;10 Min</span>
+                    <span><i style="background: var(--success);"></i> Persentase &lt;10 Min</span>
+                </div>
+                <div class="chart-scroll">
+                    <div class="bar-chart" id="rekapBulanChart">
+                        <div class="empty-placeholder" style="border: none; width: 100%;">Tarik/Drag file Excel ke kotak di atas untuk memuat data.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-bottom: 20px;">
+                <div class="card-header">
+                    <span>📦 Item Category Late (&gt;10 Min)</span>
+                    <span style="font-size: 11px; font-weight: normal; color: var(--text-muted);" id="categoryLateInfo">Dihitung per baris item</span>
+                </div>
+                <div id="categoryLateNote" style="display: none; font-size: 12px; color: #b7791f; margin-bottom: 8px;">⚠️ Kolom kategori tidak ditemukan di file Excel (dicari header yang mengandung "Category" / "Kategori"), sehingga semua item masuk "Tanpa Kategori".</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Item Category</th>
+                            <th>Selling Area >10 Min</th>
+                            <th>WH Area >10 Min</th>
+                            <th>Total Item Late</th>
+                            <th>% dari Total Late</th>
+                        </tr>
+                    </thead>
+                    <tbody id="categoryLateBody">
+                        <tr>
+                            <td colspan="5" class="empty-placeholder">Tarik/Drag file Excel ke kotak di atas untuk memuat data.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="remarks-footer" style="text-align: right; font-size: 11px; font-style: italic; color: var(--text-muted); margin-top: 8px;">Remarks: Ridwan Qbig</div>
+        </div>
+    </div>
+
+    <div id="tab-detail" class="tab-panel">
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <span>📋 Detail Transaksi Per Item & Tanggal</span>
+                    <span id="activeFilterInfo" class="active-filter-badge" style="margin-left: 10px; display: none;"></span>
+                </div>
+                <span style="font-size: 11px; font-weight: normal; color: var(--text-muted);" id="detail-counter">0 Baris Item Tampil</span>
+            </div>
+
+            <div class="filter-bar">
+                <div class="filter-left">
+                    <div class="filter-group">
+                        <label>🔍 Cari:</label>
+                        <input type="text" id="searchFilter" style="width: 180px;" placeholder="Kode Item / MS / Cust..." onkeyup="applyDetailFilters()">
+                    </div>
+
+                    <div class="filter-group">
+                        <label>📅 Tanggal:</label>
+                        <select id="dateFilter" onchange="applyDetailFilters()">
+                            <option value="ALL">Semua Tanggal</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Status:</label>
+                        <select id="statusFilter" onchange="applyDetailFilters()">
+                            <option value="ALL">Semua Status</option>
+                            <option value="AWT">AWT (>10 Min)</option>
+                            <option value="no awt">No AWT (≤10 Min)</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Area:</label>
+                        <select id="areaFilter" onchange="applyDetailFilters()">
+                            <option value="ALL">Semua Area</option>
+                            <option value="SELLINGAREA">SELLINGAREA</option>
+                            <option value="WHAREA">WHAREA</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group" style="display:none;">
+                        <select id="durationTierFilter" onchange="applyDetailFilters()">
+                            <option value="ALL">Semua Tier</option>
+                            <option value="gt10">> 10 Min</option>
+                            <option value="lt10">&lt; 10 Min</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group" style="position: relative;">
+                        <label>Tipe Nota:</label>
+                        <div class="multiselect-container">
+                            <button type="button" class="multiselect-btn" id="notaTypeBtn" onclick="toggleNotaTypeDropdown()">
+                                <span id="notaTypeBtnText">Semua Tipe (6)</span> ▾
+                            </button>
+                            <div class="multiselect-dropdown" id="notaTypeDropdown">
+                                <label class="multiselect-option header-opt">
+                                    <input type="checkbox" id="chkTypeAll" checked onchange="toggleSelectAllNotaTypes(this)">
+                                    <strong>[Pilih Semua]</strong>
+                                </label>
+                                <div id="notaTypeCheckboxList"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button style="padding: 5px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; border: 1px solid #cbd5e1; background: white;" onclick="resetDetailFilters()">
+                        🔄 Reset Filter
+                    </button>
+                </div>
+
+                <button class="btn-action btn-export" onclick="exportPerfectXlsx()">
+                    📥 Export to Excel
+                </button>
+            </div>
+
+            <div style="overflow-x: auto; max-height: 550px;">
+                <table id="detailExportTable">
+                    <thead style="position: sticky; top: 0; background: #edf2f7; z-index: 10;">
+                        <tr>
+                            <th>No</th>
+                            <th>Tanggal Order</th>
+                            <th>No DN (MS)</th>
+                            <th>Tipe Nota</th>
+                            <th>Kode Item</th>
+                            <th>Nama / Deskripsi Barang</th>
+                            <th>Qty</th>
+                            <th>Customer</th>
+                            <th>Picking Area</th>
+                            <th>Time Paid (AQ)</th>
+                            <th>Time Ready (AY)</th>
+                            <th>Durasi Tunggu</th>
+                            <th>Status AWT</th>
+                        </tr>
+                    </thead>
+                    <tbody id="detailTableBody">
+                        <tr>
+                            <td colspan="13" class="empty-placeholder">Silakan upload file Excel terlebih dahulu.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let globalData = []; 
+    let globalUniqueDNs = []; 
+    let currentFilteredData = [];
+    let currentCanvas = null;
+
+    window.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        document.body.classList.add('drag-over');
+    });
+
+    window.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.clientX === 0 || e.clientY === 0) {
+            document.body.classList.remove('drag-over');
+        }
+    });
+
+    window.addEventListener('drop', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        document.body.classList.remove('drag-over');
+
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            handleExcelUpload(e.dataTransfer.files[0]);
+        }
+    });
+
+    function showToast(text) {
+        let toast = document.getElementById('toastMsg');
+        toast.innerText = text;
+        toast.style.display = 'block';
+        setTimeout(() => {
+            toast.style.display = 'none';
+        }, 3000);
+    }
+
+    function switchTab(tabId) {
+        document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+
+        if (tabId === 'tab-dash') {
+            document.getElementById('btn-tab-dash').classList.add('active');
+            document.getElementById('tab-dash').classList.add('active');
+        } else if (tabId === 'tab-bulan') {
+            document.getElementById('btn-tab-bulan').classList.add('active');
+            document.getElementById('tab-bulan').classList.add('active');
+        } else {
+            document.getElementById('btn-tab-detail').classList.add('active');
+            document.getElementById('tab-detail').classList.add('active');
+        }
+    }
+
+    function filterDetailFromClick(dateStr, areaVal, tierVal) {
+        switchTab('tab-detail');
+
+        document.getElementById('dateFilter').value = dateStr;
+        document.getElementById('areaFilter').value = areaVal;
+        document.getElementById('durationTierFilter').value = tierVal;
+        document.getElementById('statusFilter').value = tierVal === 'lt10' ? 'no awt' : (tierVal === 'ALL' && areaVal === 'ALL' ? 'ALL' : 'AWT');
+        document.getElementById('searchFilter').value = '';
+
+        applyDetailFilters();
+
+        let infoElem = document.getElementById('activeFilterInfo');
+        infoElem.style.display = 'inline-flex';
+        infoElem.innerHTML = `🎯 Filter Aktif: Tanggal <strong>${dateStr}</strong> | Area: <strong>${areaVal}</strong> | Tier: <strong>${tierVal}</strong>`;
+
+        showToast(`🔗 Menampilkan Detail Untuk Tanggal ${dateStr} (${areaVal} - ${tierVal})`);
+    }
+
+    function resetDetailFilters() {
+        document.getElementById('dateFilter').value = 'ALL';
+        document.getElementById('areaFilter').value = 'ALL';
+        document.getElementById('statusFilter').value = 'ALL';
+        let tierEl = document.getElementById('durationTierFilter');
+        if (tierEl) tierEl.value = 'ALL';
+        document.getElementById('searchFilter').value = '';
+        
+        let chkAll = document.getElementById('chkTypeAll');
+        if (chkAll) {
+            chkAll.checked = true;
+            toggleSelectAllNotaTypes(chkAll);
+        }
+        document.getElementById('activeFilterInfo').style.display = 'none';
+        applyDetailFilters();
+        showToast("🔄 Filter telah di-reset ke Semua Data");
+    }
+
+    function parseTimeToMinutes(timeStr) {
+        if (!timeStr && timeStr !== 0) return null;
+        if (typeof timeStr === 'number') return timeStr * 1440;
+        let parts = timeStr.toString().trim().split(':');
+        if (parts.length >= 2) {
+            let h = parseInt(parts[0], 10) || 0;
+            let m = parseInt(parts[1], 10) || 0;
+            let s = parts[2] ? parseFloat(parts[2]) : 0;
+            return h * 60 + m + s / 60;
+        }
+        return null;
+    }
+
+    function formatHMS(totalMinutes) {
+        let absMin = Math.abs(totalMinutes);
+        let mins = Math.floor(absMin);
+        let secs = Math.round((absMin - mins) * 60);
+        return `${mins} m ${secs} s`;
+    }
+
+    /* Bangun ringkasan, filter tanggal, dan filter tipe nota dari daftar item (dari Excel atau dari data bersama di server) */
+    function buildFromItems(items) {
+        globalData = items;
+        hasCategoryCol = items.some(function(d){ return d.category && d.category !== 'Tanpa Kategori'; });
+        let dnMap = {};
+        let uniqueDates = new Set();
+        items.forEach(function(it) {
+            if (it.date && it.date !== 'Unknown') uniqueDates.add(it.date);
+            let dnKey = it.date + "___" + it.dnNo;
+            let m = dnMap[dnKey];
+            if (!m) {
+                dnMap[dnKey] = { date: it.date, dnNo: it.dnNo, area: it.area, maxDiff: it.diffMin, late: it.late, status: it.late ? 'AWT' : 'NO AWT' };
+            } else if ((it.late && !m.late) || (it.late === m.late && it.diffMin > m.maxDiff)) {
+                m.maxDiff = it.diffMin; m.area = it.area; m.late = it.late; m.status = m.late ? 'AWT' : 'NO AWT';
+            }
+        });
+        globalUniqueDNs = Object.values(dnMap);
+
+        let dateSelect = document.getElementById('dateFilter');
+        dateSelect.innerHTML = '<option value="ALL">Semua Tanggal</option>';
+        Array.from(uniqueDates).sort().forEach(dt => {
+            let opt = document.createElement('option');
+            opt.value = dt;
+            opt.innerText = dt;
+            dateSelect.appendChild(opt);
+        });
+
+        let uniqueTypes = Array.from(new Set(items.map(d => d.notaType))).sort();
+        let container = document.getElementById('notaTypeCheckboxList');
+        container.innerHTML = '';
+        document.getElementById('chkTypeAll').checked = true;
+        uniqueTypes.forEach(tp => {
+            let lbl = document.createElement('label');
+            lbl.className = 'multiselect-option';
+            lbl.innerHTML = `<input type="checkbox" class="chk-nota-type" value="${String(tp).replace(/"/g,'&quot;')}" checked onchange="onIndividualNotaTypeChange()"> <span>${String(tp).replace(/</g,'&lt;')}</span>`;
+            container.appendChild(lbl);
+        });
+        updateNotaTypeBtnText();
+        updateDashboardSummary();
+        applyDetailFilters();
+    }
+
+    function handleExcelUpload(file) {
+        if (!file) return;
+
+        if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
+            alert("File harus berformat Excel (.xlsx atau .xls)");
+            return;
+        }
+
+        let reader = new FileReader();
+        reader.onload = function(e) {
+            let data = new Uint8Array(e.target.result);
+            let workbook = XLSX.read(data, {type: 'array'});
+            let sheet = workbook.Sheets[workbook.SheetNames[0]];
+            let rows = XLSX.utils.sheet_to_json(sheet, {header: 1});
+
+            let headerIdx = -1;
+            for (let i = 0; i < Math.min(rows.length, 15); i++) {
+                if (rows[i] && rows[i].includes("Time Paid")) {
+                    headerIdx = i;
+                    break;
+                }
+            }
+
+            if (headerIdx === -1) {
+                alert("Format file Excel tidak sesuai. Pastikan file adalah Nota Penjualan dari sistem.");
+                return;
+            }
+
+            let headers = rows[headerIdx];
+            let dateCol = headers.indexOf("Order Date");
+            let dnCol = headers.indexOf("DN No ") !== -1 ? headers.indexOf("DN No ") : headers.indexOf("DN No");
+            let typeCol = headers.indexOf("Type") !== -1 ? headers.indexOf("Type") : headers.indexOf("TYPE");
+            if (typeCol === -1) {
+                typeCol = 7;
+            }
+            let itemCol = headers.indexOf("Item no") !== -1 ? headers.indexOf("Item no") : headers.indexOf("Item No");
+            let descCol = headers.indexOf("Description");
+            let qtyCol = headers.indexOf("Quantity");
+            let custCol = headers.indexOf("Sell to Customer Name");
+            let areaCol = headers.indexOf("Picking Area");
+            let paidCol = headers.indexOf("Time Paid");
+            let readyCol = headers.indexOf("Time Ready Actual");
+            let procTimeTintingCol = headers.indexOf("Processing Time (Khusus Tinting)");
+            let catCol = headers.findIndex(h => /categ|kategori/i.test((h || '').toString()));
+            let paidBeforeCol = headers.findIndex(h => /^paid before process/i.test((h || '').toString().trim()));
+            let statusCol = headers.findIndex(h => /^status late/i.test((h || '').toString().trim()));
+            let selisihCol = headers.findIndex(h => /^selisih/i.test((h || '').toString().trim()));
+            hasCategoryCol = catCol !== -1;
+
+            globalData = [];
+            let dnMap = {};
+            let uniqueDates = new Set();
+
+            for (let r = headerIdx + 1; r < rows.length; r++) {
+                let row = rows[r];
+                if (!row || row.length === 0) continue;
+
+                let tPaid = row[paidCol];
+                let tReady = row[readyCol];
+                let minPaid = parseTimeToMinutes(tPaid);
+                let minReady = parseTimeToMinutes(tReady);
+
+                let diff = 0;
+                let statusStr = "NO AWT";
+
+                if (minPaid !== null && minReady !== null) {
+                    diff = minReady - minPaid;
+                    if (diff <= 0) {
+                        diff = 0;
+                    }
+                    statusStr = diff > 10 ? "AWT" : "NO AWT";
+                } else {
+                    tPaid = tPaid || "-";
+                    tReady = tReady || "-";
+                    statusStr = "NO AWT";
+                }
+
+                let descVal = descCol !== -1 ? (row[descCol] || '').toString().toUpperCase() : '';
+                let areaVal = (row[areaCol] || "UNSPECIFIED").toString().trim();
+                let procTintingVal = procTimeTintingCol !== -1 ? (row[procTimeTintingCol] || '').toString().trim() : '';
+
+                let isSellingArea = areaVal.toUpperCase().includes("SELLING");
+                let isBaseItem = descVal.includes("BASE") || (procTintingVal !== '' && procTintingVal !== '00:00:00' && procTintingVal !== '0');
+
+                // Item Tinting / "Paid Before Process" = Yes memakai batas khusus 30 menit, selain itu 10 menit
+                let paidBeforeYes = paidBeforeCol !== -1 && row[paidBeforeCol] !== undefined && row[paidBeforeCol] !== null && row[paidBeforeCol].toString().trim().toLowerCase() === 'yes';
+                let hasTintingProc = procTintingVal !== '' && procTintingVal !== '00:00:00' && procTintingVal !== '0';
+                let isTintingItem = paidBeforeYes || hasTintingProc;
+                let limitMin = isTintingItem ? 30 : 10;
+                let isLate;
+                let xlStatus = statusCol !== -1 && row[statusCol] !== undefined && row[statusCol] !== null ? row[statusCol].toString().trim().toLowerCase() : '';
+                if (xlStatus !== '') {
+                    // Mengikuti kolom "Status Late By Item" & "Selisih" dari Excel (sudah memperhitungkan aturan Base/Tinting & lintas tengah malam)
+                    isLate = xlStatus !== 'ontime' && xlStatus !== 'no data';
+                    let selisihVal = selisihCol !== -1 ? parseFloat(row[selisihCol]) : NaN;
+                    if (!isNaN(selisihVal)) {
+                        diff = Math.max(0, selisihVal);
+                    } else if (isLate && diff <= 10) {
+                        diff = 10.01;
+                    }
+                    statusStr = isLate ? "AWT" : "NO AWT";
+                } else {
+                    if (diff > 720) diff = 0; // selisih >12 jam = Time Ready Actual jatuh di hari sebelumnya (lintas tengah malam)
+                    // Sama seperti Excel: perbandingan batas memakai selisih menit penuh (detik dibuang)
+                    let diffWholeMin = (minPaid !== null && minReady !== null) ? Math.floor(minReady) - Math.floor(minPaid) : 0;
+                    isLate = diff > 0 && diffWholeMin > limitMin;
+                    statusStr = isLate ? "AWT" : "NO AWT";
+                }
+
+                let rawDate = row[dateCol] || "Unknown";
+                let dateStr = "Unknown";
+                if (typeof rawDate === 'number') {
+                    dateStr = XLSX.SSF.format('YYYY-MM-DD', rawDate);
+                } else if (rawDate instanceof Date) {
+                    dateStr = rawDate.toISOString().split('T')[0];
+                } else if (rawDate) {
+                    dateStr = rawDate.toString().split('T')[0].split(' ')[0];
+                }
+
+                if (dateStr && dateStr !== "Unknown") {
+                    uniqueDates.add(dateStr);
+                }
+
+                let dnNoVal = dnCol !== -1 ? (row[dnCol] || '-').toString().trim() : '-';
+                
+                let notaTypeVal = (typeCol !== -1 && row[typeCol] !== undefined && row[typeCol] !== null) 
+                                  ? row[typeCol].toString().trim() 
+                                  : "UNSPECIFIED";
+
+                let itemObj = {
+                    date: dateStr,
+                    dnNo: dnNoVal,
+                    notaType: notaTypeVal,
+                    itemNo: itemCol !== -1 ? (row[itemCol] || '-') : '-',
+                    itemDesc: descCol !== -1 ? (row[descCol] || '-') : '-',
+                    category: (catCol !== -1 && row[catCol] !== undefined && row[catCol] !== null && row[catCol].toString().trim() !== '') ? row[catCol].toString().trim() : 'Tanpa Kategori',
+                    qty: qtyCol !== -1 ? (row[qtyCol] || 1) : 1,
+                    customer: custCol !== -1 ? (row[custCol] || '-') : '-',
+                    area: areaVal,
+                    tPaid: tPaid,
+                    tReady: tReady,
+                    diffMin: diff,
+                    late: isLate,
+                    tinting: isTintingItem,
+                    status: statusStr
+                };
+
+                globalData.push(itemObj);
+
+                let dnKey = dateStr + "___" + dnNoVal;
+                if (!dnMap[dnKey]) {
+                    dnMap[dnKey] = {
+                        date: dateStr,
+                        dnNo: dnNoVal,
+                        area: areaVal,
+                        maxDiff: diff,
+                        late: isLate,
+                        status: statusStr
+                    };
+                } else {
+                    let m = dnMap[dnKey];
+                    if ((isLate && !m.late) || (isLate === m.late && diff > m.maxDiff)) {
+                        m.maxDiff = diff;
+                        m.area = areaVal;
+                        m.late = isLate;
+                    }
+                    m.status = m.late ? 'AWT' : 'NO AWT';
+                }
+            }
+
+            buildFromItems(globalData);
+            document.getElementById('status-text').innerText = `Data Berhasil Dimuat (${globalUniqueDNs.length} MS Unik / ${globalData.length} Items)`;
+            showToast("✅ Data Excel Berhasil Dimuat!");
+            shSave(file.name);
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    function renderRekapTable(limit7Days = false) {
+        let dateGroups = {};
+        globalUniqueDNs.forEach(d => {
+            if (!dateGroups[d.date]) {
+                dateGroups[d.date] = { total: 0, sellAwt: 0, whAwt: 0, totalAwt: 0 };
+            }
+            dateGroups[d.date].total++;
+            if (d.late) {
+                dateGroups[d.date].totalAwt++;
+                if (d.area.toUpperCase().includes("SELLING")) dateGroups[d.date].sellAwt++;
+                else if (d.area.toUpperCase().includes("WH")) dateGroups[d.date].whAwt++;
+            }
+        });
+
+        let tbody = document.getElementById('rekapTableBody');
+        tbody.innerHTML = '';
+
+        let sortedDates = Object.keys(dateGroups).sort();
+        let datesToDisplay = limit7Days ? sortedDates.slice(-7) : sortedDates;
+
+        datesToDisplay.forEach(dt => {
+            let g = dateGroups[dt];
+            let kontribusiPct = g.total > 0 ? ((g.totalAwt / g.total) * 100).toFixed(1) + "%" : "0.0%";
+            let achvPct = g.total > 0 ? (((g.total - g.totalAwt) / g.total) * 100).toFixed(1) + "%" : "0.0%";
+
+            let tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${dt}</strong></td>
+                <td>
+                    <span class="clickable-val badge badge-danger" onclick="filterDetailFromClick('${dt}', 'SELLINGAREA', 'gt10')" title="Klik untuk lihat detail Selling Area AWT tanggal ${dt}">
+                        ${g.sellAwt}
+                    </span>
+                </td>
+                <td>
+                    <span class="clickable-val badge badge-danger" onclick="filterDetailFromClick('${dt}', 'WHAREA', 'gt10')" title="Klik untuk lihat detail WH Area AWT tanggal ${dt}">
+                        ${g.whAwt}
+                    </span>
+                </td>
+                <td>
+                    <span class="clickable-val badge badge-danger" onclick="filterDetailFromClick('${dt}', 'ALL', 'gt10')" title="Klik untuk lihat seluruh AWT tanggal ${dt}">
+                        ${g.totalAwt}
+                    </span>
+                </td>
+                <td>
+                    <span class="clickable-val" style="color: #1f4e78;" onclick="filterDetailFromClick('${dt}', 'ALL', 'ALL')" title="Klik untuk lihat seluruh transaksi tanggal ${dt}">
+                        ${g.total}
+                    </span>
+                </td>
+                <td style="color: var(--danger); font-weight: bold;">${kontribusiPct}</td>
+                <td style="color: var(--success); font-weight: bold;">${achvPct}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    let hasCategoryCol = false;
+
+    function renderCategoryLate() {
+        let groups = {};
+        let totalLate = 0;
+        globalData.forEach(d => {
+            if (d.late) {
+                let c = d.category || 'Tanpa Kategori';
+                if (!groups[c]) groups[c] = { sell: 0, wh: 0, total: 0 };
+                let area = d.area.toUpperCase();
+                if (area.includes("SELLING")) groups[c].sell++;
+                else if (area.includes("WH")) groups[c].wh++;
+                groups[c].total++;
+                totalLate++;
+            }
+        });
+
+        let tbody = document.getElementById('categoryLateBody');
+        document.getElementById('categoryLateNote').style.display = hasCategoryCol ? 'none' : 'block';
+        tbody.innerHTML = '';
+
+        let keys = Object.keys(groups).sort((a, b) => groups[b].total - groups[a].total);
+        document.getElementById('categoryLateInfo').innerText = `${keys.length} kategori | ${totalLate} item late (dihitung per baris item)`;
+        if (!keys.length) {
+            tbody.innerHTML = '<tr><td colspan="5" class="empty-placeholder">Tidak ada item late (>10 Min).</td></tr>';
+            return;
+        }
+
+        let sumSell = 0, sumWh = 0;
+        keys.forEach(k => {
+            let g = groups[k];
+            sumSell += g.sell; sumWh += g.wh;
+            let tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${k}</strong></td>
+                <td><span class="badge badge-danger">${g.sell}</span></td>
+                <td><span class="badge badge-danger">${g.wh}</span></td>
+                <td><span class="badge badge-danger">${g.total}</span></td>
+                <td style="font-weight: bold;">${((g.total / totalLate) * 100).toFixed(1)}%</td>
+            `;
+            tbody.appendChild(tr);
+        });
+        let tf = document.createElement('tr');
+        tf.style.cssText = 'background-color: #edf2f7; font-weight: bold;';
+        tf.innerHTML = `
+            <td style="text-align: center;">TOTAL</td>
+            <td>${sumSell}</td>
+            <td>${sumWh}</td>
+            <td style="color: var(--danger);">${totalLate}</td>
+            <td>100.0%</td>
+        `;
+        tbody.appendChild(tf);
+    }
+
+    function renderRekapBulan() {
+        const namaBulan = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+        let groups = {};
+        globalUniqueDNs.forEach(d => {
+            let key = /^\d{4}-\d{2}/.test(d.date) ? d.date.substring(0, 7) : 'Unknown';
+            if (!groups[key]) groups[key] = { total: 0, sellAwt: 0, whAwt: 0, totalAwt: 0 };
+            let g = groups[key];
+            g.total++;
+            if (d.late) {
+                g.totalAwt++;
+                let area = d.area.toUpperCase();
+                if (area.includes("SELLING")) g.sellAwt++;
+                else if (area.includes("WH")) g.whAwt++;
+            }
+        });
+
+        let pct = (a, b) => b > 0 ? ((a / b) * 100).toFixed(1) + "%" : "0.0%";
+        let tbody = document.getElementById('rekapBulanBody');
+        let tfoot = document.getElementById('rekapBulanFoot');
+        tbody.innerHTML = '';
+
+        let keys = Object.keys(groups).sort();
+        let sum = { total: 0, sellAwt: 0, whAwt: 0, totalAwt: 0 };
+
+        keys.forEach(k => {
+            let g = groups[k];
+            sum.total += g.total; sum.sellAwt += g.sellAwt; sum.whAwt += g.whAwt; sum.totalAwt += g.totalAwt;
+            let label = k;
+            if (k !== 'Unknown') {
+                let [y, m] = k.split('-');
+                label = `${namaBulan[parseInt(m, 10) - 1]} ${y}`;
+            }
+            let tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${label}</strong></td>
+                <td><span class="badge badge-danger">${g.sellAwt}</span></td>
+                <td><span class="badge badge-danger">${g.whAwt}</span></td>
+                <td><span class="badge badge-danger">${g.totalAwt}</span></td>
+                <td style="color: #1f4e78; font-weight: bold;">${g.total}</td>
+                <td style="color: var(--danger); font-weight: bold;">${pct(g.totalAwt, g.total)}</td>
+                <td style="color: var(--success); font-weight: bold;">${pct(g.total - g.totalAwt, g.total)}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        tfoot.innerHTML = `
+            <tr style="background-color: #edf2f7; font-weight: bold;">
+                <td style="text-align: center;">TOTAL</td>
+                <td>${sum.sellAwt}</td>
+                <td>${sum.whAwt}</td>
+                <td style="color: var(--danger);">${sum.totalAwt}</td>
+                <td>${sum.total}</td>
+                <td style="color: var(--danger);">${pct(sum.totalAwt, sum.total)}</td>
+                <td style="color: var(--success);">${pct(sum.total - sum.totalAwt, sum.total)}</td>
+            </tr>
+        `;
+        tfoot.style.display = keys.length ? 'table-row-group' : 'none';
+
+        let chart = document.getElementById('rekapBulanChart');
+        chart.innerHTML = '';
+        keys.forEach(k => {
+            let g = groups[k];
+            let late = g.total > 0 ? (g.totalAwt / g.total) * 100 : 0;
+            let ontime = 100 - (g.total > 0 ? late : 100);
+            if (g.total === 0) ontime = 0;
+            let label = k;
+            if (k !== 'Unknown') {
+                let [y, m] = k.split('-');
+                label = `${namaBulan[parseInt(m, 10) - 1].substring(0, 3)} ${y}`;
+            }
+            let grp = document.createElement('div');
+            grp.className = 'bar-group';
+            grp.innerHTML = `
+                <div class="bar-pair">
+                    <div class="bar-col">
+                        <div class="bar-val" style="color: var(--danger);">${late.toFixed(1)}%</div>
+                        <div class="bar-fill" style="height: ${Math.round(late * 1.8)}px; background: var(--danger);"></div>
+                    </div>
+                    <div class="bar-col">
+                        <div class="bar-val" style="color: var(--success);">${ontime.toFixed(1)}%</div>
+                        <div class="bar-fill" style="height: ${Math.round(ontime * 1.8)}px; background: var(--success);"></div>
+                    </div>
+                </div>
+                <div class="bar-label">${label}</div>
+            `;
+            chart.appendChild(grp);
+        });
+        if (!keys.length) chart.innerHTML = '<div class="empty-placeholder" style="border: none; width: 100%;">Belum ada data.</div>';
+    }
+
+    function updateDashboardSummary() {
+        let totalCount = globalUniqueDNs.length;
+        let awtCount = globalUniqueDNs.filter(d => d.late).length;
+        let noAwtCount = totalCount - awtCount;
+        let pctOverall = totalCount > 0 ? ((awtCount / totalCount) * 100).toFixed(1) + "%" : "0.0%";
+
+        document.getElementById('kpi-total-val').innerText = totalCount;
+        document.getElementById('kpi-awt-val').innerText = awtCount;
+        document.getElementById('kpi-noawt-val').innerText = noAwtCount;
+        document.getElementById('kpi-pct-val').innerText = pctOverall;
+        document.getElementById('kpi-pct-noawt-val').innerText = totalCount > 0 ? ((noAwtCount / totalCount) * 100).toFixed(1) + "%" : "0.0%";
+
+        renderRekapTable(false);
+        renderRekapBulan();
+        renderCategoryLate();
+
+        let totSellAwt = 0, totWhAwt = 0, totAllAwt = 0, totTrans = 0;
+        let sellGt10 = 0, sellLt10 = 0;
+        let whGt10 = 0, whLt10 = 0;
+
+        globalUniqueDNs.forEach(d => {
+            totTrans++;
+            let isSelling = d.area.toUpperCase().includes("SELLING");
+            let isWh = d.area.toUpperCase().includes("WH");
+
+            if (d.late) {
+                totAllAwt++;
+                if (isSelling) { totSellAwt++; sellGt10++; }
+                else if (isWh) { totWhAwt++; whGt10++; }
+            } else {
+                if (isSelling) sellLt10++;
+                else if (isWh) whLt10++;
+            }
+        });
+
+        document.getElementById('breakdown-sell-gt10').innerText = sellGt10;
+        document.getElementById('breakdown-sell-lt10').innerText = sellLt10;
+
+        document.getElementById('breakdown-wh-gt10').innerText = whGt10;
+        document.getElementById('breakdown-wh-lt10').innerText = whLt10;
+
+        let footKontribusi = totTrans > 0 ? ((totAllAwt / totTrans) * 100).toFixed(1) + "%" : "0.0%";
+        let footAchv = totTrans > 0 ? (((totTrans - totAllAwt) / totTrans) * 100).toFixed(1) + "%" : "0.0%";
+
+        let tfoot = document.getElementById('rekapTableFoot');
+        tfoot.innerHTML = `
+            <tr>
+                <td style="text-align: center;">TOTAL</td>
+                <td id="foot-sell-awt">${totSellAwt}</td>
+                <td id="foot-wh-awt">${totWhAwt}</td>
+                <td id="foot-tot-awt" style="color: var(--danger);">${totAllAwt}</td>
+                <td id="foot-tot-trans">${totTrans}</td>
+                <td id="foot-pct-kontribusi" style="color: var(--danger);">${footKontribusi}</td>
+                <td id="foot-pct-achv" style="color: var(--success);">${footAchv}</td>
+            </tr>
+        `;
+
+        document.getElementById('rekapTableFoot').style.display = 'table-row-group';
+    }
+
+    function applyDetailFilters() {
+        let search = document.getElementById('searchFilter').value.toLowerCase();
+        let dateVal = document.getElementById('dateFilter').value;
+        let statusVal = document.getElementById('statusFilter').value;
+        let areaVal = document.getElementById('areaFilter').value;
+        let tierEl = document.getElementById('durationTierFilter');
+        let tierVal = tierEl ? tierEl.value : 'ALL';
+
+        let selectedTypes = Array.from(document.querySelectorAll('.chk-nota-type:checked')).map(cb => cb.value);
+        let isAllTypesChecked = document.getElementById('chkTypeAll').checked;
+
+        currentFilteredData = globalData.filter(d => {
+            let matchesSearch = d.itemNo.toString().toLowerCase().includes(search) ||
+                                d.itemDesc.toLowerCase().includes(search) ||
+                                d.dnNo.toLowerCase().includes(search) ||
+                                d.customer.toLowerCase().includes(search);
+            let matchesDate = dateVal === 'ALL' || d.date === dateVal;
+            let matchesStatus = statusVal === 'ALL' || d.status.toLowerCase() === statusVal.toLowerCase();
+            let matchesArea = areaVal === 'ALL' || d.area.toUpperCase().includes(areaVal);
+            let matchesType = isAllTypesChecked || selectedTypes.includes(d.notaType);
+
+            let matchesTier = true;
+            if (tierVal === 'gt10') matchesTier = d.late;
+            else if (tierVal === 'lt10') matchesTier = !d.late;
+
+            return matchesSearch && matchesDate && matchesStatus && matchesArea && matchesType && matchesTier;
+        });
+
+        let tbody = document.getElementById('detailTableBody');
+        tbody.innerHTML = '';
+        document.getElementById('detail-counter').innerText = `${currentFilteredData.length} Baris Item Tampil`;
+
+        if (currentFilteredData.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="13" class="empty-placeholder">Tidak ada data transaksi yang sesuai dengan filter.</td></tr>`;
+            return;
+        }
+
+        currentFilteredData.forEach((row, idx) => {
+            let tr = document.createElement('tr');
+            let badgeClass = row.status === 'AWT' ? 'badge-danger' : 'badge-success';
+            tr.innerHTML = `
+                <td>${idx + 1}</td>
+                <td><strong>${row.date}</strong></td>
+                <td><strong>${row.dnNo}</strong></td>
+                <td><span style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-weight: 600; font-size: 11px;">${row.notaType}</span></td>
+                <td><code style="background: #edf2f7; padding: 2px 5px; border-radius: 4px; font-weight: bold;">${row.itemNo}</code></td>
+                <td style="text-align: left; font-weight: 600;">${row.itemDesc}</td>
+                <td><strong>${row.qty}</strong></td>
+                <td style="text-align: left;">${row.customer}</td>
+                <td><span style="font-weight: 600; color: #1f4e78;">${row.area}</span></td>
+                <td>${row.tPaid}</td>
+                <td>${row.tReady}</td>
+                <td>${formatHMS(row.diffMin)}</td>
+                <td><span class="badge ${badgeClass}">${row.status}</span></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    async function exportPerfectXlsx() {
+        if (currentFilteredData.length === 0) {
+            alert("Tidak ada data untuk di-download. Silakan upload file Excel terlebih dahulu.");
+            return;
+        }
+
+        showToast("⏳ Sedang memproses file Excel berformat...");
+
+        let workbook = new ExcelJS.Workbook();
+        let worksheet = workbook.addWorksheet('Detail Monitoring AWT');
+
+        worksheet.columns = [
+            { header: 'No', key: 'no', width: 6 },
+            { header: 'Tanggal Order', key: 'date', width: 15 },
+            { header: 'No DN (MS)', key: 'dnNo', width: 25 },
+            { header: 'Tipe Nota', key: 'notaType', width: 32 },
+            { header: 'Kode Item', key: 'itemNo', width: 16 },
+            { header: 'Nama / Deskripsi Barang', key: 'itemDesc', width: 45 },
+            { header: 'Qty', key: 'qty', width: 8 },
+            { header: 'Customer', key: 'customer', width: 32 },
+            { header: 'Picking Area', key: 'area', width: 16 },
+            { header: 'Time Paid', key: 'tPaid', width: 13 },
+            { header: 'Time Ready Actual', key: 'tReady', width: 18 },
+            { header: 'Durasi Tunggu (Menit)', key: 'diffMin', width: 22 },
+            { header: 'Status AWT', key: 'status', width: 18 }
+        ];
+
+        let headerRow = worksheet.getRow(1);
+        headerRow.height = 28;
+
+        headerRow.eachCell((cell) => {
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1F4E78' } };
+            cell.font = { name: 'Segoe UI', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
+            cell.alignment = { vertical: 'middle', horizontal: 'center' };
+            cell.border = {
+                top: { style: 'thin', color: { argb: 'FF000000' } },
+                left: { style: 'thin', color: { argb: 'FF000000' } },
+                bottom: { style: 'medium', color: { argb: 'FF000000' } },
+                right: { style: 'thin', color: { argb: 'FF000000' } }
+            };
+        });
+
+        currentFilteredData.forEach((row, idx) => {
+            let isAwt = row.status === 'AWT';
+            let addedRow = worksheet.addRow({
+                no: idx + 1,
+                date: row.date,
+                dnNo: row.dnNo,
+                notaType: row.notaType,
+                itemNo: row.itemNo,
+                itemDesc: row.itemDesc,
+                qty: row.qty,
+                customer: row.customer,
+                area: row.area,
+                tPaid: row.tPaid,
+                tReady: row.tReady,
+                diffMin: Math.round(row.diffMin * 100) / 100,
+                status: isAwt ? 'AWT (>10 Min)' : 'NO AWT (≤10 Min)'
+            });
+
+            addedRow.height = 20;
+
+            addedRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+                cell.border = {
+                    top: { style: 'thin', color: { argb: 'FFD0D7DE' } },
+                    left: { style: 'thin', color: { argb: 'FFD0D7DE' } },
+                    bottom: { style: 'thin', color: { argb: 'FFD0D7DE' } },
+                    right: { style: 'thin', color: { argb: 'FFD0D7DE' } }
+                };
+
+                if (colNumber === 4 || colNumber === 6 || colNumber === 8) {
+                    cell.alignment = { vertical: 'middle', horizontal: 'left' };
+                } else {
+                    cell.alignment = { vertical: 'middle', horizontal: 'center' };
+                }
+
+                if (isAwt) {
+                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFECEC' } };
+                    if (colNumber === 13) {
+                        cell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FFE53E3E' } };
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFADBD8' } };
+                    } else {
+                        cell.font = { name: 'Segoe UI', size: 10, color: { argb: 'FF2D3748' } };
+                    }
+                } else {
+                    if (colNumber === 13) {
+                        cell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FF27AE60' } };
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD4EFDF' } };
+                    } else {
+                        cell.font = { name: 'Segoe UI', size: 10, color: { argb: 'FF2D3748' } };
+                    }
+                }
+            });
+        });
+
+        let buffer = await workbook.xlsx.writeBuffer();
+        let blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        let url = URL.createObjectURL(blob);
+        let a = document.createElement('a');
+        a.href = url;
+        a.download = 'Laporan_Monitoring_AWT.xlsx';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        showToast("🎨 Excel Native .XLSX Rapi & AWT Merah Berhasil Diunduh!");
+    }
+
+    function captureDashboardWithPreview() {
+        let isTabDash = document.getElementById('tab-dash').classList.contains('active');
+        let isTabBulan = document.getElementById('tab-bulan').classList.contains('active');
+        let captureElem = isTabDash 
+            ? document.getElementById('captureArea') 
+            : (isTabBulan ? document.getElementById('captureAreaBulan') : document.querySelector('#tab-detail .card'));
+
+        let tabName = isTabDash ? "Dashboard Utama" : (isTabBulan ? "AWT Per Bulan & Item Category Late" : "Detail Data Transaksi");
+        let suffix = isTabBulan ? "" : " (7 Hari Terbaru)";
+
+        showToast(`⏳ Sedang menyiapkan capture ${tabName}${suffix}...`);
+
+        let scrollContainer = document.getElementById('rekapScrollContainer');
+        let origMaxHeight = "";
+        let origOverflow = "";
+
+        if (isTabDash && scrollContainer) {
+            origMaxHeight = scrollContainer.style.maxHeight;
+            origOverflow = scrollContainer.style.overflowY;
+            scrollContainer.style.maxHeight = 'none';
+            scrollContainer.style.overflowY = 'visible';
+            renderRekapTable(true);
+        }
+
+        let scrollDiv = document.querySelector('#tab-detail div[style*="max-height"]');
+        let origDetailMax = "";
+        let origDetailOver = "";
+
+        if (!isTabDash && scrollDiv) {
+            origDetailMax = scrollDiv.style.maxHeight;
+            origDetailOver = scrollDiv.style.overflowY;
+            scrollDiv.style.maxHeight = 'none';
+            scrollDiv.style.overflowY = 'visible';
+        }
+
+        html2canvas(captureElem, {
+            scale: 2,
+            backgroundColor: "#f4f7fa",
+            useCORS: true,
+            windowWidth: captureElem.scrollWidth + 50,
+            windowHeight: captureElem.scrollHeight + 50
+        }).then(canvas => {
+            if (isTabDash && scrollContainer) {
+                scrollContainer.style.maxHeight = origMaxHeight;
+                scrollContainer.style.overflowY = origOverflow;
+                renderRekapTable(false);
+            }
+
+            if (!isTabDash && scrollDiv) {
+                scrollDiv.style.maxHeight = origDetailMax;
+                scrollDiv.style.overflowY = origDetailOver;
+            }
+
+            currentCanvas = canvas;
+            let imgData = canvas.toDataURL('image/png');
+            document.getElementById('previewImage').src = imgData;
+            document.querySelector('#captureModal .modal-header h3').innerText = `🖼️ Preview Hasil Capture ${tabName}${suffix}`;
+            document.getElementById('captureModal').style.display = 'flex';
+        }).catch(err => {
+            if (isTabDash && scrollContainer) {
+                scrollContainer.style.maxHeight = origMaxHeight;
+                scrollContainer.style.overflowY = origOverflow;
+                renderRekapTable(false);
+            }
+            if (!isTabDash && scrollDiv) {
+                scrollDiv.style.maxHeight = origDetailMax;
+                scrollDiv.style.overflowY = origDetailOver;
+            }
+            alert("Gagal mengambil capture gambar: " + err);
+        });
+    }
+
+    function closeModal() {
+        document.getElementById('captureModal').style.display = 'none';
+    }
+
+    function downloadCapturedImage() {
+        if (!currentCanvas) return;
+        let isTabDash = document.getElementById('tab-dash').classList.contains('active');
+        let isTabBulan = document.getElementById('tab-bulan').classList.contains('active');
+        let fileName = isTabDash ? 'Capture_Dashboard_Utama_AWT_Mitra10_Qbig.png' : (isTabBulan ? 'Capture_AWT_Per_Bulan_Mitra10_Qbig.png' : 'Capture_Detail_Transaksi_AWT_Mitra10_Qbig.png');
+        let link = document.createElement('a');
+        link.download = fileName;
+        link.href = currentCanvas.toDataURL('image/png');
+        link.click();
+        showToast("💾 Gambar Berhasil Diunduh!");
+    }
+
+    function copyCapturedImage() {
+        if (!currentCanvas) return;
+        currentCanvas.toBlob(blob => {
+            if (navigator.clipboard && navigator.clipboard.write) {
+                let item = new ClipboardItem({'image/png': blob});
+                navigator.clipboard.write([item]).then(() => {
+                    showToast("📋 Gambar Berhasil Disalin Ke Clipboard!");
+                }).catch(err => {
+                    alert("Gagal menyalin gambar otomatis. Silakan gunakan tombol Unduh.");
+                });
+            } else {
+                alert("Browser tidak mendukung salin gambar otomatis. Silakan gunakan tombol Unduh Gambar.");
+            }
+        }, 'image/png');
+    }
+
+    function toggleNotaTypeDropdown() {
+        let dropdown = document.getElementById('notaTypeDropdown');
+        dropdown.classList.toggle('show');
+    }
+
+    document.addEventListener('click', function(e) {
+        let container = document.querySelector('.multiselect-container');
+        if (container && !container.contains(e.target)) {
+            document.getElementById('notaTypeDropdown').classList.remove('show');
+        }
+    });
+
+    function toggleSelectAllNotaTypes(masterChk) {
+        let checkboxes = document.querySelectorAll('.chk-nota-type');
+        checkboxes.forEach(cb => cb.checked = masterChk.checked);
+        updateNotaTypeBtnText();
+        applyDetailFilters();
+    }
+
+    function onIndividualNotaTypeChange() {
+        let total = document.querySelectorAll('.chk-nota-type').length;
+        let checkedCount = document.querySelectorAll('.chk-nota-type:checked').length;
+        let chkAll = document.getElementById('chkTypeAll');
+        
+        if (checkedCount === total) {
+            chkAll.checked = true;
+            chkAll.indeterminate = false;
+        } else if (checkedCount === 0) {
+            chkAll.checked = false;
+            chkAll.indeterminate = false;
+        } else {
+            chkAll.checked = false;
+            chkAll.indeterminate = true;
+        }
+
+        updateNotaTypeBtnText();
+        applyDetailFilters();
+    }
+
+    function updateNotaTypeBtnText() {
+        let total = document.querySelectorAll('.chk-nota-type').length;
+        let checkedCount = document.querySelectorAll('.chk-nota-type:checked').length;
+        let btnText = document.getElementById('notaTypeBtnText');
+
+        if (checkedCount === total) {
+            btnText.innerText = `Semua Tipe (${total})`;
+        } else if (checkedCount === 0) {
+            btnText.innerText = `Pilih Tipe Nota (0)`;
+        } else {
+            btnText.innerText = `${checkedCount} Tipe Dipilih`;
+        }
+    }
+
+    /* ===== Data bersama (Supabase) =====
+       Semua orang melihat data terakhir yang disimpan. Hanya akun admin/editor yang boleh memperbarui. */
+    const SB_URL = 'https://igkdetuufvcczmiluvqd.supabase.co', SB_KEY = 'sb_publishable_RUgz--hm3bwPBx75hzfrzA_C13Vm34h';
+    const SHURL = SB_URL + '/functions/v1/shared-data?name=awt';
+    const SB_LS = 'qbig_sb_session';
+    let _tok = null, _tokExp = 0, _who = '';
+    function sbOk() { return !!_tok && Date.now() < _tokExp - 60000; }
+    function sbUser(u) { u = String(u || '').trim().toLowerCase(); return u.indexOf('@') > -1 ? u : u + '@qbig.example.com'; }
+    function sbSet(j, email) { _tok = j.access_token; _tokExp = Date.now() + (j.expires_in || 3600) * 1000; _who = email || _who; try { localStorage.setItem(SB_LS, JSON.stringify({ rt: j.refresh_token, em: _who })); } catch (e) {} sbPill(); }
+    async function sbLogin(email, pw) {
+        email = sbUser(email);
+        const r = await fetch(SB_URL + '/auth/v1/token?grant_type=password', { method: 'POST', headers: { apikey: SB_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email, password: pw }) });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok || !j.access_token) throw new Error('Username atau password salah.');
+        sbSet(j, email); return _tok;
+    }
+    async function sbRefresh() {
+        let s = null; try { s = JSON.parse(localStorage.getItem(SB_LS) || 'null'); } catch (e) {}
+        if (!s || !s.rt) return false;
+        try {
+            const r = await fetch(SB_URL + '/auth/v1/token?grant_type=refresh_token', { method: 'POST', headers: { apikey: SB_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ refresh_token: s.rt }) });
+            const j = await r.json().catch(() => ({}));
+            if (!r.ok || !j.access_token) { if (r.status >= 400 && r.status < 500) { try { localStorage.removeItem(SB_LS); } catch (e) {} } return false; }
+            sbSet(j, s.em || ''); return true;
+        } catch (e) { return false; }
+    }
+    function sbOut() { _tok = null; _tokExp = 0; _who = ''; try { localStorage.removeItem(SB_LS); } catch (e) {} sbPill(); }
+    function sbLogged() { return sbOk() || (function () { try { return !!JSON.parse(localStorage.getItem(SB_LS) || 'null'); } catch (e) { return false; } })(); }
+    function sbPill() {
+        let p = document.getElementById('sbpill');
+        if (!p) {
+            p = document.createElement('div'); p.id = 'sbpill'; document.body.appendChild(p);
+            p.addEventListener('click', function (e) { const b = e.target.closest('button'); if (!b) return; if (b.dataset.a === 'out') sbOut(); else sbAsk(function () {}); });
+        }
+        const nm = String(_who || '').split('@')[0], on = sbLogged();
+        p.innerHTML = on ? '<i></i><span>Editor' + (nm ? ' · ' + nm.replace(/[<>&"]/g, '') : '') + '</span><button type="button" data-a="out">Keluar</button>' : '<button type="button" data-a="in">Login Editor</button>';
+        p.style.paddingLeft = on ? '11px' : '6px';
+    }
+    function sbAsk(cb, onCancel) {
+        if (sbOk()) { cb(_tok); return; }
+        sbRefresh().then(function (ok) { if (ok) { cb(_tok); return; } sbDlg(cb, onCancel); });
+    }
+    function sbDlg(cb, onCancel) {
+        const old = document.getElementById('lgdlg'); if (old) old.remove();
+        document.body.insertAdjacentHTML('beforeend', '<div class="lgbg" id="lgdlg" role="dialog" aria-modal="true" aria-label="Login admin/editor"><form class="lgbox" id="lgform"><h3>Login Admin / Editor</h3><p>Hanya admin atau editor yang boleh memperbarui data. Setelah login, data otomatis tersimpan untuk semua pengguna.</p><label for="lgem">Username</label><input id="lgem" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required><label for="lgpw">Password</label><input id="lgpw" type="password" autocomplete="current-password" required><div class="lgerr" id="lgerr" role="alert"></div><div class="lgact"><button type="button" id="lgx">Batal</button><button type="submit" class="ok" id="lgok">Masuk</button></div></form></div>');
+        const d = document.getElementById('lgdlg'), f = document.getElementById('lgform'), er = document.getElementById('lgerr');
+        document.getElementById('lgem').focus();
+        document.getElementById('lgx').addEventListener('click', function () { d.remove(); if (onCancel) onCancel(); });
+        f.addEventListener('submit', async function (e) {
+            e.preventDefault(); const b = document.getElementById('lgok'); b.disabled = true; er.textContent = 'Masuk...';
+            try { await sbLogin(document.getElementById('lgem').value.trim(), document.getElementById('lgpw').value); d.remove(); cb(_tok); }
+            catch (x) { er.textContent = x.message || 'Login gagal.'; b.disabled = false; }
+        });
+    }
+    function shStamp(iso) { try { return new Intl.DateTimeFormat('id-ID', { dateStyle: 'long', timeStyle: 'medium', timeZone: 'Asia/Jakarta' }).format(new Date(iso)) + ' WIB'; } catch (x) { return iso; } }
+    function shMsg(t, err) { const e = document.getElementById('status-text'); if (e) { e.innerText = t; e.style.color = err ? '#b42318' : ''; } }
+    function shBanner(on) {
+        let b = document.getElementById('shbanner');
+        if (!on) { if (b) b.remove(); return; }
+        if (b) return;
+        b = document.createElement('div'); b.id = 'shbanner'; b.setAttribute('role', 'alert');
+        b.style.cssText = 'background:#fdecec;color:#a3231b;border:1px solid #e59a96;border-radius:10px;padding:10px 14px;margin:10px auto;max-width:1200px;font-size:13px;font-weight:600';
+        b.textContent = 'Data terbaru belum bisa dimuat dari server. Muat ulang halaman (Ctrl+F5) atau coba jaringan lain. Kamu tetap bisa upload file Excel sendiri.';
+        document.body.insertBefore(b, document.body.firstChild);
+    }
+    async function shLoad() {
+        if (location.protocol === 'file:') { shMsg('Data online aktif setelah dashboard dibuka dari alamat websitenya.'); return; }
+        shMsg('Memeriksa data terbaru…');
+        try {
+            const r = await fetch(SHURL, { cache: 'no-store' });
+            if (r.status === 404) { shBanner(0); shMsg('Belum ada data tersimpan. Silakan upload data.'); return; }
+            if (!r.ok) throw new Error('Data tidak dapat dimuat (' + r.status + ').');
+            const sh = await r.json();
+            const items = sh && sh.data && Array.isArray(sh.data.items) ? sh.data.items : null;
+            if (!items || !items.length) { shBanner(0); shMsg('Belum ada data tersimpan. Silakan upload data.'); return; }
+            buildFromItems(items);
+            shBanner(0);
+            shMsg('Data terakhir disimpan: ' + shStamp(sh.savedAt) + (sh.data.fileName ? ' (' + sh.data.fileName + ')' : '') + ' · ' + globalUniqueDNs.length + ' MS Unik / ' + globalData.length + ' Items');
+        } catch (e) { shBanner(1); shMsg((e && e.message) || 'Data online belum tersedia.', true); }
+    }
+    function shSave(fileName) {
+        if (location.protocol === 'file:') return;
+        if (typeof CompressionStream === 'undefined') { showToast('Browser ini belum mendukung simpan online. Gunakan Chrome atau Edge terbaru.'); return; }
+        const items = globalData;
+        const run = function (tok) {
+            shMsg('Menyimpan data untuk semua pengguna…');
+            const stream = new Blob([JSON.stringify({ items: items, fileName: fileName || '', uploadedAt: new Date().toISOString() })]).stream().pipeThrough(new CompressionStream('gzip'));
+            new Response(stream).arrayBuffer().then(function (body) {
+                return fetch(SHURL, { method: 'PUT', headers: { 'Content-Type': 'application/gzip', 'Authorization': 'Bearer ' + tok }, body: body });
+            }).then(function (r) {
+                return r.json().catch(function () { return {}; }).then(function (j) {
+                    if (!r.ok) throw new Error(j.error || ('Simpan gagal (' + r.status + ').'));
+                    shMsg('Data tersimpan untuk semua pengguna (' + shStamp(j.savedAt) + ') · ' + globalUniqueDNs.length + ' MS Unik / ' + items.length + ' Items');
+                    showToast('✅ Data tersimpan untuk semua pengguna');
+                });
+            }).catch(function (e) { shMsg((e && e.message) || 'Data gagal disimpan.', true); });
+        };
+        sbAsk(run, function () { shMsg('Data hanya tampil di perangkat ini (belum disimpan untuk semua pengguna). Login Editor untuk menyimpan.'); });
+    }
+    (function () {
+        const st = document.createElement('style');
+        st.textContent = '#sbpill{position:fixed;top:10px;right:12px;z-index:900;display:flex;align-items:center;gap:6px;font:600 12px/1 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#fff;color:#1f2d4d;border:1px solid #d5deee;border-radius:999px;padding:6px 6px 6px 11px;box-shadow:0 2px 8px rgba(20,40,80,.1)}#sbpill button{font:inherit;border:0;border-radius:999px;padding:5px 10px;cursor:pointer;background:#eef3ff;color:#1f4aa8}#sbpill button:hover{background:#dfe8ff}#sbpill i{width:7px;height:7px;border-radius:50%;background:#16a34a;display:inline-block}@media (max-width:640px){#sbpill{top:6px;right:8px;font-size:11px;padding:4px 4px 4px 9px}#sbpill button{padding:4px 8px}}@media print{#sbpill{display:none}}'
+            + '.lgbg{position:fixed;inset:0;z-index:2000;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;padding:16px}.lgbox{background:#fff;color:#1f2937;border-radius:14px;width:min(380px,100%);padding:20px;box-shadow:0 20px 50px rgba(0,0,0,.3);font-family:inherit}.lgbox h3{margin:0 0 4px;font-size:18px}.lgbox p{margin:0 0 12px;font-size:13px;color:#64748b}.lgbox label{display:block;font-size:12px;font-weight:600;margin:10px 0 4px}.lgbox input{width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px}.lgerr{color:#b91c1c;font-size:13px;min-height:18px;margin-top:8px}.lgact{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}.lgact button{border:1px solid #cbd5e1;background:#f8fafc;border-radius:8px;padding:8px 14px;font:inherit;font-size:13px;cursor:pointer}.lgact button.ok{background:#1f4aa8;border-color:#1f4aa8;color:#fff;font-weight:600}';
+        document.head.appendChild(st);
+    })();
+    sbPill(); sbRefresh();
+    shLoad();
+</script>
+</body>
+</html>
