@@ -58,6 +58,15 @@ button.g{background:var(--navy);color:#fff}button.g:hover{background:var(--navy2
 button.x{border-color:var(--line);color:var(--mut)}button.x:hover{background:#f3f5f8}
 button:disabled{opacity:.6;cursor:progress}
 .tab:focus-visible{outline-offset:-3px}
+/* keterangan */
+details.ket{background:var(--panel);border:1px solid var(--line);border-left:4px solid #aab6c3;border-radius:2px;margin:0 0 18px}
+details.ket summary{list-style:none;cursor:pointer;padding:12px 18px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+details.ket summary::-webkit-details-marker{display:none}
+details.ket summary b{font:700 18px/1 var(--cond);color:var(--navy)}
+details.ket[open] .dtog:after{content:"Sembunyikan"}details.ket:not([open]) .dtog:after{content:"Tampilkan"}
+.kbody{padding:0 18px 14px}
+.kbody h3{margin:12px 0 2px;font:700 16px/1.1 var(--cond);color:var(--navy)}
+.kbody .note{margin-top:2px}
 /* KPI strip */
 .kpi{display:grid;grid-template-columns:repeat(4,1fr);background:var(--navy);color:#fff;margin:0 0 18px;border-radius:2px;border-bottom:4px solid var(--sig)}
 .kpi button{all:unset;box-sizing:border-box;display:block;cursor:pointer;padding:16px 20px 14px;border-left:1px solid rgba(255,255,255,.14)}
@@ -153,7 +162,6 @@ table.dd td.n{text-align:right}
     <h2>Stock Inventory</h2>
     <div class="btns" style="margin-bottom:10px"><button id="bc4">🖼️ Capture tabel</button></div>
     <div class="tw"><div id="cap4" class="capbox"></div></div>
-    <div class="note" id="n4"></div>
   </div>
 
   <div class="kpi hide" id="kpi" aria-label="Ringkasan stock out plano"></div>
@@ -164,7 +172,6 @@ table.dd td.n{text-align:right}
       <button id="bc">🖼️ Capture tabel</button>
     </div>
     <div class="tw"><div id="cap1"></div></div>
-    <div class="note" id="notes"></div>
   </div>
 
   <div class="card hide" id="main2">
@@ -173,6 +180,15 @@ table.dd td.n{text-align:right}
     <div class="tw"><div id="cap2" class="capbox"></div></div>
   </div>
 
+  <details class="ket" id="ket">
+    <summary><b>Keterangan</b><span class="dtog"></span></summary>
+    <div class="kbody">
+      <h3>Stock Inventory</h3>
+      <div class="note" id="n4"></div>
+      <h3>Stock Out Plano</h3>
+      <div class="note" id="notes"></div>
+    </div>
+  </details>
   </div>
   <div id="tab-detail" class="hide">
   <div class="card hide" id="det">
