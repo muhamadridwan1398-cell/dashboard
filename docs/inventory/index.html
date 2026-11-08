@@ -68,16 +68,16 @@ details.ket[open] .dtog:after{content:"Sembunyikan"}details.ket:not([open]) .dto
 .kbody h3{margin:12px 0 2px;font:700 16px/1.1 var(--cond);color:var(--navy)}
 .kbody .note{margin-top:2px}
 /* KPI strip */
-.kpi{display:grid;grid-template-columns:repeat(4,1fr);background:var(--navy);color:#fff;margin:0 0 18px;border-radius:2px;border-bottom:4px solid var(--sig)}
+.kpi{display:grid;grid-template-columns:repeat(5,1fr);background:var(--navy);color:#fff;margin:0 0 18px;border-radius:2px;border-bottom:4px solid var(--sig)}
 .kpi button{all:unset;box-sizing:border-box;display:block;cursor:pointer;padding:16px 20px 14px;border-left:1px solid rgba(255,255,255,.14)}
 .kpi button:first-child{border-left:0}
 .kpi button:hover{background:rgba(255,255,255,.07)}
 .kpi button:focus-visible{outline:3px solid var(--sig);outline-offset:-3px}
 .kpi .l{display:block;font-size:13.5px;color:#a9bdd1}
-.kpi .n{display:block;font:700 46px/1.05 var(--cond);letter-spacing:.3px;font-variant-numeric:tabular-nums;margin-top:2px}
+.kpi .n{display:block;white-space:nowrap;font:700 40px/1.05 var(--cond);letter-spacing:.3px;font-variant-numeric:tabular-nums;margin-top:2px}
 .kpi .n.y{color:var(--sig)}
 .kpi .s{display:block;font-size:13px;color:#cfe0f0;margin-top:2px}
-@media (max-width:860px){.kpi{grid-template-columns:1fr 1fr}.kpi button:nth-child(3){border-left:0}.kpi button:nth-child(n+3){border-top:1px solid rgba(255,255,255,.14)}}
+@media (max-width:980px){.kpi{grid-template-columns:1fr 1fr!important}.kpi button{border-left:0!important;border-top:1px solid rgba(255,255,255,.14)}.kpi button:first-child{grid-column:1/-1;border-top:0}.kpi button:nth-child(odd):not(:first-child){border-left:1px solid rgba(255,255,255,.14)!important}.kpi button:nth-child(2){border-top:1px solid rgba(255,255,255,.14)}}
 /* tables */
 .tw{overflow-x:auto;border:1px solid var(--line);border-radius:2px}
 #cap1,#cap2,#cap4{background:#fff;color:var(--ink);display:inline-block;min-width:100%;padding:0}
@@ -158,13 +158,13 @@ table.dd td.n{text-align:right}
   </details>
 
   <div id="tab-plano">
+  <div class="kpi hide" id="kpi" aria-label="Ringkasan stock out plano"></div>
   <div class="card hide" id="main4">
     <h2>Stock Inventory</h2>
     <div class="btns" style="margin-bottom:10px"><button id="bc4">🖼️ Capture tabel</button></div>
     <div class="tw"><div id="cap4" class="capbox"></div></div>
   </div>
 
-  <div class="kpi hide" id="kpi" aria-label="Ringkasan stock out plano"></div>
   <div class="card hide" id="main">
     <h2>Stock Out Plano</h2>
     <div class="btns" style="margin-bottom:10px">
@@ -325,13 +325,19 @@ function tableHTML(D,first,title,gk){
   };
   D.rows.forEach(function(r){h+=row(r,0)});return h+row(D.tot,1)+'</table>';
 }
+function rpM(n){return 'Rp '+(n/1e9).toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2})+' M'}
 function renderKpi(){
-  var T=sumData().tot,u={};R.forEach(function(r){u[r.k]=1});var neg=R.filter(function(r){return r.neg}).length;
-  var k=[['Baris item plano',nf(T.t),'','Dari '+nf(Object.keys(u).length)+' item unik','','' ],['Stock = Nol',nf(T.L.nol),'y',pf(T.L.nol,T.t)+' dari baris plano','nol'],['Stock < Half Capacity',nf(T.L.half),'y',pf(T.L.half,T.t)+' dari baris plano','half'],['Stok minus',nf(neg),'','Bukan stock out, kemungkinan ada penjualan','neg']];
-  $('#kpi').innerHTML=k.map(function(x){return '<button type="button" data-s="'+(x[4]||'')+'"><span class="l">'+x[0]+'</span><span class="n '+x[2]+'">'+x[1]+'</span><span class="s">'+x[3]+'</span></button>'}).join('');
+  var T=sumData().tot,k=[],hasInv=!!(S.inv&&S.inv.length&&S.inv[0].length>5&&S.cls);
+  if(hasInv){var I=invCat().tot;k.push({l:'Stock Inventory toko',n:rpM(I.v),s:nf(I.n)+' item · Retail + Catalog',x:1})}
+  else k.push({l:'Stock Inventory toko',n:'-',s:'Unggah SQV dan Report ABCD Class',x:1});
+  k.push({l:'Stock out Assortment',n:pf(T.A.nol,T.A.n),s:nf(T.A.nol)+' dari '+nf(T.A.n)+' baris',y:1,t:'A',st:'nol'});
+  if(S.cls){var C=sumClass().rows,g=function(v){return C.filter(function(r){return r.v===v})[0]};
+    [['A','Stock out Class A'],['D','Stock out Class D'],['-','Stock out Non Class']].forEach(function(x){var r=g(x[0]);if(r)k.push({l:x[1],n:pf(r.L.nol,r.L.n),s:nf(r.L.nol)+' dari '+nf(r.L.n)+' baris',y:1,cl:x[0],st:'nol'})})}
+  $('#kpi').style.gridTemplateColumns=k.length>1?'1.5fr repeat('+(k.length-1)+',1fr)':'1fr';
+  $('#kpi').innerHTML=k.map(function(x,i){return '<button type="button"'+(x.x?' data-x="1" tabindex="-1" style="cursor:default"':'')+' data-s="'+(x.st||'')+'" data-t="'+(x.t||'')+'" data-l="'+(x.cl||'')+'"><span class="l">'+x.l+'</span><span class="n'+(x.y?' y':'')+'">'+x.n+'</span><span class="s">'+x.s+'</span></button>'}).join('');
   $('#kpi').classList.remove('hide');
 }
-$('#kpi').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;F={c:'',l:'',t:'',s:b.getAttribute('data-s')||'',q:''};syncF();renderDet();showTab('detail');window.scrollTo({top:0,behavior:'smooth'})});
+$('#kpi').addEventListener('click',function(e){var b=e.target.closest('button');if(!b||b.getAttribute('data-x'))return;F={c:'',l:b.getAttribute('data-l')||'',t:b.getAttribute('data-t')||'',s:b.getAttribute('data-s')||'',q:''};syncF();renderDet();showTab('detail');window.scrollTo({top:0,behavior:'smooth'})});
 function dataSummary(){
   var n=[S.plano,S.stk,S.rep,S.cls].filter(Boolean).length;
   $('#dsum').textContent=n+' dari 4 file dimuat'+(S.meta.repDate?' · replenishment tanggal '+S.meta.repDate:'')+(S.plano&&S.stk&&S.rep?' · '+nf(R.length)+' baris plano dihitung':'');
