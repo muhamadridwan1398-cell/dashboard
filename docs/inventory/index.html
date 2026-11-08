@@ -70,22 +70,37 @@ button:disabled{opacity:.6;cursor:progress}
 .kpi .s{display:block;font-size:13px;color:#cfe0f0;margin-top:2px}
 @media (max-width:860px){.kpi{grid-template-columns:1fr 1fr}.kpi button:nth-child(3){border-left:0}.kpi button:nth-child(n+3){border-top:1px solid rgba(255,255,255,.14)}}
 /* tables */
-.tw{overflow-x:auto}
-#cap1,#cap2,#cap4{background:#fff;color:#111;padding:8px;display:inline-block;min-width:100%}
-table.sm{border-collapse:collapse;width:100%;font:500 12.5px/1.25 var(--body);color:#111;font-variant-numeric:tabular-nums}
-table.sm th,table.sm td{border:1px solid #d6dbe4;padding:4px 5px;text-align:right;white-space:nowrap}
-table.sm th{white-space:normal;line-height:1.2}
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:2px}
+#cap1,#cap2,#cap4{background:#fff;color:var(--ink);display:inline-block;min-width:100%;padding:0}
+table.sm{border-collapse:separate;border-spacing:0;width:100%;font:500 13.5px/1.2 var(--body);color:var(--ink);font-variant-numeric:tabular-nums}
+table.sm th,table.sm td{padding:9px 12px;text-align:right;white-space:nowrap;border:0;border-bottom:1px solid #e6ebf0}
+table.sm th{white-space:normal;line-height:1.15;font-weight:600;font-size:12.5px}
 table.sm td.l{text-align:left}
-table.sm td.ttl{text-align:center}
-.ttl{background:#92d050;color:#111;text-align:center;font:700 26px/1.1 var(--cond);padding:10px;border:1px solid #d6dbe4;letter-spacing:.4px}
-.gb{background:#000;color:#fff;text-align:center!important}.ga{background:#eccdf0;text-align:center!important;font-weight:700}.gn{background:#fbe1d0;text-align:center!important;font-weight:700}.gl{background:#d5d5fb;text-align:center!important;font-weight:700}
-.gd{background:#cfe8c3;text-align:center!important;font-weight:700}.gx{background:#d9dce3;text-align:center!important;font-weight:700}
-.ha{background:#f6e6f8}.hn{background:#fdf0e7}.hl{background:#e8e8fd}th.hd{background:#e3f2dc}th.hx{background:#eceef2}
-th.ha,th.hn,th.hl,th.hd,th.hx{font-weight:700;text-align:center}
-th.cat{background:#000;color:#fff;font:700 18px/1 var(--cond);text-align:left}
-.pg{background:#c6efce;color:#006100}.pr{background:#ffc7ce;color:#9c0006}
-tr.tot td{background:#ffff00;font-weight:700}
-td[data-f]{cursor:pointer}td[data-f]:hover{outline:2px solid var(--navy2);outline-offset:-2px}
+/* judul hanya tampil saat capture */
+table.sm td.ttl{display:none;text-align:center;background:var(--navy);color:#fff;font:700 24px/1.1 var(--cond);padding:14px;letter-spacing:.3px;border-bottom:4px solid var(--sig)}
+.cap-on table.sm td.ttl{display:table-cell}
+/* header grup */
+.gb{background:var(--navy);color:#fff;text-align:center!important;font:700 15px/1 var(--cond)!important;letter-spacing:.3px}
+.ga,.gn,.gl,.gd,.gx{color:#fff;text-align:center!important;font:700 15px/1 var(--cond)!important;letter-spacing:.3px}
+.ga{background:#1f5f8b}.gn{background:#9a6700}.gl{background:#475569}.gd{background:#2f7d5b}.gx{background:#6b7280}
+th.ha,th.hn,th.hl,th.hd,th.hx{text-align:center;color:var(--ink)}
+th.ha{background:#e4eff7}th.hn{background:#f9efd8}th.hl{background:#e6eaef}th.hd{background:#e0f0e8}th.hx{background:#eceef1}
+th.cat{background:var(--navy);color:#fff;font:700 17px/1 var(--cond);text-align:left;vertical-align:bottom;letter-spacing:.3px}
+table.sm th.cat{text-align:left}
+th.cat,table.sm td:first-child{position:sticky;left:0;z-index:2}
+table.sm td:first-child{background:#fff;z-index:1;box-shadow:1px 0 0 #e6ebf0}
+/* pemisah grup kolom */
+table.sm:not(.inv) tr td:nth-child(3),table.sm:not(.inv) tr td:nth-child(8),table.sm:not(.inv) tr td:nth-child(13){border-left:2px solid #cfd8e3}
+table.inv tr td:nth-child(even){border-left:2px solid #cfd8e3}
+/* persen: hanya yang perlu perhatian diberi warna */
+td.pg{color:#5a6978}
+td.pr{background:#fde8e6;color:var(--red);font-weight:700}
+/* baris */
+table.sm tbody tr:hover td,table.sm tr:hover td{background:#f1f6fb}
+table.sm tr:hover td:first-child{background:#f1f6fb}
+/* total */
+tr.tot td{background:#fff6cc!important;font-weight:700;border-top:2px solid var(--navy);border-bottom:0}
+td[data-f]{cursor:pointer}td[data-f]:hover{background:#dbe8f5!important;color:var(--navy)}
 .note{font-size:13px;color:var(--mut);margin-top:10px;line-height:1.55;max-width:110ch}
 .note b{color:var(--ink);font-weight:600}
 /* detail */
@@ -278,7 +293,7 @@ function tableHTML(D,first,title,gk){
   var h='<table class="sm" data-g="'+gk+'"><tr><td class="ttl" colspan="17">'+title+'</td></tr>';
   h+='<tr><th class="gb" colspan="2">Stockout Planogram</th><th class="ga" colspan="5">Assortment</th><th class="gn" colspan="5">Non Assortment</th><th class="gl" colspan="5">ALL ITEM PLANO</th></tr>';
   var sub=function(c){return '<th class="'+c+'">Σ Item</th><th class="'+c+'">Stock = Nol</th><th class="'+c+'">%</th><th class="'+c+'">Stock &lt; Half Capacity</th><th class="'+c+'">%</th>'};
-  h+='<tr><th class="cat">'+first+'</th><th style="background:#000;color:#fff;text-align:center">Σ Item Planogram</th>'+sub('ha')+sub('hn')+sub('hl')+'</tr>';
+  h+='<tr><th class="cat">'+first+'</th><th class="gb" style="font-size:13px!important;font-family:var(--body)!important;font-weight:600!important">Σ Item Planogram</th>'+sub('ha')+sub('hn')+sub('hl')+'</tr>';
   var row=function(r,tot){
     var dc=' data-c="'+esc(r.v)+'"';
     var s='<tr'+(tot?' class="tot"':'')+'><td class="l" '+(tot?'':'style="font-weight:600"')+'>'+esc(r.c)+'</td><td data-f="|"'+dc+'>'+nf(r.t)+'</td>';
@@ -321,11 +336,11 @@ function invCat(){
   return {rows:cats.map(function(c){return mk(c,rows.filter(function(x){return (x[5]||'-')===c}))}),tot:mk('Total',rows),cnt:rows.length};
 }
 function invHTML(D){
-  var h='<table class="sm"><tr><td class="ttl" colspan="13">INVENTORY PER CATEGORY BY CLASS (FUNCTION CLASS)</td></tr><tr><th class="gb" rowspan="2" style="text-align:left;font-size:15px">Category</th>';
+  var h='<table class="sm inv"><tr><td class="ttl" colspan="13">INVENTORY PER CATEGORY BY CLASS (FUNCTION CLASS)</td></tr><tr><th class="gb" rowspan="2" style="text-align:left;font-size:15px">Category</th>';
   CKEYS.forEach(function(k,i){h+='<th class="'+CGRP[i][0]+'" colspan="2">'+clName(k)+'</th>'});
   h+='<th class="gb" colspan="2">Total</th></tr><tr>';
   CKEYS.forEach(function(k,i){h+='<th class="'+CGRP[i][1]+'">Σ Item</th><th class="'+CGRP[i][1]+'">Nilai (Rp)</th>'});
-  h+='<th class="gb">Σ Item</th><th class="gb">Nilai (Rp)</th></tr>';
+  h+='<th class="gb" style="font:600 12.5px/1.15 var(--body)!important;letter-spacing:0">Σ Item</th><th class="gb" style="font:600 12.5px/1.15 var(--body)!important;letter-spacing:0">Nilai (Rp)</th></tr>';
   var row=function(r,tot){var s='<tr'+(tot?' class="tot"':'')+'><td class="l" '+(tot?'':'style="font-weight:600"')+'>'+esc(r.c)+'</td>';
     CKEYS.forEach(function(k){var e=r.k[k];s+='<td>'+(e.n?nf(e.n):'-')+'</td><td>'+(e.n?rp(e.v):'-')+'</td>'});
     return s+'<td>'+nf(r.n)+'</td><td>'+rp(r.v)+'</td></tr>'};
@@ -497,7 +512,7 @@ function capPreview(items,title){
 }
 function capBtn(btn,sel,name,title,label){
   btn.onclick=function(){var b=this;b.disabled=true;b.textContent='Menyiapkan...';
-    loadH2C().then(function(){return html2canvas($(sel),{scale:2,backgroundColor:'#ffffff'})}).then(function(cv){capPreview([{canvas:cv,name:name+'_'+today()+'.png'}],title)})
+    loadH2C().then(function(){var el=$(sel);el.classList.add('cap-on');return html2canvas(el,{scale:2,backgroundColor:'#ffffff'}).then(function(cv){el.classList.remove('cap-on');return cv},function(e){el.classList.remove('cap-on');throw e})}).then(function(cv){capPreview([{canvas:cv,name:name+'_'+today()+'.png'}],title)})
      .catch(function(e){say(e.message||String(e),1)}).then(function(){b.disabled=false;b.textContent=label});};
 }
 capBtn($('#bc'),'#cap1','Inventory_PlanoStock','Stock Out vs Plano','🖼️ Capture tabel');
