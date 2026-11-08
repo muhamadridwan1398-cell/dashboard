@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Inventory - Stock Out vs Plano vs Replenishment</title>
+<title>Inventory - Plano Stock</title>
 <style>
 :root{--bg:#f3f6fb;--ink:#14284b;--mut:#5b6577;--card:#fff;--line:#dbe3f0;--a:#1f4aa8;--ok:#166534;--bad:#b42318}
 @media (prefers-color-scheme:dark){:root{--bg:#0f172a;--ink:#e6edf8;--mut:#9aa8c2;--card:#18233b;--line:#2a3a5c;--a:#7aa2ff;--ok:#6ee7a0;--bad:#ff8a80}}
@@ -48,13 +48,16 @@ table.dd td.n{text-align:right}
 .tg{display:inline-block;border-radius:6px;padding:1px 8px;font-size:11.5px;font-weight:700}
 .tg.r{background:#ffc7ce;color:#9c0006}.tg.y{background:#fff2cc;color:#7a5b00}.tg.k{background:#e5e7eb;color:#374151}.tg.p{background:#eccdf0;color:#5b1b66}.tg.o{background:#fbe1d0;color:#7a3a10}
 .hide{display:none}
+.tabs{display:flex;gap:6px;margin:0 0 12px;border-bottom:2px solid var(--line);overflow-x:auto}
+.tab{background:transparent;color:var(--mut);border:0;border-radius:8px 8px 0 0;padding:10px 18px;font-weight:700;font-size:14px;cursor:pointer;white-space:nowrap;margin-bottom:-2px;border-bottom:3px solid transparent}
+.tab.on{color:var(--a);border-bottom-color:var(--a);background:var(--card)}
 @media (max-width:640px){.wrap{padding:10px}.ttl{font-size:17px}}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 <div class="wrap">
-  <div class="top"><h1>📦 Inventory · Stock Out vs Plano vs Replenishment</h1><a href="../">← Menu dashboard</a></div>
+  <div class="top"><h1>📦 Inventory</h1><a href="../">← Menu dashboard</a></div>
 
   <div class="card">
     <h2>1. Unggah data</h2>
@@ -67,6 +70,8 @@ table.dd td.n{text-align:right}
     <div class="msg" id="msg">Pilih file sekaligus. Wajib: ITEM PLANO, SQV, Replenishment. Class A/B/C/D memakai Report ABCD Class (kolom Function Class). Jenis file dikenali otomatis dari kolomnya, jadi boleh dipilih sekaligus di kotak mana pun.</div>
   </div>
 
+  <div class="tabs" role="tablist"><button class="tab on" role="tab" aria-selected="true" data-tab="plano">Plano Stock</button></div>
+  <div id="tab-plano">
   <div class="card hide" id="main">
     <h2>2. Rekap per category</h2>
     <div class="btns" style="margin-bottom:10px">
@@ -95,6 +100,7 @@ table.dd td.n{text-align:right}
     </div>
     <div class="dt"><table class="dd"><thead><tr><th>Category</th><th>Fixture</th><th>Item No</th><th>Deskripsi</th><th>Tipe</th><th>Class</th><th style="text-align:right">Capacity</th><th style="text-align:right">Stock</th><th style="text-align:right">Min</th><th style="text-align:right">ROP</th><th style="text-align:right">Max</th><th>Status</th></tr></thead><tbody id="db"></tbody></table></div>
     <div class="note" id="dn"></div>
+  </div>
   </div>
   <p class="note">Created Ridwan</p>
 </div>
@@ -332,7 +338,7 @@ function exportExcel(){
   fr.forEach(function(r){dr.push([T(r.c,2),T(r.n+' #'+r.fx,2),T(r.k,2),T(r.d,2),T(r.a?'Assortment':'Non Assortment',2),T(r.cl&&r.cl!=='-'?r.cl:'-',2),T(r.cap,3),r.soh===null?T('-',2):T(r.soh,3),r.mn===null?T('-',2):T(r.mn,3),r.rop===null?T('-',2):T(r.rop,3),r.mx===null?T('-',2):T(r.mx,3),T(stat(r)[0],2)])});
   var fdesc=[F.c||'Semua category',F.l?clName(F.l):'Semua class',F.t==='A'?'Assortment':F.t==='N'?'Non Assortment':'Assortment + Non',F.s==='nol'?'Stock = Nol':F.s==='nos'?'Nol tanpa baris stok':F.s==='half'?'< Half Capacity':F.s==='neg'?'Stok Minus':'Semua status'].join(' · ');
   sheets.push({name:'Detail',w:[24,40,13,46,15,8,10,10,11,13,11,24],fz:1,af:'A1:L'+dr.length,rows:dr,h:{0:30}});
-  xsave(xbuild(sheets),'Inventory_StockOut_vs_Plano_'+today()+'.xlsx');
+  xsave(xbuild(sheets),'Inventory_PlanoStock_'+today()+'.xlsx');
   say('✔ Excel diunduh. Sheet Detail mengikuti filter: '+fdesc+' ('+nf(fr.length)+' baris).');
 }
 $('#bx').onclick=exportExcel;
@@ -366,8 +372,8 @@ function capBtn(btn,sel,name,title,label){
     loadH2C().then(function(){return html2canvas($(sel),{scale:2,backgroundColor:'#ffffff'})}).then(function(cv){capPreview([{canvas:cv,name:name+'_'+today()+'.png'}],title)})
      .catch(function(e){say(e.message||String(e),1)}).then(function(){b.disabled=false;b.textContent=label});};
 }
-capBtn($('#bc'),'#cap1','Inventory_StockOut_vs_Plano','Stock Out vs Plano','🖼️ Capture tabel');
-capBtn($('#bc2'),'#cap2','Inventory_StockOut_per_Class','Per Class','🖼️ Capture tabel class');
+capBtn($('#bc'),'#cap1','Inventory_PlanoStock','Stock Out vs Plano','🖼️ Capture tabel');
+capBtn($('#bc2'),'#cap2','Inventory_PlanoStock_per_Class','Per Class','🖼️ Capture tabel class');
 restore();
 </script>
 </body>
