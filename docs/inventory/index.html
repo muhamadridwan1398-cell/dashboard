@@ -81,7 +81,7 @@ table.dd td.n{text-align:right}
     <div class="flt">
       <select id="fc"></select>
       <select id="ft"><option value="">Semua (Assortment + Non)</option><option value="A">Assortment (repsys)</option><option value="N">Non Assortment</option></select>
-      <select id="fs"><option value="">Semua status</option><option value="nol">Stock = Nol</option><option value="nos">Nol - tidak ada baris di file stok</option><option value="half">Stock &lt; Half Capacity</option></select>
+      <select id="fs"><option value="">Semua status</option><option value="nol">Stock = Nol</option><option value="nos">Nol - tidak ada baris di file stok</option><option value="half">Stock &lt; Half Capacity</option><option value="neg">Stok Minus (kemungkinan ada penjualan)</option></select>
       <input id="fq" type="search" placeholder="Cari item no / deskripsi / fixture" style="min-width:220px">
       <button class="x" id="fr">Reset</button>
     </div>
@@ -157,7 +157,7 @@ function build(){
   R=S.plano.map(function(p){
     var rp=S.rep[p.k],soh=Object.prototype.hasOwnProperty.call(S.stk,p.k)?S.stk[p.k]:null;
     return {c:p.c,n:p.n,fx:p.fx,k:p.k,d:p.d,cap:p.cap,soh:soh,a:!!rp,mn:rp?rp[0]:null,mx:rp?rp[1]:null,rop:rp?rp[2]:null,
-      nol:soh===null||soh===0,nos:soh===null,half:soh!==null&&soh>0&&soh<p.cap/2};
+      nol:soh===null||soh===0,nos:soh===null,neg:soh!==null&&soh<0,half:soh!==null&&soh>0&&soh<p.cap/2};
   });
   var seen={};CATS=[];R.forEach(function(r){if(!seen[r.c]){seen[r.c]=1;CATS.push(r.c)}});CATS.sort();
   var sel=$('#fc');sel.innerHTML='<option value="">Semua category</option>'+CATS.map(function(c){return '<option>'+esc(c)+'</option>'}).join('');
@@ -194,7 +194,7 @@ function renderSum(){
   D.rows.forEach(function(r){h+=row(r,0)});h+=row(D.tot,1)+'</table>';
   $('#cap1').innerHTML=h;
   var nos=R.filter(function(r){return r.nos}).length;
-  $('#notes').innerHTML='Σ Item dihitung per baris lokasi plano (satu item di dua lokasi dihitung dua kali), sama seperti template Excel. <b>Assortment</b> = item ada di Replenishment (repsys); <b>Non Assortment</b> = tidak ada di Replenishment. <b>Stock = Nol</b> mencakup '+nf(nos)+' baris yang tidak punya baris di file stok. <b>Stock &lt; Half Capacity</b> = stok lebih dari nol dan kurang dari Capacity/2 (stok minus tidak ikut). % merah bila Stock=Nol lebih dari 7% (Assortment dan ALL). Klik angka untuk melihat detail item.'
+  $('#notes').innerHTML='Σ Item dihitung per baris lokasi plano (satu item di dua lokasi dihitung dua kali), sama seperti template Excel. <b>Assortment</b> = item ada di Replenishment (repsys); <b>Non Assortment</b> = tidak ada di Replenishment. <b>Stock = Nol</b> mencakup '+nf(nos)+' baris yang tidak punya baris di file stok. <b>Stok minus</b> ('+nf(R.filter(function(r){return r.neg}).length)+' baris) tidak dihitung di Stock = Nol maupun Half Capacity karena kemungkinan ada penjualan; lihat lewat filter status di Detail. <b>Stock &lt; Half Capacity</b> = stok lebih dari nol dan kurang dari Capacity/2 (stok minus tidak ikut). % merah bila Stock=Nol lebih dari 7% (Assortment dan ALL). Klik angka untuk melihat detail item.'
    +'<br>Data: '+esc(S.meta.plano||'')+' · '+esc(S.meta.stk||'')+' · '+esc(S.meta.rep||'')+(S.meta.repDate?' (tanggal replenishment '+S.meta.repDate+')':'');
 }
 $('#cap1').addEventListener('click',function(e){
@@ -211,12 +211,12 @@ function filtered(){
   return R.filter(function(r){
     if(F.c&&r.c!==F.c)return false;
     if(F.t==='A'&&!r.a)return false;if(F.t==='N'&&r.a)return false;
-    if(F.s==='nol'&&!r.nol)return false;if(F.s==='nos'&&!r.nos)return false;if(F.s==='half'&&!r.half)return false;
+    if(F.s==='nol'&&!r.nol)return false;if(F.s==='nos'&&!r.nos)return false;if(F.s==='half'&&!r.half)return false;if(F.s==='neg'&&!r.neg)return false;
     if(q&&(r.k+' '+r.d+' '+r.n+' '+r.fx).toLowerCase().indexOf(q)<0)return false;
     return true;
   });
 }
-function stat(r){return r.nos?['Nol (tidak ada di stok)','p']:r.nol?['Stock = Nol','r']:r.half?['< Half Capacity','y']:['Aman','k']}
+function stat(r){return r.neg?['Stok Minus','o']:r.nos?['Nol (tidak ada di stok)','p']:r.nol?['Stock = Nol','r']:r.half?['< Half Capacity','y']:['Aman','k']}
 function renderDet(){
   var rows=filtered(),h='';
   rows.slice(0,LIM).forEach(function(r){var s=stat(r);
@@ -300,7 +300,7 @@ function exportExcel(){
   var fr=filtered().sort(function(a,b){return a.c<b.c?-1:a.c>b.c?1:(a.n+a.fx)<(b.n+b.fx)?-1:1});
   var dr=[['Category','Fixture','Item No','Deskripsi','Tipe','Capacity','Stock','Min Stock','Reorder Point','Max Stock','Status'].map(function(t){return T(t,1)})];
   fr.forEach(function(r){dr.push([T(r.c,2),T(r.n+' #'+r.fx,2),T(r.k,2),T(r.d,2),T(r.a?'Assortment':'Non Assortment',2),T(r.cap,3),r.soh===null?T('-',2):T(r.soh,3),r.mn===null?T('-',2):T(r.mn,3),r.rop===null?T('-',2):T(r.rop,3),r.mx===null?T('-',2):T(r.mx,3),T(stat(r)[0],2)])});
-  var fdesc=[F.c||'Semua category',F.t==='A'?'Assortment':F.t==='N'?'Non Assortment':'Assortment + Non',F.s==='nol'?'Stock = Nol':F.s==='nos'?'Nol tanpa baris stok':F.s==='half'?'< Half Capacity':'Semua status'].join(' · ');
+  var fdesc=[F.c||'Semua category',F.t==='A'?'Assortment':F.t==='N'?'Non Assortment':'Assortment + Non',F.s==='nol'?'Stock = Nol':F.s==='nos'?'Nol tanpa baris stok':F.s==='half'?'< Half Capacity':F.s==='neg'?'Stok Minus':'Semua status'].join(' · ');
   var det={name:'Detail',w:[24,40,13,46,15,10,10,11,13,11,24],fz:1,af:'A1:K'+dr.length,rows:dr,h:{0:30}};
   xsave(xbuild([sum,det]),'Inventory_StockOut_vs_Plano_'+today()+'.xlsx');
   say('✔ Excel diunduh. Sheet Detail mengikuti filter: '+fdesc+' ('+nf(fr.length)+' baris).');
