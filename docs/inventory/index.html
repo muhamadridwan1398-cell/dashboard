@@ -98,7 +98,9 @@ th.cat{background:var(--navy);color:#fff;font:700 17px/1 var(--cond);text-align:
 table.sm th.cat{text-align:left}
 th.cat,table.sm td:first-child{position:sticky;left:0;z-index:2}
 table.sm td:first-child{background:#fff;z-index:1;box-shadow:1px 0 0 #e6ebf0}
-table.inv th,table.inv td{padding:8px 7px;font-size:13px}
+table.inv th,table.inv td{padding:8px 5px;font-size:13px}
+table.inv td.pc{font-weight:700;color:var(--navy);border-left:1px solid #e6ebf0}
+tr.pct td{background:#eef3f8!important;font-weight:700;color:var(--navy);border-top:2px solid var(--navy);border-bottom:0}
 table.inv td:first-child,table.inv th.cat{padding-left:12px;padding-right:10px}
 table.inv th{font-size:12px}
 /* pemisah grup kolom */
@@ -361,15 +363,20 @@ function invCat(){
   return {rows:cats.map(function(c){return mk(c,rows.filter(function(x){return (x[5]||'-')===c}))}),tot:mk('Total',rows),cnt:rows.length};
 }
 function invHTML(D){
-  var h='<table class="sm inv"><tr><td class="ttl" colspan="13">STOCK INVENTORY PER CATEGORY BY CLASS (FUNCTION CLASS)</td></tr><tr><th class="gb" rowspan="2" style="text-align:left;font-size:15px">Category</th>';
+  var tv=D.tot.v||1,tn=D.tot.n||1;
+  var h='<table class="sm inv"><tr><td class="ttl" colspan="14">STOCK INVENTORY PER CATEGORY BY CLASS (FUNCTION CLASS)</td></tr><tr><th class="gb" rowspan="2" style="text-align:left;font-size:15px">Category</th>';
   CKEYS.forEach(function(k,i){h+='<th class="'+CGRP[i][0]+'" colspan="2">'+clName(k)+'</th>'});
-  h+='<th class="gb" colspan="2">Total</th></tr><tr>';
+  h+='<th class="gb" colspan="3">Total</th></tr><tr>';
   CKEYS.forEach(function(k,i){h+='<th class="'+CGRP[i][1]+'">Σ Item</th><th class="'+CGRP[i][1]+'">Nilai (Rp)</th>'});
-  h+='<th class="gb" style="font:600 12.5px/1.15 var(--body)!important;letter-spacing:0">Σ Item</th><th class="gb" style="font:600 12.5px/1.15 var(--body)!important;letter-spacing:0">Nilai (Rp)</th></tr>';
+  var st=' style="font:600 12.5px/1.15 var(--body)!important;letter-spacing:0"';
+  h+='<th class="gb"'+st+'>Σ Item</th><th class="gb"'+st+'>Nilai (Rp)</th><th class="gb"'+st+'>% Nilai</th></tr>';
   var row=function(r,tot){var s='<tr'+(tot?' class="tot"':'')+'><td class="l" '+(tot?'':'style="font-weight:600"')+'>'+esc(r.c)+'</td>';
     CKEYS.forEach(function(k){var e=r.k[k];s+='<td>'+(e.n?nf(e.n):'-')+'</td><td>'+(e.n?rp(e.v):'-')+'</td>'});
-    return s+'<td>'+nf(r.n)+'</td><td>'+rp(r.v)+'</td></tr>'};
-  D.rows.forEach(function(r){h+=row(r,0)});return h+row(D.tot,1)+'</table>';
+    return s+'<td>'+nf(r.n)+'</td><td>'+rp(r.v)+'</td><td class="pc">'+pf(r.v,tv)+'</td></tr>'};
+  D.rows.forEach(function(r){h+=row(r,0)});h+=row(D.tot,1);
+  h+='<tr class="pct"><td class="l">% dari total</td>';
+  CKEYS.forEach(function(k){var e=D.tot.k[k];h+='<td>'+pf(e.n,tn)+'</td><td>'+pf(e.v,tv)+'</td>'});
+  return h+'<td>100,0%</td><td>100,0%</td><td class="pc">100,0%</td></tr></table>';
 }
 function renderInv(){
   var ok=!!(S.inv&&S.inv.length&&S.cls&&S.inv[0].length>5);$('#main4').classList.toggle('hide',!ok);if(!ok)return;
@@ -487,15 +494,17 @@ function sumSheet(name,D,first,title){
   return {name:name,grid:0,w:[26,14,10,11,8,14,8,10,11,8,14,8,10,11,8,14,8],h:{0:34,3:32},rows:rows,m:['A1:Q1','A3:B3','C3:G3','H3:L3','M3:Q3']};
 }
 function invSheet(name,D){
-  var T=function(v,st){return {v:v,s:st}},rows=[],E=function(n){var a=[];for(var i=0;i<n;i++)a.push('');return a};
-  rows.push([T('STOCK INVENTORY PER CATEGORY BY CLASS (FUNCTION CLASS)',4)].concat(E(12).map(function(){return T('',4)})));rows.push(E(13));
+  var T=function(v,st){return {v:v,s:st}},rows=[],E=function(n){var a=[];for(var i=0;i<n;i++)a.push('');return a},tv=D.tot.v||1,tn=D.tot.n||1;
+  rows.push([T('STOCK INVENTORY PER CATEGORY BY CLASS (FUNCTION CLASS)',4)].concat(E(13).map(function(){return T('',4)})));rows.push(E(14));
   var G=[6,7,8,21,22],g=[T('Category',19)],h=[T('',19)];
   CKEYS.forEach(function(k,i){g.push(T(clName(k),G[i]),T('',G[i]));h.push(T('Σ Item',G[i]),T('Nilai (Rp)',G[i]))});
-  g.push(T('Total',5),T('',5));h.push(T('Σ Item',5),T('Nilai (Rp)',5));rows.push(g);rows.push(h);
-  var ln=function(r,tot){var a=[T(r.c,tot?16:17)];CKEYS.forEach(function(k){var e=r.k[k];a.push(T(e.n,tot?14:3),T(Math.round(e.v),tot?14:3))});a.push(T(r.n,tot?14:3),T(Math.round(r.v),tot?14:3));return a};
-  D.rows.forEach(function(r){rows.push(ln(r,0))});rows.push(ln(D.tot,1));rows.push(E(13));
-  rows.push([T('Class dari Report ABCD Class (Function Class), category dan nilai dari SQV (Retail + Catalog, Consignment tidak dihitung). Non Class = item tidak ada di file class.',18)]);
-  return {name:name,grid:0,w:[26,9,17,9,17,9,17,9,17,9,17,10,18],h:{0:34},rows:rows,m:['A1:M1','A3:A4','B3:C3','D3:E3','F3:G3','H3:I3','J3:K3','L3:M3']};
+  g.push(T('Total',5),T('',5),T('',5));h.push(T('Σ Item',5),T('Nilai (Rp)',5),T('% Nilai',5));rows.push(g);rows.push(h);
+  var ln=function(r,tot){var a=[T(r.c,tot?16:17)];CKEYS.forEach(function(k){var e=r.k[k];a.push(T(e.n,tot?14:3),T(Math.round(e.v),tot?14:3))});a.push(T(r.n,tot?14:3),T(Math.round(r.v),tot?14:3),T(r.v/tv,tot?15:20));return a};
+  D.rows.forEach(function(r){rows.push(ln(r,0))});rows.push(ln(D.tot,1));
+  var p=[T('% dari total',17)];CKEYS.forEach(function(k){var e=D.tot.k[k];p.push(T(e.n/tn,20),T(e.v/tv,20))});p.push(T(1,20),T(1,20),T(1,20));rows.push(p);
+  rows.push(E(14));
+  rows.push([T('Class dari Report ABCD Class (Function Class), category dan nilai dari SQV (Retail + Catalog, Consignment tidak dihitung). Non Class = item tidak ada di file class. % Nilai = nilai terhadap total inventory toko.',18)]);
+  return {name:name,grid:0,w:[26,9,17,9,17,9,17,9,17,9,17,10,18,10],h:{0:34},rows:rows,m:['A1:N1','A3:A4','B3:C3','D3:E3','F3:G3','H3:I3','J3:K3','L3:N3']};
 }
 function exportExcel(){
   var T=function(v,st){return {v:v,s:st}},sheets=[sumSheet('Stock Out Plano',sumData(),'Category','STOCK OUT vs PLANO vs REPLENISMENT')];
