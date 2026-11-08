@@ -182,7 +182,7 @@ function build(){
   $('#main').classList.remove('hide');$('#det').classList.remove('hide');$('#main2').classList.toggle('hide',!CLS.length);
   F={c:'',l:'',t:'',s:'',q:''};syncF();renderSum();renderDet();
 }
-function clName(c){return c==='-'?'Tanpa class':'Class '+c}
+function clName(c){return c==='-'?'Non Class':'Class '+c}
 function agg(rows){
   var o={n:rows.length,nol:0,half:0};rows.forEach(function(r){if(r.nol)o.nol++;if(r.half)o.half++});return o;
 }
@@ -219,7 +219,7 @@ function renderSum(){
   if(CLS.length)$('#cap2').innerHTML=tableHTML(sumClass(),'Class','STOCK OUT PLANO vs REPLENISMENT PER CLASS (FUNCTION CLASS)','cl');
   var nos=R.filter(function(r){return r.nos}).length,nocl=R.filter(function(r){return r.cl==='-'}).length;
   $('#notes').innerHTML='Σ Item dihitung per baris lokasi plano (satu item di dua lokasi dihitung dua kali), sama seperti template Excel. <b>Assortment</b> = item ada di Replenishment (repsys); <b>Non Assortment</b> = tidak ada di Replenishment. <b>Stock = Nol</b> mencakup '+nf(nos)+' baris yang tidak punya baris di file stok. <b>Stok minus</b> ('+nf(R.filter(function(r){return r.neg}).length)+' baris) tidak dihitung di Stock = Nol maupun Half Capacity karena kemungkinan ada penjualan; lihat lewat filter status di Detail. <b>Stock &lt; Half Capacity</b> = stok lebih dari nol dan kurang dari Capacity/2 (stok minus tidak ikut). % merah bila Stock=Nol lebih dari 7% (Assortment dan ALL). Klik angka untuk melihat detail item.'
-   +(CLS.length?'<br><b>Class</b> memakai kolom Function Class dari Report ABCD Class; '+nf(nocl)+' baris plano tidak ada di file class (Tanpa class).':'<br>Class belum tampil: unggah Report ABCD Class (.csv) untuk rekap per class.')
+   +(CLS.length?'<br><b>Class</b> memakai kolom Function Class dari Report ABCD Class; '+nf(nocl)+' baris plano tidak ada di file class (Non Class).':'<br>Class belum tampil: unggah Report ABCD Class (.csv) untuk rekap per class.')
    +'<br>Data: '+esc(S.meta.plano||'')+' · '+esc(S.meta.stk||'')+' · '+esc(S.meta.rep||'')+(S.meta.cls?' · '+esc(S.meta.cls):'')+(S.meta.repDate?' (tanggal replenishment '+S.meta.repDate+')':'');
 }
 function drill(e){
