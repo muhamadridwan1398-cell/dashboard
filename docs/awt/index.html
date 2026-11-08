@@ -1061,7 +1061,7 @@
     const AWT_LIMIT = 30;
     let fullItems = [];
     let quickView = 'ALL';
-    function isCcGudang(t) { return String(t || '').toLowerCase().replace(/[^a-z]/g, '').indexOf('cashcarrygudang') > -1; }
+    function isCcGudang(t) { let n = String(t || '').toLowerCase().replace(/[^a-z]/g, ''); return n.indexOf('cashcarry') > -1 && n.indexOf('gudang') > -1; } /* contoh tipe: "Cash&Carry via Gudang Store" */
     function isWhArea(a) { return String(a || '').toUpperCase().indexOf('WH') > -1; }
     function setQuickView(q) {
         if (q === 'WHCC' && !fullItems.some(function (it) { return isCcGudang(it.notaType); })) {
