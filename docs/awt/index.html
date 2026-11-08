@@ -628,8 +628,8 @@
         <div id="captureArea">
             <div class="quick-view" id="quickView">
                 <span class="quick-label">Tampilan data:</span>
-                <button type="button" class="quick-btn active" data-q="ALL" onclick="setQuickView('ALL')">Semua Data</button>
-                <button type="button" class="quick-btn" data-q="WHCC" onclick="setQuickView('WHCC')">WH Area · Cash &amp; Carry Gudang</button>
+                <button type="button" class="quick-btn" data-q="ALL" onclick="setQuickView('ALL')">Semua Data</button>
+                <button type="button" class="quick-btn active" data-q="WHCC" onclick="setQuickView('WHCC')">WH Area · Cash &amp; Carry Gudang</button>
                 <span class="quick-info" id="quickInfo"></span>
             </div>
             <div class="kpi-grid">
@@ -1060,7 +1060,7 @@
     /* Batas AWT: nota dihitung AWT (late) bila durasi tunggu lebih dari AWT_LIMIT menit. Berlaku untuk semua item, termasuk data yang tersimpan di server. */
     const AWT_LIMIT = 30;
     let fullItems = [];
-    let quickView = 'ALL';
+    let quickView = 'WHCC'; /* tampilan awal: WH Area + Cash & Carry Gudang */
     function isCcGudang(t) { let n = String(t || '').toLowerCase().replace(/[^a-z]/g, ''); return n.indexOf('cashcarry') > -1 && n.indexOf('gudang') > -1; } /* contoh tipe: "Cash&Carry via Gudang Store" */
     function isWhArea(a) { return String(a || '').toUpperCase().indexOf('WH') > -1; }
     function setQuickView(q) {
@@ -1078,6 +1078,7 @@
             it.late = (Number(it.diffMin) || 0) > AWT_LIMIT;
             it.status = it.late ? 'AWT' : 'NO AWT';
         });
+        if (quickView === 'WHCC' && !allItems.some(function (it) { return isCcGudang(it.notaType); })) quickView = 'ALL'; /* tipe tidak ada di data: tampilkan semua */
         let items = quickView === 'WHCC' ? allItems.filter(function (it) { return isWhArea(it.area) && isCcGudang(it.notaType); }) : allItems;
         document.querySelectorAll('#quickView .quick-btn').forEach(function (b) { b.classList.toggle('active', b.dataset.q === quickView); });
         let qi = document.getElementById('quickInfo');
