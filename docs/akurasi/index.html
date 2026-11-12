@@ -622,6 +622,7 @@ function save(){try{localStorage.setItem(KEY,JSON.stringify(CC))}catch(e){}}
 function load(){try{var d=JSON.parse(localStorage.getItem(KEY)||'null');if(d&&d.items&&d.items.length){CC=d;return true}}catch(e){}return false}
 
 var ZN={W:'Warehouse',T:'Topper',D:'Display',O:'Lainnya'};function zg(l){var c=String(l||'').charAt(0).toUpperCase();return c==='W'?'W':c==='C'?'T':c==='D'?'D':'O'}
+function zlocs(x,zf){return zf&&zf.length?x.locs.filter(function(l){return zf.indexOf(zg(l[0]))>=0}):x.locs}
 function calc(x){x.locs.sort(function(a,b){return String(a[0]).localeCompare(String(b[0]),'en',{numeric:true})});var z={W:0,T:0,D:0,O:0};x.locs.forEach(function(l){z[zg(l[0])]+=l[1]});x.zW=Math.round(z.W*1000)/1000;x.zT=Math.round(z.T*1000)/1000;x.zD=Math.round(z.D*1000)/1000;x.zO=Math.round(z.O*1000)/1000;var p=x.nq?x.nv/x.nq:0;x.ots=x.ots||0;x.sq=Math.round((x.nq+x.ots)*1000)/1000;var d=Math.round((x.wq-x.sq)*1000)/1000;x.pr=p;x.d=d;x.val=d*p;x.st=!x.has?'NOSYS':(d>0?'OVER':(d<0?'MINUS':'SAMA'));x.ad=Math.abs(x.val);return x}
 function order(vals){var pr=['A','B'];return vals.sort(function(a,b){var i=pr.indexOf(a),j=pr.indexOf(b);if(i<0&&j<0)return String(a).localeCompare(String(b),'id',{numeric:true});if(i<0)return 1;if(j<0)return -1;return i-j})}
 function agg(rows){var o={n:rows.length,df:0,ov:0,mi:0,dq:0,vo:0,vm:0};rows.forEach(function(x){if(x.d!==0){o.df++;o.dq+=x.d;if(x.d>0){o.ov++;o.vo+=x.val}else{o.mi++;o.vm+=x.val}}});return o}
@@ -664,7 +665,7 @@ function detail(){
   var a=agg(L);$('ccCount').textContent=L.length+' item · '+a.df+' selisih ('+a.ov+' over, '+a.mi+' minus) · nilai over '+rp(a.vo)+' · nilai minus '+rp(a.vm)+' · net '+rp(a.vo+a.vm);
   var th=function(k,t,n){return '<th data-s="'+k+'" class="'+(n?'n':'')+'" style="cursor:pointer">'+t+(SORT.k===k?(SORT.d>0?' ▲':' ▼'):'')+'</th>'};
   $('ccDet').innerHTML='<thead><tr>'+th('cat','Category')+th('code','Item Code')+'<th>Item Name</th><th>UOM</th>'+th('day','Hari')+th('nq','Qty NAV',1)+th('ots','OTS',1)+th('sq','Qty Sistem',1)+th('wq','Fisik (SWBL)',1)+th('d','Variance',1)+th('pr','Harga/unit',1)+th('val','Nilai selisih',1)+th('st','Status')+'<th>Lokasi WMS (qty)</th></tr></thead><tbody>'+
-   L.map(function(x){var lc=x.locs.slice(0,4).map(function(l){return esc(l[0])+' ('+nf.format(l[1])+')'}).join(' · ')+(x.locs.length>4?' +'+(x.locs.length-4)+' lagi':'');
+   L.map(function(x){var zl=zlocs(x,mpVals('ccFz')),lc=zl.slice(0,4).map(function(l){return esc(l[0])+' ('+nf.format(l[1])+')'}).join(' · ')+(zl.length>4?' +'+(zl.length-4)+' lagi':'');
     return '<tr><td>'+esc(x.cat)+'</td><td>'+esc(x.k)+'</td><td style="white-space:normal;min-width:220px">'+esc(x.name)+'</td><td>'+esc(x.uom)+'</td><td class="c">'+esc(x.day)+'</td><td class="n">'+nf.format(x.nq)+'</td><td class="n">'+(x.ots?nf.format(x.ots):'<span class="zero">-</span>')+'</td><td class="n">'+nf.format(x.sq)+'</td><td class="n">'+nf.format(x.wq)+'</td>'+'<td class="n">'+fq(x.d)+'</td><td class="n">'+(x.pr?nf0.format(x.pr):'<span class="zero">-</span>')+'</td><td class="n">'+fv(x.val)+'</td><td><span class="st '+x.st+'">'+STL[x.st]+'</span></td><td class="loc">'+(lc||'<span class="zero">tidak ada di lokasi</span>')+'</td></tr>'}).join('')+'</tbody>';
 }
 /* ---------- Excel berstyle + setting cetak A4 ---------- */
@@ -746,7 +747,7 @@ function xrecap(I,me,days){
   cats.forEach(function(c,i){rows.push(line(c,I.filter(function(x){return x.cat===c}),0,i%2))});rows.push(line('TOTAL',I,1));
   rows.push(row());var nt=row();nt[0]=T('Klik filter di dashboard untuk detail item. Warna hijau = over (fisik > sistem), merah = minus (fisik < sistem).',{i:1,sz:9,c:'FF5B6577',h:'left'});rows.push(nt);m.push('A'+rows.length+':'+last+rows.length);
   return {name:'Rekap',grid:0,first:1,w:W,h:{0:30,1:22,5:20,7:20},rows:rows,m:m,print:{o:'landscape',titles:'$8:$9',fl:'Tools SO/CC · Rekap'}}}
-function xdetail(L,me,fdesc){
+function xdetail(L,me,fdesc,zf){
   var T=function(v,o){return {v:v,s:sty(o)}},E=function(o){return T('',o)};
   var W=[5,24,12,44,7,7,9,8,10,10,10,15,13,21,9,16],nc=W.length,last=xcol(nc),rows=[],m=[];
   var row=function(){var a=[];for(var i=0;i<nc;i++)a.push('');return a};
@@ -757,7 +758,7 @@ function xdetail(L,me,fdesc){
   rows.push(['No','Category','Item Code','Item Name','UOM','Hari ke-','Qty NAV','OTS','Qty Sistem (NAV+OTS)','Fisik SWBL','Variance qty','Nilai selisih (Rp)','Status','Lokasi WMS','Qty di lokasi','Cek Fisik'].map(function(t,j){return T(t,j===15?{b:1,c:'FFFFFFFF',fill:'FFB57A22',bd:1,h:'center',bc:'FF183153',w:1}:HS)}));
   var ST={OVER:{fill:'FFC6EFCE',c:'FF006100'},MINUS:{fill:'FFFFC7CE',c:'FF9C0006'},SAMA:{fill:'FFEDF0F3',c:'FF6D7B88'},NOSYS:{fill:'FFFFEB9C',c:'FF9C5700'}};
   var ht={0:30,1:20,3:34};
-  L.forEach(function(x,i){var bg=i%2?'FFEEF4FA':null,locs=x.locs.length?x.locs:[['(tidak ada di lokasi)','']];
+  L.forEach(function(x,i){var bg=i%2?'FFEEF4FA':null,zl=zlocs(x,zf),locs=zl.length?zl:[['(tidak ada di lokasi)','']];
     var base=function(o){if(bg)o.fill=bg;o.bd=1;return o},q=function(v,vv){return T(v,base({h:'right',nf:v%1?ND:NI}))};
     locs.forEach(function(l,n){var r=[],first=n===0;
       r.push(first?T(i+1,base({h:'center',c:'FF5B6577'})):E(base({})));
@@ -775,7 +776,7 @@ function xls(which){
     if(which==='det'){
       var fd=[['ccFc','Semua category'],['ccFh','Semua hari'],['ccFz','Semua zone'],['ccFs','Semua status']].map(function(f){var v=mpVals(f[0]);return v.length?v.map(function(z){var o=(MPO[f[0]]||[]).filter(function(y){return y[0]===z})[0];return o?o[1]:z}).join(', '):f[1]}).join(' · ');
       var q=$('ccFq').value.trim();if(q)fd+=' · cari "'+q+'"';
-      sheets.push(xdetail(filt().sort(srt),me,fd))}
+      sheets.push(xdetail(filt().sort(srt),me,fd,mpVals('ccFz')))}
     else{sheets.push(xrecap(I,me,days));sheets.push(xdetail(I.slice().sort(srt),me,'Semua item CC'))}
     xsave(xbuild(sheets),'Tools_SO_CC'+(which==='det'?'_Detail':'')+'_'+today()+'.xlsx')
   }catch(e){say(e.message||String(e),1)}}
