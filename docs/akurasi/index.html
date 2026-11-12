@@ -669,15 +669,15 @@ function detail(){
 }
 function xls(which){ensureXL().then(function(){
   var I=CC.items.map(calc),wb=XLSX.utils.book_new(),me=CC.meta||{};
-  var det=[['No','Category','Item Code','Barcode','Item Name','UOM','Hari ke-','Qty NAV','OTS','Qty Sistem (NAV+OTS)','Fisik SWBL','Variance qty','Nilai selisih','Status','Zona','Lokasi WMS','Qty di lokasi']];
+  var det=[['No','Category','Item Code','Item Name','UOM','Hari ke-','Qty NAV','OTS','Qty Sistem (NAV+OTS)','Fisik SWBL','Variance qty','Nilai selisih','Status','Zona','Lokasi WMS','Qty di lokasi']];
   (which==='det'?filt():I).forEach(function(x,i){var L=x.locs.length?x.locs.map(function(l){return [l[0],l[1],ZN[zg(l[0])]]}):[['(tidak ada di lokasi WMS)','','']];
-    L.forEach(function(l,n){det.push(n===0?[i+1,x.cat,x.k,x.bar,x.name,x.uom,x.day,x.nq,x.ots,x.sq,x.wq,x.d,Math.round(x.val),STL[x.st],l[2],l[0],l[1]]:['',x.cat,x.k,'',x.name].concat(new Array(9).fill(''),[l[2],l[0],l[1]]))})});
+    L.forEach(function(l,n){det.push(n===0?[i+1,x.cat,x.k,x.name,x.uom,x.day,x.nq,x.ots,x.sq,x.wq,x.d,Math.round(x.val),STL[x.st],l[2],l[0],l[1]]:['',x.cat,x.k,x.name].concat(new Array(9).fill(''),[l[2],l[0],l[1]]))})});
   if(which!=='det'){var cats=I.map(function(x){return x.cat}).filter(function(v,i,a){return a.indexOf(v)===i}).sort(),days=order(I.map(function(x){return x.day}).filter(function(v,i,a){return v&&a.indexOf(v)===i})),cls=[];
     var rec=[[me.STORE||'',me.PERIODE||'',me.TANGGAL||''],[],['Category','Item CC'].concat(days.map(function(d){return 'Hari ke-'+d}),cls,['Item selisih','Over','Minus','Variance qty','Nilai over','Nilai minus','Nilai selisih'])];
     var line=function(l,rs){var a=agg(rs);return [l,a.n].concat(days.map(function(d){return rs.filter(function(x){return x.day===d}).length}),cls.map(function(c){return rs.filter(function(x){return x.cl===c}).length}),[a.df,a.ov,a.mi,a.dq,Math.round(a.vo),Math.round(a.vm),Math.round(a.vo+a.vm)])};
     cats.forEach(function(c){rec.push(line(c,I.filter(function(x){return x.cat===c})))});rec.push(line('TOTAL',I));
     var s1=XLSX.utils.aoa_to_sheet(rec);s1['!cols']=[{wch:26}].concat(rec[2].slice(1).map(function(){return {wch:13}}));XLSX.utils.book_append_sheet(wb,s1,'Rekap')}
-  var s2=XLSX.utils.aoa_to_sheet(det);s2['!cols']=[5,24,13,15,48,7,8,10,8,12,10,11,15,12,12,22,12].map(function(w){return {wch:w}});XLSX.utils.book_append_sheet(wb,s2,'Detail Item');
+  var s2=XLSX.utils.aoa_to_sheet(det);s2['!cols']=[5,24,13,48,7,8,10,8,12,10,11,15,12,12,22,12].map(function(w){return {wch:w}});XLSX.utils.book_append_sheet(wb,s2,'Detail Item');
   XLSX.writeFile(wb,'Tools_SO_CC'+(which==='det'?'_Detail':'')+'.xlsx')}).catch(function(e){say(e.message,1)})}
 
 function tab(n){$('ccV1').hidden=n!==1;$('ccV2').hidden=n!==2;$('ccT1').classList.toggle('active',n===1);$('ccT2').classList.toggle('active',n===2)}
