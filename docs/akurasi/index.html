@@ -543,6 +543,8 @@ function sbAsk(cb){
   sbRefresh().then(ok=>{if(ok){cb(_tok);return}sbDlg(cb)})
 }
 sbPill();sbRefresh();
+window.__shr={put:function(name,obj){return new Promise(function(ok,no){if(location.protocol==='file:')return no(new Error('Buka dari alamat website agar tersimpan untuk semua orang.'));sbAsk(function(tok){var st=new Blob([JSON.stringify(obj)]).stream().pipeThrough(new CompressionStream('gzip'));new Response(st).arrayBuffer().then(function(body){return fetch(SHARED_API+'?name='+name,{method:'PUT',headers:{'Content-Type':'application/gzip','Authorization':'Bearer '+tok},body:body})}).then(function(r){return r.json().catch(function(){return{}}).then(function(j){if(!r.ok)throw new Error(j.error||('Simpan gagal ('+r.status+').'));ok(j)})}).catch(no)})})},
+get:function(name){return fetch(SHARED_API+'?name='+name,{cache:'no-store'}).then(function(r){if(!r.ok)return null;return r.json()}).then(function(j){return j&&j.data?j:null}).catch(function(){return null})}};
 function sbDlg(cb){
   const old=document.getElementById('lgdlg');if(old)old.remove();
   document.body.insertAdjacentHTML('beforeend','<div class="lgbg" id="lgdlg" role="dialog" aria-modal="true" aria-label="Login admin/editor"><form class="lgbox" id="lgform"><h3>Login Admin / Editor</h3><p>Hanya admin atau editor yang boleh memperbarui data. Setelah login, data otomatis tersimpan untuk semua pengguna.</p><label for="lgem">Username</label><input id="lgem" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required><label for="lgpw">Password</label><input id="lgpw" type="password" autocomplete="current-password" required><div class="lgerr" id="lgerr" role="alert"></div><div class="lgact"><button type="button" id="lgx">Batal</button><button type="submit" class="ok" id="lgok">Masuk</button></div></form></div>');
@@ -728,11 +730,13 @@ async function generate(){
       var m3=String(ot.a[0]&&ot.a[0][0]||'').match(/(\d{1,2}-[A-Za-z]{3}-\d{4}[^\n]*)/);meta.otsDate=m3?m3[1].trim():'';hasOts=true}
     meta.hasOts=hasOts;items.forEach(function(x){x.ots=Math.round((x.ots||0)*1000)/1000});
     meta.at=new Date().toISOString();
-    CC={items:items,meta:meta};save();render();$('ccUp').hidden=true;$('ccToggle').textContent='Buka upload ▾';
+    CC={items:items,meta:meta};save();render();shareCC();$('ccUp').hidden=true;$('ccToggle').textContent='Buka upload ▾';
   }catch(e){say(e.message||String(e),1)}
   $('ccGo').disabled=false;
 }
 function save(){try{localStorage.setItem(KEY,JSON.stringify(CC))}catch(e){}}
+function shareCC(){if(!window.__shr||!CC)return;say('Menyimpan ke server untuk semua pengguna...');window.__shr.put('cc',CC).then(function(){say('Data tersimpan di server. Semua pengguna melihat data ini.')}).catch(function(e){say('Tersimpan di browser ini saja. '+(e&&e.message||''),1)})}
+var _ccRemote=false;function remoteCC(){if(_ccRemote||!window.__shr)return;_ccRemote=true;window.__shr.get('cc').then(function(j){if(!j)return;var d=j.data;if(!d||!d.items||!d.items.length)return;if(CC&&CC.meta&&CC.meta.at&&d.meta&&d.meta.at&&CC.meta.at>=d.meta.at)return;CC=d;save();render()})}
 function load(){try{var d=JSON.parse(localStorage.getItem(KEY)||'null');if(d&&d.items&&d.items.length){CC=d;return true}}catch(e){}return false}
 
 var ZN={W:'Warehouse',T:'Topper',D:'Display',O:'Lainnya'};function zg(l){var c=String(l||'').charAt(0).toUpperCase();return c==='W'?'W':c==='C'?'T':c==='D'?'D':'O'}
@@ -911,7 +915,7 @@ function xls(which){
 function tab(n){$('ccV1').hidden=n!==1;$('ccV2').hidden=n!==2;$('ccT1').classList.toggle('active',n===1);$('ccT2').classList.toggle('active',n===2)}
 function show(on){['accuracyPanel','adjustmentPanel','minusPanel','detailsPanel','greyProgPanel'].forEach(function(i){var e=$(i);if(e&&on)e.hidden=true});
   $('ccPanel').hidden=!on;['tabMain','tabDetails','tabGrey'].forEach(function(i){if(on)$(i).classList.remove('active')});$('tabCC').classList.toggle('active',on);
-  if(on&&!CC){load();}if(on&&CC)render()}
+  if(on&&!CC){load();}if(on&&CC)render();if(on)remoteCC()}
 var orig=window.switchPage;
 window.switchPage=function(mode){if(mode==='cc'){show(true);return}$('ccPanel').hidden=true;$('tabCC').classList.remove('active');return orig(mode)};
 $('tabCC').addEventListener('click',function(){window.switchPage('cc')});
@@ -993,10 +997,12 @@ async function generate(){
     focus.sort(function(a,b){return Math.abs(b.fv)-Math.abs(a.fv)});
     R={focus:focus,meta:{so:fs.name,sqv:srcNote,nSo:nSo,nSqv:sqv.length,nCc:cc.length,at:new Date().toISOString(),ccMeta:(window.__ccMeta&&window.__ccMeta())||{}}};
     try{localStorage.setItem(KEY,JSON.stringify(R))}catch(e){}
-    render();$('soUp').hidden=true;$('soToggle').textContent='Buka upload ▾';
+    shareSO();render();$('soUp').hidden=true;$('soToggle').textContent='Buka upload ▾';
   }catch(e){say(e.message||String(e),1)}
   $('soGo').disabled=false;
 }
+function shareSO(){if(!window.__shr||!R)return;window.__shr.put('socheck',R).then(function(){say('Data tersimpan di server. Semua pengguna melihat data ini.')}).catch(function(e){say('Tersimpan di browser ini saja. '+(e&&e.message||''),1)})}
+var _soRemote=false;function remoteSO(){if(_soRemote||!window.__shr)return;_soRemote=true;window.__shr.get('socheck').then(function(j){if(!j)return;var d=j.data;if(!d||!d.focus||!d.focus.length)return;if(R&&R.meta&&R.meta.at&&d.meta&&d.meta.at&&R.meta.at>=d.meta.at)return;R=d;try{localStorage.setItem(KEY,JSON.stringify(R))}catch(e){}render()})}
 function modeF(){var m=$('soMode').value;return R.focus.filter(function(f){return m==='plus'?f.fq>0:m==='minus'?f.fq<0:true})}
 function viewF(){var c=MP.vals('soFc'),q=$('soFq').value.trim().toLowerCase();
   return modeF().filter(function(f){return (!c.length||c.indexOf(f.cat)>=0)&&(!q||(f.k+' '+f.name).toLowerCase().indexOf(q)>=0)})}
@@ -1071,7 +1077,7 @@ function wire(){initMP();
   window.switchPage=function(mode){
     if(mode==='so'){['accuracyPanel','adjustmentPanel','minusPanel','detailsPanel','greyProgPanel','ccPanel'].forEach(function(i){var e=$(i);if(e)e.hidden=true});
       ['tabMain','tabDetails','tabGrey','tabCC'].forEach(function(i){var e=$(i);if(e)e.classList.remove('active')});$('soPanel').hidden=false;$('tabSO').classList.add('active');
-      if(!R){try{var d=JSON.parse(localStorage.getItem(KEY)||'null');if(d&&d.focus){R=d}}catch(e){}if(R)render()}return}
+      if(!R){try{var d=JSON.parse(localStorage.getItem(KEY)||'null');if(d&&d.focus){R=d}}catch(e){}if(R)render();remoteSO()}return}
     $('soPanel').hidden=true;$('tabSO').classList.remove('active');return prev(mode)};
   $('tabSO').addEventListener('click',function(){window.switchPage('so')});
 }
