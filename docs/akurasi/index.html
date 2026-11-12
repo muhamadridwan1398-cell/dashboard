@@ -1023,8 +1023,9 @@ function score(F,C){var sc=0,why=[];
   if(C.br&&F.br&&C.br===F.br){sc+=4;why.push('Brand')}else if(C.mb&&F.mb&&C.mb===F.mb){sc+=1;why.push('Master brand')}
   if(C.sfn&&C.sfn===F.sfn){sc+=3;why.push('Sub fungsi')}else if(C.fn&&C.fn===F.fn){sc+=2;why.push('Fungsi')}
   if(C.sub&&C.sub===F.sub){sc+=2}
-  var j=jac(F.t,C.t);if(j>0){sc+=j*8;if(j>=0.34)why.push('Nama '+Math.round(j*100)+'%')}
-  var m=modelSim(F.t,C.t);if(m>0){sc+=m*5;if(m>=0.6)why.push('Model/tipe')}
+  var j=jac(F.t,C.t),m=modelSim(F.t,C.t);if(j>0){sc+=j*20;if(j>=0.2)why.unshift('Nama '+Math.round(j*100)+'%')}
+  if(m>0){sc+=m*8;if(m>=0.6)why.push('Model/tipe')}
+  if(j<0.2&&m<0.5)sc=Math.min(sc,4);
   if(F.cost>0&&C.cost>0){var d=Math.abs(Math.log(F.cost/C.cost));if(d<0.10){sc+=3;why.push('Harga mirip')}else if(d<0.30){sc+=1.5;why.push('Harga sepadan')}}
   if(F.fq!==0&&C.fq!==0&&((F.fq>0)!==(C.fq>0))){sc+=5;why.push('Berlawanan');var a=Math.abs(F.fq),b=Math.abs(C.fq);if(Math.min(a,b)/Math.max(a,b)>=0.5){sc+=2;why.push('Qty seimbang')}}
   return {s:Math.round(sc*10)/10,why:why}}
