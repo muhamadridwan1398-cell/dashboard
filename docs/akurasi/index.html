@@ -214,7 +214,7 @@ html body:not(.capture-mode) #greySummaryGrid tfoot td:first-child{letter-spacin
 <h3 class="cch">Per Hari Pelaksanaan</h3><div class="ccwrap" style="max-width:760px"><table class="cct" id="ccDay"></table></div>
 <div class="small" id="ccNote" style="margin-top:10px"></div></div>
 <div id="ccV2" hidden>
-<div class="controls cc-f"><div class="field"><label>Category</label><select id="ccFc"></select></div><div class="field"><label>Hari ke-</label><select id="ccFh"><option value="">Semua</option></select></div><div class="field"><label>Zone</label><select id="ccFz"><option value="">Semua zone</option><option value="W">Warehouse</option><option value="T">Topper</option><option value="D">Display</option><option value="O">Lainnya</option></select></div><div class="field"><label>Status</label><select id="ccFs"><option value="">Semua</option><option value="OVER">Over (Fisik &gt; Sistem)</option><option value="MINUS">Minus (Fisik &lt; Sistem)</option><option value="DIFF">Semua yang selisih</option><option value="SAMA">Sesuai</option></select></div><div class="field"><label>Cari item</label><input type="search" id="ccFq" placeholder="Kode / nama / barcode"></div><button id="ccFr" class="secondary" type="button">Reset</button><button id="ccXls2" class="secondary" type="button">⬇ Export Excel</button></div>
+<div class="controls cc-f"><div class="field"><label>Category</label><details class="category-picker ccmp" id="ccFc" data-all="Semua category"><summary>Semua category</summary><div class="ccmpbody"></div></details></div><div class="field"><label>Hari ke-</label><details class="category-picker ccmp" id="ccFh" data-all="Semua hari"><summary>Semua hari</summary><div class="ccmpbody"></div></details></div><div class="field"><label>Zone</label><details class="category-picker ccmp" id="ccFz" data-all="Semua zone"><summary>Semua zone</summary><div class="ccmpbody"></div></details></div><div class="field"><label>Status</label><details class="category-picker ccmp" id="ccFs" data-all="Semua status"><summary>Semua status</summary><div class="ccmpbody"></div></details></div><div class="field"><label>Cari item</label><input type="search" id="ccFq" placeholder="Kode / nama / barcode"></div><button id="ccFr" class="secondary" type="button">Reset</button><button id="ccXls2" class="secondary" type="button">⬇ Export Excel</button></div>
 <div class="small" id="ccCount" style="margin:6px 0"></div>
 <div class="ccwrap" style="max-height:70vh;overflow:auto"><table class="cct" id="ccDet"></table></div></div>
 </div></section>
@@ -558,7 +558,7 @@ document.getElementById('toggleOverDetails').addEventListener('click',()=>{const
 #ccPanel .cc-f{align-items:flex-end;gap:10px;flex-wrap:wrap}#ccPanel .cc-f .field{min-width:150px;max-width:230px}
 #ccPanel .st{padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;display:inline-block}
 #ccPanel .st.OVER{background:#e1f1e8;color:#1d6b43}#ccPanel .st.MINUS{background:#f6e3e3;color:#a94c4c}#ccPanel .st.SAMA{background:#eef1f4;color:#6d7b88}#ccPanel .st.NOSYS{background:#fbf0d9;color:#8a5f10}
-#ccPanel .loc{max-width:340px;white-space:normal;font-size:11px;color:var(--muted)}
+#ccPanel .ccmp{background:#fff;border-radius:5px}#ccPanel .ccmp[open]{border:1px solid #c8d1da}#ccPanel .ccmp summary{border:1px solid #c8d1da;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px}#ccPanel .ccmp[open] summary{border:0;border-bottom:1px solid var(--line)}#ccPanel .ccmp .ccmpbody{display:none}#ccPanel .ccmp[open] .ccmpbody{display:block;position:absolute;left:-1px;right:-1px;top:100%;background:#fff;border:1px solid #c8d1da;border-top:0;border-radius:0 0 6px 6px;z-index:30;max-height:260px;overflow:auto;box-shadow:0 10px 20px -10px rgba(24,48,110,.35)}#ccPanel .loc{max-width:340px;white-space:normal;font-size:11px;color:var(--muted)}
 #ccPanel #ccKpi{grid-template-columns:repeat(5,minmax(130px,1fr))}
 @media(max-width:760px){#ccPanel #ccKpi{grid-template-columns:repeat(2,1fr)}}
 </style><script>(function(){
@@ -643,12 +643,21 @@ function render(){
     cats.map(function(c){return row(c,I.filter(function(x){return x.cat===c}),cls)}).join('')+row('TOTAL',I,cls,1)+'</tbody>';
   $('ccDay').innerHTML='<thead><tr><th>Hari ke-</th><th class="n">Item CC</th><th class="n">Item selisih</th><th class="n">Nilai over</th><th class="n">Nilai minus</th><th class="n">Nilai selisih</th></tr></thead><tbody>'+days.map(function(d){var a=agg(I.filter(function(x){return x.day===d}));return '<tr><td>Hari ke-'+esc(d)+'</td><td class="n">'+a.n+'</td><td class="n">'+a.df+'</td><td class="n">'+fv(a.vo)+'</td><td class="n">'+fv(a.vm)+'</td><td class="n">'+fv(a.vo+a.vm)+'</td></tr>'}).join('')+'</tbody>';
   $('ccNote').innerHTML='Klik baris category untuk melihat detail itemnya.'+(nosys?' <b>'+nosys+'</b> item CC tidak ada di stok sistem NAV (dianggap Qty NAV 0).':'')+(noprice?' <b>'+noprice+'</b> item selisih tapi Qty NAV 0, sehingga harga tidak bisa dihitung (nilai 0).':'')+(me.hasOts?' OTS NP ditambahkan ke stok sistem: <b>'+nf.format(totOts)+'</b> qty pada <b>'+otsItems+'</b> item CC.':'')+' Stok WMS = Stock On Hand semua lokasi (aktif dan INACT, semua tipe item).';
-  fill('ccFc',[['','Semua category']].concat(cats.map(function(c){return [c,c]})));fill('ccFh',[['','Semua']].concat(days.map(function(d){return [d,'Hari ke-'+d]})));
+  mpBuild('ccFc',cats.map(function(c){return [c,c]}));mpBuild('ccFh',days.map(function(d){return [d,'Hari ke-'+d]}));mpBuild('ccFz',[['W','Warehouse'],['T','Topper'],['D','Display'],['O','Lainnya']]);mpBuild('ccFs',[['OVER','Over (Fisik > Sistem)'],['MINUS','Minus (Fisik < Sistem)'],['SAMA','Sesuai'],['NOSYS','Tidak ada di stok NAV']]);
   detail();
 }
+var MPO={};
+function mpBuild(id,opts){var e=$(id),keep=mpVals(id);MPO[id]=opts;var all=e.dataset.all;
+  e.querySelector('.ccmpbody').innerHTML='<label class="category-option"><input type="checkbox" data-all="1"><span>'+esc(all)+'</span></label>'+opts.map(function(o){return '<label class="category-option"><input type="checkbox" value="'+esc(o[0])+'"><span>'+esc(o[1])+'</span></label>'}).join('');
+  mpSet(id,keep.filter(function(v){return opts.some(function(o){return o[0]===v})}),1)}
+function mpVals(id){var e=$(id);return [].map.call(e.querySelectorAll('input[value]:checked'),function(i){return i.value})}
+function mpSet(id,vals,quiet){var e=$(id),ins=e.querySelectorAll('input[value]');[].forEach.call(ins,function(i){i.checked=vals.indexOf(i.value)>=0});mpSync(id)}
+function mpSync(id){var e=$(id),v=mpVals(id),a=e.querySelector('input[data-all]');if(a)a.checked=!v.length;
+  var sm=e.querySelector('summary'),o=MPO[id]||[];sm.textContent=!v.length?e.dataset.all:(v.length===1?(o.filter(function(x){return x[0]===v[0]})[0]||[v[0],v[0]])[1]:v.length+' dipilih')}
+function mpClear(id){mpSet(id,[])}
 function fill(id,opts){var e=$(id),v=e.value;e.innerHTML=opts.map(function(o){return '<option value="'+esc(o[0])+'">'+esc(o[1])+'</option>'}).join('');if(opts.some(function(o){return o[0]===v}))e.value=v}
-function filt(){var c=$('ccFc').value,h=$('ccFh').value,zn=$('ccFz').value,l='',s=$('ccFs').value,q=$('ccFq').value.trim().toLowerCase();
-  return CC.items.filter(function(x){return (!c||x.cat===c)&&(!h||x.day===h)&&(!zn||x['z'+zn]!==0)&&(!l||x.cl===l)&&(!s||(s==='DIFF'?x.d!==0:x.st===s))&&(!q||(x.code+' '+x.name+' '+x.bar).toLowerCase().indexOf(q)>=0)})}
+function filt(){var c=mpVals('ccFc'),h=mpVals('ccFh'),zn=mpVals('ccFz'),s=mpVals('ccFs'),q=$('ccFq').value.trim().toLowerCase();
+  return CC.items.filter(function(x){return (!c.length||c.indexOf(x.cat)>=0)&&(!h.length||h.indexOf(x.day)>=0)&&(!zn.length||zn.some(function(z){return x['z'+z]!==0}))&&(!s.length||s.indexOf(x.st)>=0)&&(!q||(x.code+' '+x.name+' '+x.bar).toLowerCase().indexOf(q)>=0)})}
 var STL={OVER:'Over',MINUS:'Minus',SAMA:'Sesuai',NOSYS:'Tdk di NAV'};
 function detail(){
   if(!CC)return;var L=filt().slice().sort(function(a,b){var k=SORT.k,va=a[k],vb=b[k];if(typeof va==='string')return SORT.d*String(va).localeCompare(String(vb),'id',{numeric:true});return SORT.d*((va||0)-(vb||0))});
@@ -683,10 +692,10 @@ $('ccToggle').addEventListener('click',function(){var u=$('ccUp');u.hidden=!u.hi
 $('ccGo').addEventListener('click',generate);
 $('ccClear').addEventListener('click',function(){CC=null;try{localStorage.removeItem(KEY)}catch(e){}$('ccBody').hidden=true;say('Data dihapus. Upload 3 file untuk memulai.')});
 $('ccT1').addEventListener('click',function(){tab(1)});$('ccT2').addEventListener('click',function(){tab(2);detail()});
-['ccFc','ccFh','ccFz','ccFs'].forEach(function(i){$(i).addEventListener('change',detail)});$('ccFq').addEventListener('input',detail);
-$('ccFr').addEventListener('click',function(){['ccFc','ccFh','ccFz','ccFs'].forEach(function(i){$(i).value=''});$('ccFq').value='';detail()});
+['ccFc','ccFh','ccFz','ccFs'].forEach(function(i){$(i).addEventListener('change',function(e){var t=e.target;if(t.dataset.all){mpClear(i)}else{mpSync(i)}detail()})});document.addEventListener('click',function(e){[].forEach.call(document.querySelectorAll('#ccPanel .ccmp[open]'),function(d){if(!d.contains(e.target))d.open=false})});$('ccFq').addEventListener('input',detail);
+$('ccFr').addEventListener('click',function(){['ccFc','ccFh','ccFz','ccFs'].forEach(mpClear);$('ccFq').value='';detail()});
 $('ccXls1').addEventListener('click',function(){xls('all')});$('ccXls2').addEventListener('click',function(){xls('det')});
-$('ccRecap').addEventListener('click',function(e){var tr=e.target.closest('tr[data-c]');if(!tr)return;$('ccFc').value=tr.dataset.c;$('ccFh').value='';$('ccFz').value='';$('ccFs').value='';$('ccFq').value='';tab(2);detail()});
+$('ccRecap').addEventListener('click',function(e){var tr=e.target.closest('tr[data-c]');if(!tr)return;['ccFh','ccFz','ccFs'].forEach(mpClear);mpSet('ccFc',[tr.dataset.c]);$('ccFq').value='';tab(2);detail()});
 $('ccDet').addEventListener('click',function(e){var t=e.target.closest('th[data-s]');if(!t)return;var k=t.dataset.s;SORT=SORT.k===k?{k:k,d:-SORT.d}:{k:k,d:(k==='cat'||k==='code'||k==='day'||k==='cl'||k==='st')?1:-1};detail()});
 if(load()){try{$('ccUp').hidden=true}catch(e){}}
 })();
