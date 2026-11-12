@@ -629,7 +629,7 @@ function render(){
   $('ccBody').hidden=false;
   $('ccSub').textContent=[me.STORE,me.PERIODE,me.TANGGAL].filter(Boolean).join(' · ')||'Item Cycle Count';
   say('Stok NAV: '+(me.navDate||'-')+'  |  Fisik SWBL: '+(me.wmsDate||'-')+'  |  OTS NP: '+(me.hasOts?(me.otsDate||'ada'):'tidak dipakai')+'  |  Variance = Fisik SWBL − (Qty NAV'+(me.hasOts?' + OTS':'')+'); nilai = variance × harga per unit (Value ÷ Qty NAV).');
-  var T=agg(I),days=order([].concat.apply([],[I.map(function(x){return x.day})]).filter(function(v,i,a){return v!==''&&a.indexOf(v)===i})),cls=order(I.map(function(x){return x.cl}).filter(function(v,i,a){return v!==''&&a.indexOf(v)===i}));
+  var T=agg(I),days=order([].concat.apply([],[I.map(function(x){return x.day})]).filter(function(v,i,a){return v!==''&&a.indexOf(v)===i})),cls=[];
   var totOts=I.reduce(function(t,x){return t+x.ots},0),otsItems=I.filter(function(x){return x.ots}).length,nosys=I.filter(function(x){return !x.has}).length,noprice=I.filter(function(x){return x.has&&!x.nq&&x.d!==0}).length;
   $('ccKpi').innerHTML=[['Item CC',nf0.format(T.n),'item'],['Item Selisih',nf0.format(T.df),(T.n?(T.df/T.n*100).toFixed(1):0)+'% dari item CC · '+T.ov+' over / '+T.mi+' minus'],['Nilai Over',rp(T.vo),T.ov+' item'],['Nilai Minus',rp(T.vm),T.mi+' item'],['Nilai Selisih (net)',rp(T.vo+T.vm),'Selisih qty '+(T.dq>0?'+':'')+nf.format(T.dq)]].map(function(k){return '<div class="card"><div class="label">'+k[0]+'</div><div class="value">'+k[1]+'</div><small>'+k[2]+'</small></div>'}).join('');
   var cats=I.map(function(x){return x.cat}).filter(function(v,i,a){return a.indexOf(v)===i}).sort();
@@ -662,7 +662,7 @@ function xls(which){ensureXL().then(function(){
   var det=[['No','Category','Item Code','Barcode','Item Name','UOM','Hari ke-','Qty NAV','OTS','Qty Sistem (NAV+OTS)','Fisik SWBL','Variance qty','Harga/unit','Nilai selisih','Status','Lokasi WMS','Qty di lokasi']];
   (which==='det'?filt():I).forEach(function(x,i){var L=x.locs.length?x.locs:[['(tidak ada di lokasi WMS)','']];
     L.forEach(function(l,n){det.push(n===0?[i+1,x.cat,x.k,x.bar,x.name,x.uom,x.day,x.nq,x.ots,x.sq,x.wq,x.d,Math.round(x.pr),Math.round(x.val),STL[x.st],l[0],l[1]]:['',x.cat,x.k,'',x.name,'','','','','','','','','','',l[0],l[1]])})});
-  if(which!=='det'){var cats=I.map(function(x){return x.cat}).filter(function(v,i,a){return a.indexOf(v)===i}).sort(),days=order(I.map(function(x){return x.day}).filter(function(v,i,a){return v&&a.indexOf(v)===i})),cls=order(I.map(function(x){return x.cl}).filter(function(v,i,a){return v&&a.indexOf(v)===i}));
+  if(which!=='det'){var cats=I.map(function(x){return x.cat}).filter(function(v,i,a){return a.indexOf(v)===i}).sort(),days=order(I.map(function(x){return x.day}).filter(function(v,i,a){return v&&a.indexOf(v)===i})),cls=[];
     var rec=[[me.STORE||'',me.PERIODE||'',me.TANGGAL||''],[],['Category','Item CC'].concat(days.map(function(d){return 'Hari ke-'+d}),cls,['Item selisih','Over','Minus','Variance qty','Nilai over','Nilai minus','Nilai selisih'])];
     var line=function(l,rs){var a=agg(rs);return [l,a.n].concat(days.map(function(d){return rs.filter(function(x){return x.day===d}).length}),cls.map(function(c){return rs.filter(function(x){return x.cl===c}).length}),[a.df,a.ov,a.mi,a.dq,Math.round(a.vo),Math.round(a.vm),Math.round(a.vo+a.vm)])};
     cats.forEach(function(c){rec.push(line(c,I.filter(function(x){return x.cat===c})))});rec.push(line('TOTAL',I));
