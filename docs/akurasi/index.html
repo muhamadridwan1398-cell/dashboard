@@ -956,7 +956,7 @@ function xdetail(L,me,fdesc,zf){
     var base=function(o){if(bg)o.fill=bg;o.bd=1;return o},q=function(v,vv){return T(v,base({h:'right',nf:v%1?ND:NI}))};
     locs.forEach(function(l,n){var r=[],first=n===0;
       r.push(first?T(i+1,base({h:'center',c:'FF5B6577'})):E(base({})));
-      r.push(T(x.cat,base({sz:10,c:first?'FF1F2933':'FF9AA6B2'})));r.push(T(x.k,base({h:'center',c:first?'FF1F2933':'FF9AA6B2'})));r.push(T(x.name,base({w:first?1:0,c:first?'FF1F2933':'FF9AA6B2'})));
+      if(first){r.push(T(x.cat,base({sz:10})));r.push(T(x.k,base({h:'center'})));r.push(T(x.name,base({w:1})))}else{r.push(E(base({})),E(base({})),E(base({})))}
       if(first){r.push(T(x.uom,base({h:'center'})),T(x.day,base({h:'center'})),q(x.nq),q(x.ots),q(x.bb),q(x.sq),q(x.wq),T(x.d,base(vo(x.d))),T(Math.round(x.val),base(vo(Math.round(x.val)))),T(XSTL[x.st],{b:1,sz:10,h:'center',bd:1,fill:ST[x.st].fill,c:ST[x.st].c}))}
       else for(var k=0;k<10;k++)r.push(E(base({})));
       r.push(T(l[0],base({h:'center',sz:10})));r.push(l[1]===''?E(base({})):q(l[1]));r.push(E({bd:1,bc:'FF8A97A8',fill:'FFFFFFFF'}));rows.push(r);
