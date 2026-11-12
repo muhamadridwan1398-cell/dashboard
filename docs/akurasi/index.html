@@ -198,7 +198,7 @@ html body:not(.capture-mode) #greySummaryGrid tfoot td:first-child{letter-spacin
 </style></head><body><main class="wrap">
 <div class="top"><div><h1>Dashboard Akurasi WMS vs NAV</h1><div class="small" style="font-weight:700;margin:0 0 5px">Created Ridwan</div></div><div class="snapshot"><button id="screenshotMode" class="secondary" type="button" title="Langsung simpan tampilan akurasi sebagai gambar PNG">📷 Simpan gambar</button><button id="downloadScreenshot" type="button" hidden>Unduh PNG</button></div></div>
 <section class="panel upload-panel collapsed" id="uploadPanel"><div class="sectionhead"><div><h2>UPLOAD DATA</h2><div class="small up-desc">Gunakan dua laporan dengan site dan tanggal yang sama.</div></div><button id="uploadToggle" class="secondary" type="button" aria-expanded="false" aria-controls="uploadPanel">Buka ▾</button></div><div class="upload-grid"><div class="field"><label for="wmsUpload">Laporan WMS vs NAV (.xlsx)</label><input type="file" id="wmsUpload" accept=".xlsx"></div><div class="field"><label for="locationUpload">Stok per lokasi dan lot (.xlsx)</label><input type="file" id="locationUpload" accept=".xlsx"></div></div><div class="actions"><button id="applyUpload" disabled>Generate</button><button id="resetDemo" class="secondary">Gunakan data awal</button></div><div class="controls" style="margin-top:12px"><div class="field" hidden><button id="saveSharedData" type="button" hidden>Simpan data</button><button id="reloadSharedData" class="secondary" type="button">Ambil data terbaru</button><span id="sharedDataStatus" class="small">Data terbaru belum diperiksa.</span></div><div id="uploadMessage" class="small" style="margin-top:10px">Memakai data awal.</div><div id="lastUploadTime" class="small" style="margin-top:5px;color:var(--muted)">Waktu pembaruan tampil setelah data dimuat.</div><div id="uploadWarning" class="upload-warning" hidden></div></section>
-<nav class="page-tabs"><button id="tabMain" class="active" type="button">Tampilan utama</button><button id="tabDetails" type="button">Detail item OVER &amp; MINUS</button><button id="tabGrey" type="button">Progress lokasi Grey</button><button id="tabCC" type="button">Tools SO/CC</button></nav><section class="panel" id="greyProgPanel" hidden></section>
+<nav class="page-tabs"><button id="tabMain" class="active" type="button">Tampilan utama</button><button id="tabDetails" type="button">Detail item OVER &amp; MINUS</button><button id="tabGrey" type="button">Progress lokasi Grey</button><button id="tabCC" type="button">Tools SO/CC</button><button id="tabSO" type="button">Cek Silang SO</button></nav><section class="panel" id="greyProgPanel" hidden></section>
 <section class="panel" id="ccPanel" hidden>
 <div class="sectionhead"><div><h2>Tools SO/CC</h2><div class="small" id="ccSub">Bandingkan stok sistem (NAV + OTS NP) dengan stok fisik SWBL (WMS by lokasi) untuk item Cycle Count.</div></div><div class="controls"><button id="ccToggle" class="secondary" type="button">Buka upload ▾</button></div></div>
 <div class="ccup" id="ccUp" hidden>
@@ -218,6 +218,21 @@ html body:not(.capture-mode) #greySummaryGrid tfoot td:first-child{letter-spacin
 <div class="small" id="ccCount" style="margin:6px 0"></div>
 <div class="ccwrap" style="max-height:70vh;overflow:auto"><table class="cct" id="ccDet"></table></div></div>
 </div></section>
+<section class="panel" id="soPanel" hidden>
+<div class="sectionhead"><div><h2>Cek Silang SO</h2><div class="small" id="soSub">Item selisih saat SO yang kena CC sekarang, beserta item mirip dari SQV yang belum masuk CC untuk dicek fisik.</div></div><div class="controls"><button id="soToggle" class="secondary" type="button">Buka upload ▾</button></div></div>
+<div class="ccup" id="soUp" hidden>
+<div class="upload-grid"><div class="field"><label for="soFSo">1. Laporan Stock Opname (.xlsx, sheet Compare NAV)</label><input type="file" id="soFSo" accept=".xlsx,.xls"></div><div class="field"><label for="soFSqv">2. Stock Qty and Value / SQV (.xlsx)</label><input type="file" id="soFSqv" accept=".xlsx,.xls"><div class="small" id="soSqvNote"></div></div></div>
+<div class="actions" style="margin-top:10px"><button id="soGo" disabled>Generate</button><button id="soClear" class="secondary" type="button">Hapus data</button></div>
+</div>
+<div id="soMsg" class="small" style="margin:8px 0">Belum ada data. Pastikan item CC sudah dibuat di tab Tools SO/CC, lalu upload laporan SO.</div>
+<div id="soBody" hidden>
+<div class="cc-chips" id="soChips"></div><div class="cc-kpi so-kpi" id="soKpi"></div>
+<div class="controls cc-f"><div class="field"><label>Item fokus saat SO</label><select id="soMode"><option value="plus">Variance plus</option><option value="minus">Variance minus</option><option value="all">Semua selisih</option></select></div><div class="field"><label>Category</label><details class="category-picker ccmp" id="soFc" data-all="Semua category"><summary>Semua category</summary><div class="ccmpbody"></div></details></div><div class="field"><label>Cari item</label><input type="search" id="soFq" placeholder="Kode / nama"></div><button id="soFr" class="secondary" type="button">Reset</button><button id="soXls" class="secondary" type="button">⬇ Export Excel</button></div>
+<div class="small" id="soCount" style="margin:6px 0"></div>
+<div class="ccwrap" style="max-height:74vh;overflow:auto"><table class="cct" id="soTab"></table></div>
+<details class="cc-ket"><summary>Keterangan</summary><div class="small" id="soNote"></div></details>
+</div></section>
+
 
 <section class="panel" id="accuracyPanel"><div class="sectionhead"><div><h2>Akurasi WMS vs NAV per Category</h2><div class="small">Akurasi = HIT ÷ total item.</div></div><div class="controls"><div class="field" style="max-width:210px;min-width:170px"><label for="consignFilter">Item Consign</label><select id="consignFilter"><option value="NO" selected>NO</option><option value="YES">YES</option></select></div><div class="field" style="max-width:300px;min-width:230px"><label>Category</label><details class="category-picker"><summary id="accuracyCategorySummary">Semua category</summary><label class="category-option"><input type="checkbox" id="accuracyCategoryAll" checked><span>Semua category</span></label><div id="accuracyCategoryOptions"></div></details></div></div></div><div class="cards" id="accuracyCards"></div><div class="monitor-tables"><section><h2>Ringkasan per Category</h2><div class="grid" id="accuracyGrid"></div></section><section><h2>Ringkasan per Zona</h2><div class="grid" id="zoneAccuracyGrid"></div></section></div><div class="score-head"><h2 class="score-heading">BY CATEGORY</h2><details class="category-picker score-filter"><summary id="displayCategorySummary">Semua category</summary><label class="category-option"><input type="checkbox" id="displayCategoryAll" checked><span>Semua category</span></label><div id="displayCategoryOptions"></div></details></div><div class="score-cards" id="categoryScoreCards"></div><div class="score-head"><h2 class="score-heading">BY ZONASI</h2><details class="category-picker score-filter"><summary id="displayZoneSummary">Semua zona</summary><label class="category-option"><input type="checkbox" id="displayZoneAll" checked><span>Semua zona</span></label><div id="displayZoneOptions"></div></details></div><div class="score-cards zone-scores" id="zoneScoreCards"></div><section class="panel" id="greySummaryPanel"><div class="sectionhead"><h2>Qty lokasi Grey per Category</h2><span class="small">Jumlah Available Qty per lokasi</span></div><div class="grid" id="greySummaryGrid"></div></section></section>
 <section class="panel" id="adjustmentPanel"><h2>Ringkasan adjustment OVER</h2><div class="small">Pilih zone untuk melihat pemenuhan per lokasi dan lot.</div><div class="small" style="margin-top:4px">Item NAV minus, WMS positif, dan tanpa OTS NP tidak ikut adjustment OVER.</div><div class="cards" id="cards"></div>
@@ -600,7 +615,66 @@ document.getElementById('toggleOverDetails').addEventListener('click',()=>{const
 #ccPanel .dl{display:flex;justify-content:space-between;gap:8px;font-size:12px;flex-wrap:wrap}#ccPanel .dl .up{color:#1d6b43}#ccPanel .dl .dn{color:#a94c4c}
 #ccPanel .ds{font-size:12px;color:#6d7b88}
 @media(max-width:900px){#ccPanel .cc-kpi{grid-template-columns:1fr 1fr}#ccPanel .kc.hero{grid-column:1/-1}}
-</style><script>(function(){
+#soPanel .ccwrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px}
+#soPanel table.cct{margin:0;font-size:12px}
+#soPanel table.cct th{white-space:nowrap}
+#soPanel table.cct td.n,#soPanel table.cct th.n{text-align:right;font-variant-numeric:tabular-nums}
+#soPanel table.cct td.c{text-align:center}
+#soPanel table.cct tr.tot td{font-weight:700;background:#eaf0f5;border-top:2px solid var(--navy)}
+#soPanel table.cct tr.cl{cursor:pointer}#soPanel table.cct tr.cl:hover{background:#f1f5f8}
+#soPanel .pos{color:#1d6b43;font-weight:700}#soPanel .neg{color:#a94c4c;font-weight:700}#soPanel .zero{color:#9aa6b2}
+#soPanel th.g1{background:#dfeaf5}#soPanel th.g2{background:#e8e4f4}#soPanel th.g3{background:#f8ecd4}
+#soPanel .ccsub{display:inline-flex;gap:4px;background:#e8eefb;padding:5px;border-radius:14px;margin:4px 0 12px}
+#soPanel .ccsub button{border:0;background:transparent;color:#51648c;border-radius:10px;padding:8px 14px;font-weight:600}
+#soPanel .ccsub button.active{background:#fff;color:#1e47b8;box-shadow:0 6px 14px -8px rgba(24,48,110,.5)}
+#soPanel .cch{font-size:14px;color:var(--navy);margin:18px 0 8px}
+#soPanel .cc-actions{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:10px}#soPanel .ccrh{max-width:220px;min-width:180px;flex:none}
+#soPanel .cc-f{align-items:flex-end;gap:10px;flex-wrap:wrap}#soPanel .cc-f .field{min-width:150px;max-width:230px}
+#soPanel .st{padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;display:inline-block}
+#soPanel .st.OVER{background:#e1f1e8;color:#1d6b43}#soPanel .st.MINUS{background:#f6e3e3;color:#a94c4c}#soPanel .st.SAMA{background:#eef1f4;color:#6d7b88}#soPanel .st.NOSYS{background:#fbf0d9;color:#8a5f10}
+#soPanel .ccmp{background:#fff;border-radius:5px}#soPanel .ccmp[open]{border:1px solid #c8d1da}#soPanel .ccmp summary{border:1px solid #c8d1da;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px}#soPanel .ccmp[open] summary{border:0;border-bottom:1px solid var(--line)}#soPanel .ccmp .ccmpbody{display:none}#soPanel .ccmp[open] .ccmpbody{display:block;position:absolute;left:-1px;right:-1px;top:100%;background:#fff;border:1px solid #c8d1da;border-top:0;border-radius:0 0 6px 6px;z-index:30;max-height:260px;overflow:auto;box-shadow:0 10px 20px -10px rgba(24,48,110,.35)}#soPanel .loc{max-width:340px;white-space:normal;font-size:11px;color:var(--muted)}
+
+
+
+#soPanel .cc-chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:2px 0 14px}
+#soPanel .ccchip{background:#eaf1f8;color:#183153;border-radius:999px;padding:5px 12px;font-size:12px}#soPanel .ccchip b{font-weight:700;margin-right:4px}#soPanel .ccchip.off{background:#f2f4f6;color:#6d7b88}
+#soPanel .cc-ket{margin-top:16px;border-top:1px solid #e3e9ef;padding-top:10px}#soPanel .cc-ket summary{cursor:pointer;font-size:12.5px;color:#6d7b88;font-weight:600;list-style:none}#soPanel .cc-ket summary:before{content:'▸ '}#soPanel .cc-ket[open] summary:before{content:'▾ '}#soPanel .cc-ket .small{margin-top:8px}#soPanel .cc-ket p{margin:0 0 6px;line-height:1.55}
+#soPanel .cc-kpi{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:14px;margin:0 0 20px}
+#soPanel .kc{background:#fff;border:1px solid #dce3e9;border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:6px;min-width:0}
+#soPanel .kc.hero{background:linear-gradient(160deg,#183153,#244a73);color:#fff;border:0}
+#soPanel .kl{font-size:12.5px;color:#6d7b88;font-weight:600}#soPanel .hero .kl{color:#b9cde2}
+#soPanel .kv{font-size:28px;font-weight:700;color:#183153;line-height:1.15;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+#soPanel .hero .kv{color:#fff;font-size:32px;white-space:nowrap}
+#soPanel .kv.up{color:#1d6b43}#soPanel .kv.dn{color:#a94c4c}#soPanel .hero .kv.up{color:#8fe3b5}#soPanel .hero .kv.dn{color:#ffb4b4}
+#soPanel .ks{font-size:12px;color:#6d7b88}
+#soPanel .split{display:flex;gap:3px;height:10px;margin-top:8px}#soPanel .split i{display:block;border-radius:3px;min-width:3px}#soPanel .split .o{background:#5fcf93}#soPanel .split .m{background:#f08a8a}
+#soPanel .sl{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12px}#soPanel .hero .sl .up{color:#8fe3b5}#soPanel .hero .sl .dn{color:#ffb4b4}#soPanel .sl b{font-weight:700}
+#soPanel .pb{display:block;height:6px;background:#e6edf3;border-radius:4px;overflow:hidden}#soPanel .pb i{display:block;height:100%;background:#356b97;border-radius:4px}
+#soPanel .ccwrap{border:1px solid #dce3e9;border-radius:12px;overflow:auto;background:#fff}
+#soPanel table.cct th{background:#f4f7fa;color:#51648c;font-size:12px;font-weight:700;padding:11px 12px;border-bottom:1px solid #dce3e9}
+#soPanel table.cct td{padding:11px 12px;border-bottom:1px solid #edf1f5;font-size:13px}
+#soPanel table.cct tbody tr:last-child td{border-bottom:0}
+#soPanel table.cct td.cat{font-weight:700;color:#183153;white-space:nowrap}
+#soPanel table.cct tr.cl:hover td{background:#f3f8fd}
+#soPanel table.cct tr.tot td{background:#183153;color:#fff;font-weight:700;border-top:0}
+#soPanel tr.tot .pos{color:#8fe3b5}#soPanel tr.tot .neg{color:#ffb4b4}#soPanel tr.tot .zero{color:#8aa0b8}
+#soPanel .dchip{display:inline-block;background:#eaf1f8;color:#356b97;border-radius:6px;padding:2px 8px;font-size:11.5px;font-weight:700;margin-right:4px}
+#soPanel td.sel{white-space:nowrap}#soPanel td.sel b{display:inline-block;min-width:22px}#soPanel td.sel .pb.sm{display:inline-block;width:46px;height:5px;vertical-align:middle;margin:0 6px}#soPanel td.sel small{color:#6d7b88;font-size:11px}
+#soPanel tr.tot .pb.sm{background:#3a5a80}#soPanel tr.tot .pb.sm i{background:#8fb8de}#soPanel tr.tot small{color:#b9cde2}
+#soPanel td.net{font-weight:700}
+#soPanel .dv{position:relative;display:block;width:150px;height:12px;margin:auto;background:#f0f3f6;border-radius:6px;overflow:hidden}
+#soPanel .dv:before{content:"";position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:#9aa8b6;z-index:2}
+#soPanel .dv i{position:absolute;top:0;bottom:0}#soPanel .dv .o{left:50%;background:#3e9a68}#soPanel .dv .m{right:50%;background:#c86464}
+#soPanel tr.tot .dv{background:#2e4d73}
+#soPanel .cc-days{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+#soPanel .dc{background:#fff;border:1px solid #dce3e9;border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:8px}
+#soPanel .dh{display:flex;justify-content:space-between;align-items:baseline;color:#183153}#soPanel .dh b{font-size:15px}#soPanel .dh span{font-size:12px;color:#6d7b88}
+#soPanel .dnet{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}#soPanel .dnet.up{color:#1d6b43}#soPanel .dnet.dn{color:#a94c4c}
+#soPanel .dc .dv{width:100%;margin:2px 0}
+#soPanel .dl{display:flex;justify-content:space-between;gap:8px;font-size:12px;flex-wrap:wrap}#soPanel .dl .up{color:#1d6b43}#soPanel .dl .dn{color:#a94c4c}
+#soPanel .ds{font-size:12px;color:#6d7b88}
+@media(max-width:900px){#soPanel .cc-kpi{grid-template-columns:1fr 1fr}#soPanel .kc.hero{grid-column:1/-1}}
+#soPanel .so-kpi{grid-template-columns:1.8fr 1fr 1fr 1.2fr}#soPanel tr.sf td{background:#e6eef7;border-top:2px solid #c9d8e8}#soPanel tr.sf td b{color:#183153}#soPanel tr.sc.op td{background:#fff7d6}#soPanel td.ind{padding-left:24px}#soPanel .dchip.hot{background:#ffe9a8;color:#7a4b00}#soPanel td.soc{white-space:normal;min-width:200px;font-size:12px;line-height:1.7}#soPanel #soTab td{padding:8px 10px}#soPanel .st.OVER{background:#e1f1e8;color:#1d6b43}#soPanel #soTab td,#soPanel #soTab th{vertical-align:middle}@media(max-width:900px){#soPanel .so-kpi{grid-template-columns:1fr 1fr}}</style><script>(function(){
 var $=function(i){return document.getElementById(i)},KEY='qbig_cc_v1',CC=null,SORT={k:'ad',d:-1},XL_URL='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
 var nf=new Intl.NumberFormat('id-ID',{maximumFractionDigits:2}),nf0=new Intl.NumberFormat('id-ID',{maximumFractionDigits:0});
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
@@ -636,8 +710,9 @@ async function generate(){
     if(!nv)throw new Error('File 2: kolom "Item No" dan "Quantity" tidak ditemukan (pakai laporan Stock Qty and Value).');
     var vi=-1;Object.keys(nv.h.m).forEach(function(c){if(c.indexOf('value')===0&&vi<0)vi=nv.h.m[c]});
     var want={};items.forEach(function(x){want[x.k]=x});
-    nv.a.slice(nv.h.r+1).forEach(function(r){var k=key(r[nv.h.m['Item No'.toLowerCase()]]);var x=want[k];if(!x)return;x.has=true;x.nq+=num(r[nv.h.m['quantity']]);x.nv+=vi>=0?num(r[vi]):0});
-    var m=String(nv.a[2]&&nv.a[2][0]||'').match(/Stock Date:\s*([^,]+)/i);meta.navDate=m?m[1].trim():'';
+    var M=nv.h.m,sq=[],gs=function(r,n){return M[n]>=0&&M[n]!==undefined?String(r[M[n]]==null?'':r[M[n]]).trim().toUpperCase():''};
+    nv.a.slice(nv.h.r+1).forEach(function(r){var k=key(r[nv.h.m['Item No'.toLowerCase()]]);if(k)sq.push({k:k,name:String(r[M['item name']]||'').trim(),cat:gs(r,'category name'),sub:gs(r,'sub category name'),fn:gs(r,'function name'),sfn:gs(r,'sub function name'),mb:gs(r,'master brand name'),br:gs(r,'brand name'),uom:String(r[M['uom']]||'').trim(),type:gs(r,'type'),q:num(r[M['quantity']]),v:vi>=0?num(r[vi]):0});var x=want[k];if(!x)return;x.has=true;x.nq+=num(r[nv.h.m['quantity']]);x.nv+=vi>=0?num(r[vi]):0});
+    window.__qbigSqv=sq;var m=String(nv.a[2]&&nv.a[2][0]||'').match(/Stock Date:\s*([^,]+)/i);meta.navDate=m?m[1].trim():'';
     say('Membaca stok WMS by lokasi...');
     var wl=await readBook(fl),lc=aoa(wl,null,['Item No','Stock On Hand Qty']);
     if(!lc)throw new Error('File 3: kolom "Item No" dan "Stock On Hand Qty" tidak ditemukan (pakai Stock Warehouse By Location).');
@@ -852,5 +927,154 @@ $('ccXls1').addEventListener('click',function(){xls('all')});$('ccXls2').addEven
 $('ccRecap').addEventListener('click',function(e){var tr=e.target.closest('tr[data-c]');if(!tr)return;['ccFz','ccFs'].forEach(mpClear);mpSet('ccFh',mpVals('ccRh'));mpSet('ccFc',[tr.dataset.c]);$('ccFq').value='';tab(2);detail()});
 $('ccDet').addEventListener('click',function(e){var t=e.target.closest('th[data-s]');if(!t)return;var k=t.dataset.s;SORT=SORT.k===k?{k:k,d:-SORT.d}:{k:k,d:(k==='cat'||k==='code'||k==='day'||k==='cl'||k==='st')?1:-1};detail()});
 if(load()){try{$('ccUp').hidden=true}catch(e){}}
+window.__ccGet=function(){return CC?CC.items.map(calc):null};window.__ccMeta=function(){return CC&&CC.meta||{}};
+window.__qbigX={xInit:xInit,sty:sty,xbuild:xbuild,xsave:xsave,xcol:xcol};window.__qbigMP={build:mpBuild,vals:mpVals,clear:mpClear,sync:mpSync,set:mpSet};
+})();
+</script><script>(function(){
+var $=function(i){return document.getElementById(i)},KEY='qbig_so_v1',XL_URL='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js',R=null;
+var nf=new Intl.NumberFormat('id-ID',{maximumFractionDigits:2}),nf0=new Intl.NumberFormat('id-ID',{maximumFractionDigits:0});
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function key(v){var s=String(v==null?'':v).trim();return s?s.replace(/\.0+$/,'').padStart(10,'0'):''}
+function num(v){var n=typeof v==='number'?v:parseFloat(String(v).replace(/,/g,''));return isFinite(n)?n:0}
+function say(t,bad){var e=$('soMsg');e.textContent=t;e.style.color=bad?'#a94c4c':''}
+function ensureXL(){return new Promise(function(ok,no){if(window.XLSX)return ok();var s=document.createElement('script');s.src=XL_URL;s.onload=function(){ok()};s.onerror=function(){no(new Error('Library Excel gagal dimuat (cek internet).'))};document.head.appendChild(s)})}
+function readBook(f){return ensureXL().then(function(){return f.arrayBuffer()}).then(function(b){return XLSX.read(b,{type:'array'})})}
+function norm(c){return String(c==null?'':c).trim().toLowerCase()}
+function findSheet(wb,need,pref){var names=wb.SheetNames.slice();if(pref&&names.indexOf(pref)>0){names.splice(names.indexOf(pref),1);names.unshift(pref)}
+  for(var i=0;i<names.length;i++){var a=XLSX.utils.sheet_to_json(wb.Sheets[names[i]],{header:1,defval:'',raw:true});
+    for(var r=0;r<Math.min(a.length,30);r++){var row=a[r].map(norm);if(need.every(function(n){return row.indexOf(n)>=0}))return {a:a,r:r,h:row}}}return null}
+/* ---------- kemiripan ---------- */
+var STOP={CM:1,MM:1,PCS:1,SET:1,THE:1,AND:1,WITH:1,DI:1,STP:1,PAIR:1,UNIT:1};
+function toks(name){var s=String(name||'').toUpperCase().replace(/^[A-Z]{1,4}\//,'').replace(/(\d)\s*X\s*(\d)/g,'$1 $2').replace(/(\d)[.,](\d)/g,'$1$2');
+  var t=s.split(/[^A-Z0-9]+/).filter(function(x){return x&&!STOP[x]&&(x.length>=2||/\d/.test(x))});var o={},a=[];t.forEach(function(x){if(!o[x]){o[x]=1;a.push(x)}});return a}
+function jac(a,b){if(!a.length||!b.length)return 0;var s={};a.forEach(function(x){s[x]=1});var i=0;b.forEach(function(x){if(s[x])i++});return i/(a.length+b.length-i)}
+function lcp(a,b){var n=Math.min(a.length,b.length),i=0;while(i<n&&a.charAt(i)===b.charAt(i))i++;return i}
+function modelSim(a,b){var best=0;a.forEach(function(x){if(x.length<5||!/\d/.test(x)||!/[A-Z]/.test(x))return;b.forEach(function(y){if(y.length<5||!/\d/.test(y)||!/[A-Z]/.test(y))return;var l=lcp(x,y);if(l>=4){var r=l/Math.max(x.length,y.length);if(r>best)best=r}})});return best}
+function score(F,C){var sc=0,why=[];
+  if(C.br&&F.br&&C.br===F.br){sc+=4;why.push('Brand')}else if(C.mb&&F.mb&&C.mb===F.mb){sc+=1;why.push('Master brand')}
+  if(C.sfn&&C.sfn===F.sfn){sc+=3;why.push('Sub fungsi')}else if(C.fn&&C.fn===F.fn){sc+=2;why.push('Fungsi')}
+  if(C.sub&&C.sub===F.sub){sc+=2}
+  var j=jac(F.t,C.t);if(j>0){sc+=j*8;if(j>=0.34)why.push('Nama '+Math.round(j*100)+'%')}
+  var m=modelSim(F.t,C.t);if(m>0){sc+=m*5;if(m>=0.6)why.push('Model/tipe')}
+  if(F.cost>0&&C.cost>0){var d=Math.abs(Math.log(F.cost/C.cost));if(d<0.10){sc+=3;why.push('Harga mirip')}else if(d<0.30){sc+=1.5;why.push('Harga sepadan')}}
+  if(F.fq!==0&&C.fq!==0&&((F.fq>0)!==(C.fq>0))){sc+=5;why.push('Berlawanan');var a=Math.abs(F.fq),b=Math.abs(C.fq);if(Math.min(a,b)/Math.max(a,b)>=0.5){sc+=2;why.push('Qty seimbang')}}
+  return {s:Math.round(sc*10)/10,why:why}}
+
+async function generate(){
+  var fs=$('soFSo').files[0],fq=$('soFSqv').files[0];
+  if(!fs){say('Pilih laporan Stock Opname terlebih dahulu.',1);return}
+  var cc=window.__ccGet&&window.__ccGet();if(!cc||!cc.length){say('Item CC belum ada. Buat dulu datanya di tab Tools SO/CC.',1);return}
+  $('soGo').disabled=true;
+  try{
+    say('Membaca laporan SO...');var wb=await readBook(fs),sh=findSheet(wb,['final variance qty','description'],'Compare NAV');
+    if(!sh)throw new Error('Kolom "Final Variance Qty" dan "Description" tidak ditemukan. Pakai sheet Compare NAV dari laporan Stock Opname.');
+    var H=sh.h,ix=function(n){return H.indexOf(n)},codeCol=-1;for(var j=H.length-1;j>=0;j--){if(H[j]==='no'){codeCol=j;break}}if(codeCol<0)codeCol=H.indexOf('item no');
+    if(codeCol<0)throw new Error('Kolom kode item (No) tidak ditemukan di laporan SO.');
+    var so={},cols={bar:ix('barcode no'),desc:ix('description'),cat:ix('category name'),sub:ix('sub category name'),fn:ix('functionname'),sfn:ix('subfunction name'),mb:ix('masterbrandname'),br:ix('brand name'),uom:ix('base uom'),cost:ix('costunit'),fq:ix('final variance qty'),fv:ix('final variance value'),why:ix('reason')};
+    sh.a.slice(sh.r+1).forEach(function(r){var k=key(r[codeCol]);if(!k||r[codeCol]==='')return;var g=function(c){return c>=0?r[c]:''};so[k]={bar:String(g(cols.bar)||'').trim(),desc:String(g(cols.desc)||'').trim(),cat:String(g(cols.cat)||'').trim().toUpperCase(),sub:String(g(cols.sub)||'').trim().toUpperCase(),fn:String(g(cols.fn)||'').trim().toUpperCase(),sfn:String(g(cols.sfn)||'').trim().toUpperCase(),mb:String(g(cols.mb)||'').trim().toUpperCase(),br:String(g(cols.br)||'').trim().toUpperCase(),uom:String(g(cols.uom)||'').trim(),cost:num(g(cols.cost)),fq:num(g(cols.fq)),fv:num(g(cols.fv)),why:String(g(cols.why)||'').trim()}});
+    var nSo=Object.keys(so).length;if(!nSo)throw new Error('Laporan SO kosong.');
+    /* SQV */
+    var sqv=null,srcNote='';
+    if(fq){say('Membaca SQV...');var w2=await readBook(fq),s2=findSheet(w2,['item no','quantity'],null);if(!s2)throw new Error('SQV: kolom "Item No" dan "Quantity" tidak ditemukan.');
+      var h2=s2.h,vi=-1;h2.forEach(function(c,i){if(c.indexOf('value')===0&&vi<0)vi=i});var g2=function(n){return h2.indexOf(n)};
+      sqv=[];s2.a.slice(s2.r+1).forEach(function(r){var k=key(r[g2('item no')]);if(!k)return;sqv.push({k:k,name:String(r[g2('item name')]||'').trim(),cat:String(r[g2('category name')]||'').trim().toUpperCase(),sub:String(r[g2('sub category name')]||'').trim().toUpperCase(),fn:String(r[g2('function name')]||'').trim().toUpperCase(),sfn:String(r[g2('sub function name')]||'').trim().toUpperCase(),mb:String(r[g2('master brand name')]||'').trim().toUpperCase(),br:String(r[g2('brand name')]||'').trim().toUpperCase(),uom:String(r[g2('uom')]||'').trim(),type:String(r[g2('type')]||'').trim().toUpperCase(),q:num(r[g2('quantity')]),v:vi>=0?num(r[vi]):0})});srcNote='SQV dari file '+fq.name}
+    else if(window.__qbigSqv&&window.__qbigSqv.length){sqv=window.__qbigSqv;srcNote='SQV dari tab Tools SO/CC'}
+    else throw new Error('SQV belum ada. Upload file Stock Qty and Value, atau generate dulu di tab Tools SO/CC.');
+    say('Mencari item mirip...');await new Promise(function(r){setTimeout(r,30)});
+    var ccKeys={};cc.forEach(function(x){ccKeys[x.k]=1});var sqm={};sqv.forEach(function(x){sqm[x.k]=x});
+    /* pool kandidat: bukan item CC, ada stok atau ada selisih SO */
+    var pool={};sqv.forEach(function(x){if(ccKeys[x.k])return;var s=so[x.k];if(!x.q&&!(s&&s.fq))return;
+      var o={k:x.k,name:x.name||(s&&s.desc)||'',cat:x.cat||(s&&s.cat)||'',sub:x.sub,fn:x.fn,sfn:x.sfn,mb:x.mb,br:x.br,uom:x.uom,type:x.type,q:x.q,v:x.v,cost:x.q?Math.abs(x.v/x.q):(s?s.cost:0),fq:s?s.fq:0,fv:s?s.fv:0,bar:s?s.bar:''};o.t=toks(o.name);(pool[o.cat]=pool[o.cat]||[]).push(o)});
+    var focus=[];
+    cc.forEach(function(x){var s=so[x.k];if(!s||!s.fq)return;var q=sqm[x.k]||{};
+      var F={k:x.k,name:x.name||s.desc,cat:x.cat||s.cat,sub:(q.sub||s.sub),fn:(q.fn||s.fn),sfn:(q.sfn||s.sfn),mb:(q.mb||s.mb),br:(q.br||s.br),uom:x.uom||s.uom,cost:x.pr||s.cost,fq:s.fq,fv:s.fv,bar:s.bar,why:s.why,day:x.day,ccd:x.d,ccv:x.val,sq:x.sq,wq:x.wq};F.t=toks(F.name);
+      var cands=[];(pool[F.cat]||[]).forEach(function(C){if(C.k===F.k)return;var r=score(F,C);if(r.s>=5)cands.push({k:C.k,name:C.name,br:C.br,sub:C.sub,uom:C.uom,type:C.type,q:C.q,cost:Math.round(C.cost),fq:C.fq,fv:C.fv,bar:C.bar,sc:r.s,why:r.why})});
+      cands.sort(function(a,b){return b.sc-a.sc});F.cands=cands.slice(0,6);delete F.t;focus.push(F)});
+    focus.sort(function(a,b){return Math.abs(b.fv)-Math.abs(a.fv)});
+    R={focus:focus,meta:{so:fs.name,sqv:srcNote,nSo:nSo,nSqv:sqv.length,nCc:cc.length,at:new Date().toISOString(),ccMeta:(window.__ccMeta&&window.__ccMeta())||{}}};
+    try{localStorage.setItem(KEY,JSON.stringify(R))}catch(e){}
+    render();$('soUp').hidden=true;$('soToggle').textContent='Buka upload ▾';
+  }catch(e){say(e.message||String(e),1)}
+  $('soGo').disabled=false;
+}
+function modeF(){var m=$('soMode').value;return R.focus.filter(function(f){return m==='plus'?f.fq>0:m==='minus'?f.fq<0:true})}
+function viewF(){var c=MP.vals('soFc'),q=$('soFq').value.trim().toLowerCase();
+  return modeF().filter(function(f){return (!c.length||c.indexOf(f.cat)>=0)&&(!q||(f.k+' '+f.name).toLowerCase().indexOf(q)>=0)})}
+function sg(v){return v>0?'<span class="pos">+'+nf.format(v)+'</span>':v<0?'<span class="neg">'+nf.format(v)+'</span>':'<span class="zero">-</span>'}
+function sgv(v){v=Math.round(v);return v>0?'<span class="pos">+'+nf0.format(v)+'</span>':v<0?'<span class="neg">-'+nf0.format(-v)+'</span>':'<span class="zero">-</span>'}
+function render(){
+  if(!R)return;$('soBody').hidden=false;say('');var me=R.meta||{};
+  $('soChips').innerHTML='<span class="ccchip"><b>Laporan SO</b> '+esc(me.so||'-')+'</span><span class="ccchip"><b>SQV</b> '+esc(me.sqv||'-')+'</span><span class="ccchip"><b>Item CC</b> '+nf0.format(me.nCc||0)+'</span>';
+  var cats=R.focus.map(function(f){return f.cat}).filter(function(v,i,a){return a.indexOf(v)===i}).sort();MP.build('soFc',cats.map(function(c){return [c,c]}));
+  view()}
+function view(){
+  var L=viewF(),withC=L.filter(function(f){return f.cands.length}).length,uniq={},opp=0;
+  L.forEach(function(f){f.cands.forEach(function(c){uniq[c.k]=1;if(c.fq&&((c.fq>0)!==(f.fq>0)))opp++})});
+  $('soKpi').innerHTML='<div class="kc hero"><div class="kl">Item fokus (selisih saat SO, kena CC sekarang)</div><div class="kv">'+nf0.format(L.length)+'</div><div class="ks" style="color:#b9cde2">'+nf0.format(L.reduce(function(t,f){return t+f.fq},0))+' qty variance SO · '+nf0.format(withC)+' item punya kandidat lawan</div></div>'+
+    '<div class="kc"><div class="kl">Kandidat unik</div><div class="kv">'+nf0.format(Object.keys(uniq).length)+'</div><div class="ks">item SQV belum masuk CC</div></div>'+
+    '<div class="kc"><div class="kl">Variance SO berlawanan</div><div class="kv">'+nf0.format(opp)+'</div><div class="ks">kandidat dengan selisih arah sebaliknya</div></div>'+
+    '<div class="kc"><div class="kl">Nilai variance SO</div><div class="kv '+(L.reduce(function(t,f){return t+f.fv},0)>=0?'up':'dn')+'">'+(function(v){v=Math.round(v);return (v<0?'-':'')+'Rp '+nf0.format(Math.abs(v))})(L.reduce(function(t,f){return t+f.fv},0))+'</div><div class="ks">item fokus</div></div>';
+  $('soCount').textContent=L.length+' item fokus · '+L.reduce(function(t,f){return t+f.cands.length},0)+' kandidat';
+  var h='<thead><tr><th>Peran</th><th>Item Code</th><th>Item Name</th><th>Brand</th><th class="n">Qty sistem</th><th class="n">Variance SO</th><th class="n">Nilai SO</th><th class="n">Variance CC</th><th class="n">Skor</th><th>Keterangan</th></tr></thead><tbody>';
+  L.forEach(function(f){
+    h+='<tr class="sf"><td><span class="st OVER" style="'+(f.fq<0?'background:#f6e3e3;color:#a94c4c':'')+'">Item SO '+(f.fq>0?'plus':'minus')+'</span></td><td><b>'+esc(f.k)+'</b></td><td style="white-space:normal;min-width:230px"><b>'+esc(f.name)+'</b><div class="small" style="margin-top:2px">'+esc(f.cat)+'</div></td><td style="max-width:130px;white-space:normal">'+esc(f.br)+'</td><td class="n">'+nf.format(f.sq)+'</td><td class="n">'+sg(f.fq)+'</td><td class="n">'+sgv(f.fv)+'</td><td class="n">'+sg(f.ccd)+'</td><td></td><td class="soc">'+(f.day?'CC hari ke-'+esc(f.day):'')+(f.why?' · SO: '+esc(f.why):'')+'</td></tr>';
+    if(!f.cands.length)h+='<tr><td></td><td colspan="9" class="zero" style="padding-left:24px">Tidak ada item mirip yang belum masuk CC.</td></tr>';
+    f.cands.forEach(function(c){var op=c.fq&&((c.fq>0)!==(f.fq>0));
+      h+='<tr class="sc'+(op?' op':'')+'"><td class="ind"><span class="st SAMA">Lawan</span></td><td>'+esc(c.k)+'</td><td style="white-space:normal;min-width:230px">'+esc(c.name)+'</td><td style="max-width:130px;white-space:normal">'+esc(c.br)+'</td><td class="n">'+nf.format(c.q)+'</td><td class="n">'+sg(c.fq)+'</td><td class="n">'+sgv(c.fv)+'</td><td></td><td class="n"><b>'+c.sc+'</b></td><td class="soc">'+c.why.map(function(w){return '<span class="dchip'+(w==='Berlawanan'?' hot':'')+'">'+esc(w)+'</span>'}).join('')+'</td></tr>'});
+  });
+  $('soTab').innerHTML=h+'</tbody>';
+  $('soNote').innerHTML='<p>Item fokus = item yang selisih saat SO (Final Variance ≠ 0) dan masuk daftar CC sekarang. Kandidat = item di SQV yang belum masuk CC, satu category, dengan skor kemiripan ≥ 5.</p><p>Skor: brand sama (+4), sub fungsi sama (+3) atau fungsi sama (+2), kemiripan nama (sampai +8), model/tipe mirip (sampai +5), harga modal mirip (+3 atau +1,5), variance SO berlawanan arah (+5) dan qty seimbang (+2). Baris berlatar kuning adalah kandidat yang variance SO-nya berlawanan, paling mungkin tertukar.</p><p>Item yang tidak punya stok di SQV dan tidak punya selisih SO tidak dijadikan kandidat.</p>'}
+/* ---------- Excel ---------- */
+function xls(){var X=window.__qbigX;if(!X){say('Tools Excel belum siap. Buka tab Tools SO/CC dulu.',1);return}
+  try{var L=viewF(),me=R.meta||{};X.xInit();var sty=X.sty,T=function(v,o){return {v:v,s:sty(o)}},E=function(o){return T('',o)};
+    var W=[13,12,46,22,15,10,12,16,8,50,12],nc=W.length,last=X.xcol(nc),rows=[],m=[],row=function(){var a=[];for(var i=0;i<nc;i++)a.push('');return a};
+    var NAVY='FF183153',BLUE='FF356B97';
+    var r1=row();r1[0]=T('CEK SILANG SO · ITEM SELISIH vs ITEM MIRIP',{b:1,sz:16,c:'FFFFFFFF',fill:NAVY,h:'left',ind:1});for(var i=1;i<nc;i++)r1[i]=E({fill:NAVY});rows.push(r1);m.push('A1:'+last+'1');
+    var cm=me.ccMeta||{},r2=row();r2[0]=T([cm.STORE,cm.PERIODE,cm.TANGGAL].filter(Boolean).join('  ·  ')+'   |   Fokus: '+($('soMode').selectedOptions[0].text),{b:1,sz:10,c:'FFFFFFFF',fill:BLUE,h:'left',ind:1});for(i=1;i<nc;i++)r2[i]=E({fill:BLUE});rows.push(r2);m.push('A2:'+last+'2');
+    var r3=row();r3[0]=T('Laporan SO: '+(me.so||'-')+'   |   '+(me.sqv||'-')+'   |   Skor: brand, fungsi, nama/model, harga modal, variance berlawanan',{i:1,sz:9,c:'FF5B6577',h:'left',ind:1});rows.push(r3);m.push('A3:'+last+'3');
+    var HS={b:1,c:'FFFFFFFF',fill:NAVY,bd:1,h:'center',bc:'FF183153',w:1};
+    rows.push(['Peran','Item Code','Item Name','Category','Brand','Qty sistem','Variance SO','Nilai SO (Rp)','Skor','Keterangan','Cek Fisik'].map(function(t,j){return T(t,j===10?{b:1,c:'FFFFFFFF',fill:'FFB57A22',bd:1,h:'center',bc:'FF183153',w:1}:HS)}));
+    var vo=function(v){return {h:'right',b:1,nf:v%1?'+#,##0.00;-#,##0.00;"-"':'+#,##0;-#,##0;"-"',c:v>0?'FF1D6B43':v<0?'FFA94C4C':'FF9AA6B2',bd:1}},ht={0:30,1:20,3:34};
+    var box={bd:1,bc:'FF8A97A8',fill:'FFFFFFFF'};
+    L.forEach(function(f){var fb={fill:'FFDDE7F1',bd:1,b:1};
+      rows.push([T('Item SO '+(f.fq>0?'plus':'minus'),Object.assign({sz:10,h:'center'},fb)),T(f.k,Object.assign({h:'center'},fb)),T(f.name,Object.assign({w:1},fb)),T(f.cat,Object.assign({sz:10},fb)),T(f.br,Object.assign({sz:10},fb)),T(Math.round(f.sq*100)/100,Object.assign({h:'right',nf:'#,##0.##;-#,##0.##;"-"'},fb)),T(f.fq,Object.assign({},vo(f.fq),{fill:'FFDDE7F1'})),T(Math.round(f.fv),Object.assign({},vo(f.fv),{fill:'FFDDE7F1'})),E(fb),T([f.day?'CC hari ke-'+f.day:'',f.why?'SO: '+f.why:''].filter(Boolean).join(' · '),Object.assign({sz:10,w:1},fb)),E(box)]);
+      if(String(f.name).length>46)ht[rows.length-1]=32;
+      if(!f.cands.length){rows.push([E({bd:1}),T('Tidak ada item mirip yang belum masuk CC',{i:1,c:'FF9AA6B2',sz:10,bd:1})].concat([2,3,4,5,6,7,8,9,10].map(function(){return E({bd:1})})));return}
+      f.cands.forEach(function(c){var op=c.fq&&((c.fq>0)!==(f.fq>0)),bg=op?'FFFFF4CC':null,b=function(o){if(bg)o.fill=bg;o.bd=1;return o};
+        rows.push([T('Lawan',b({sz:10,h:'center',c:'FF5B6577',ind:1})),T(c.k,b({h:'center'})),T(c.name,b({w:1})),T(f.cat,b({sz:10})),T(c.br,b({sz:10})),T(Math.round(c.q*100)/100,b({h:'right',nf:'#,##0.##;-#,##0.##;"-"'})),c.fq?T(c.fq,b(Object.assign(vo(c.fq),{}))):E(b({})),c.fq?T(Math.round(c.fv),b(Object.assign(vo(c.fv),{}))):E(b({})),T(c.sc,b({h:'center',b:1})),T(c.why.join(', '),b({sz:10,w:1})),E({bd:1,bc:'FF8A97A8',fill:'FFFFFFFF'})]);
+        if(String(c.name).length>46||c.why.join(', ').length>50)ht[rows.length-1]=32})});
+    var s1={name:'Cek Silang SO',grid:0,first:1,w:W,h:ht,rows:rows,m:m,fz:4,af:'A4:'+last+rows.length,print:{o:'landscape',titles:'$4:$4',fl:'Cek Silang SO'}};
+    /* sheet pengajuan item tambahan (format template CC) */
+    var best={};L.forEach(function(f){f.cands.forEach(function(c){var o=best[c.k];if(!o||c.sc>o.c.sc)best[c.k]={c:c,f:f,cat:f.cat}})});
+    var ks=Object.keys(best).sort(function(a,b){return best[b].c.sc-best[a].c.sc}),W2=[16,9,24,13,15,46,56,10,10,13,12,20],nc2=W2.length,last2=X.xcol(nc2),r2s=[],m2=[],rw=function(){var a=[];for(var i=0;i<nc2;i++)a.push('');return a};
+    var q1=rw();q1[0]=T('FORMAT ITEM TAMBAHAN · PENGAJUAN CC DARI HASIL CEK SILANG SO',{b:1,sz:15,c:'FFFFFFFF',fill:NAVY,h:'left',ind:1});for(i=1;i<nc2;i++)q1[i]=E({fill:NAVY});r2s.push(q1);m2.push('A1:'+last2+'1');
+    var q2=rw();q2[0]=T('Diisi oleh audit: kolom Approval dan Keterangan',{i:1,sz:9,c:'FF5B6577',h:'left',ind:1});r2s.push(q2);m2.push('A2:'+last2+'2');
+    r2s.push(['Item (CC / Pengajuan)','No Urut Item CC','Category','Item No','Barcode','Item Name','Reason pengajuan item','Qty NAV','Qty Fisik','Unit Cost','Approval Audit (v/x)','Keterangan'].map(function(t){return T(t,HS)}));
+    ks.forEach(function(k,i){var o=best[k],c=o.c,bg=i%2?'FFEEF4FA':null,b=function(x){if(bg)x.fill=bg;x.bd=1;return x};
+      r2s.push([T('Pengajuan',b({h:'center'})),E(b({})),T(o.cat,b({sz:10})),T(c.k,b({h:'center'})),T(c.bar||'',b({h:'center',sz:10})),T(c.name,b({w:1})),T('Mirip '+o.f.k+' (variance SO '+(o.f.fq>0?'+':'')+nf.format(o.f.fq)+'): '+c.why.join(', '),b({w:1,sz:10})),T(Math.round(c.q*100)/100,b({h:'right',nf:'#,##0.##;-#,##0.##;"-"'})),E({bd:1,bc:'FF8A97A8',fill:'FFFFFFFF'}),T(c.cost,b({h:'right',nf:'#,##0'})),E({bd:1,bc:'FF8A97A8',fill:'FFFFFFFF'}),E({bd:1,bc:'FF8A97A8',fill:'FFFFFFFF'})])});
+    var s2={name:'Pengajuan CC Tambahan',grid:0,w:W2,h:{0:30},rows:r2s,m:m2,fz:3,af:'A3:'+last2+r2s.length,print:{o:'landscape',titles:'$3:$3',fl:'Pengajuan CC Tambahan'}};
+    var d=new Date(Date.now()+7*3600e3).toISOString().slice(0,10);
+    X.xsave(X.xbuild([s1,s2]),'Cek_Silang_SO_'+d+'.xlsx')
+  }catch(e){say(e.message||String(e),1)}}
+/* ---------- wiring ---------- */
+var MP=null;function initMP(){MP=window.__qbigMP}
+function wire(){initMP();
+  $('soToggle').addEventListener('click',function(){var u=$('soUp');u.hidden=!u.hidden;this.textContent=u.hidden?'Buka upload ▾':'Tutup upload ▴';var has=window.__qbigSqv&&window.__qbigSqv.length;$('soSqvNote').textContent=has?'Opsional: SQV dari tab Tools SO/CC ('+nf0.format(window.__qbigSqv.length)+' item) otomatis dipakai.':'Wajib jika tab Tools SO/CC belum di-generate pada sesi ini.'});
+  $('soFSo').addEventListener('change',function(){$('soGo').disabled=!$('soFSo').files[0]});$('soGo').addEventListener('click',generate);
+  $('soClear').addEventListener('click',function(){R=null;try{localStorage.removeItem(KEY)}catch(e){}$('soBody').hidden=true;say('Data dihapus. Upload laporan SO untuk memulai.')});
+  $('soMode').addEventListener('change',view);$('soFq').addEventListener('input',view);
+  $('soFc').addEventListener('change',function(e){if(e.target.dataset.all){MP.clear('soFc')}else{MP.sync('soFc')}view()});
+  $('soFr').addEventListener('click',function(){MP.clear('soFc');$('soFq').value='';$('soMode').value='plus';view()});
+  $('soXls').addEventListener('click',xls);
+  document.addEventListener('click',function(e){[].forEach.call(document.querySelectorAll('#soPanel .ccmp[open]'),function(d){if(!d.contains(e.target))d.open=false})});
+  var prev=window.switchPage;
+  window.switchPage=function(mode){
+    if(mode==='so'){['accuracyPanel','adjustmentPanel','minusPanel','detailsPanel','greyProgPanel','ccPanel'].forEach(function(i){var e=$(i);if(e)e.hidden=true});
+      ['tabMain','tabDetails','tabGrey','tabCC'].forEach(function(i){var e=$(i);if(e)e.classList.remove('active')});$('soPanel').hidden=false;$('tabSO').classList.add('active');
+      if(!R){try{var d=JSON.parse(localStorage.getItem(KEY)||'null');if(d&&d.focus){R=d}}catch(e){}if(R)render()}return}
+    $('soPanel').hidden=true;$('tabSO').classList.remove('active');return prev(mode)};
+  $('tabSO').addEventListener('click',function(){window.switchPage('so')});
+}
+wire();
 })();
 </script></body></html>
