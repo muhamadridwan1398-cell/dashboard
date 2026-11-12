@@ -212,7 +212,7 @@ html body:not(.capture-mode) #greySummaryGrid tfoot td:first-child{letter-spacin
 <div id="ccV1"><div class="cc-actions"><div class="field ccrh"><label>Hari ke-</label><details class="category-picker ccmp" id="ccRh" data-all="Semua hari"><summary>Semua hari</summary><div class="ccmpbody"></div></details></div><button id="ccXls1" class="secondary" type="button">⬇ Export Excel</button></div>
 <div class="ccwrap"><table class="cct" id="ccRecap"></table></div>
 <h3 class="cch">Per hari pelaksanaan</h3><div class="cc-days" id="ccDay"></div>
-<div class="small" id="ccNote" style="margin-top:10px"></div></div>
+<details class="cc-ket"><summary>Keterangan</summary><div class="small" id="ccNote"></div></details></div>
 <div id="ccV2" hidden>
 <div class="controls cc-f"><div class="field"><label>Category</label><details class="category-picker ccmp" id="ccFc" data-all="Semua category"><summary>Semua category</summary><div class="ccmpbody"></div></details></div><div class="field"><label>Hari ke-</label><details class="category-picker ccmp" id="ccFh" data-all="Semua hari"><summary>Semua hari</summary><div class="ccmpbody"></div></details></div><div class="field"><label>Zone</label><details class="category-picker ccmp" id="ccFz" data-all="Semua zone"><summary>Semua zone</summary><div class="ccmpbody"></div></details></div><div class="field"><label>Status</label><details class="category-picker ccmp" id="ccFs" data-all="Semua status"><summary>Semua status</summary><div class="ccmpbody"></div></details></div><div class="field"><label>Cari item</label><input type="search" id="ccFq" placeholder="Kode / nama / barcode"></div><button id="ccFr" class="secondary" type="button">Reset</button><button id="ccXls2" class="secondary" type="button">⬇ Export Excel</button></div>
 <div class="small" id="ccCount" style="margin:6px 0"></div>
@@ -564,7 +564,7 @@ document.getElementById('toggleOverDetails').addEventListener('click',()=>{const
 
 #ccPanel .cc-chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:2px 0 14px}
 #ccPanel .ccchip{background:#eaf1f8;color:#183153;border-radius:999px;padding:5px 12px;font-size:12px}#ccPanel .ccchip b{font-weight:700;margin-right:4px}#ccPanel .ccchip.off{background:#f2f4f6;color:#6d7b88}
-#ccPanel .ccform{font-size:12px;color:#6d7b88;margin-left:4px}
+#ccPanel .cc-ket{margin-top:16px;border-top:1px solid #e3e9ef;padding-top:10px}#ccPanel .cc-ket summary{cursor:pointer;font-size:12.5px;color:#6d7b88;font-weight:600;list-style:none}#ccPanel .cc-ket summary:before{content:'▸ '}#ccPanel .cc-ket[open] summary:before{content:'▾ '}#ccPanel .cc-ket .small{margin-top:8px}#ccPanel .cc-ket p{margin:0 0 6px;line-height:1.55}
 #ccPanel .cc-kpi{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:14px;margin:0 0 20px}
 #ccPanel .kc{background:#fff;border:1px solid #dce3e9;border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:6px;min-width:0}
 #ccPanel .kc.hero{background:linear-gradient(160deg,#183153,#244a73);color:#fff;border:0}
@@ -670,7 +670,7 @@ function render(){
   if(!CC)return;var IA=CC.items.map(calc),me=CC.meta||{},hf=mpVals('ccRh'),I=hf.length?IA.filter(function(x){return hf.indexOf(x.day)>=0}):IA;
   $('ccBody').hidden=false;
   $('ccSub').textContent=[me.STORE,me.PERIODE,me.TANGGAL].filter(Boolean).join(' · ')||'Item Cycle Count';
-  say('');$('ccChips').innerHTML=chip('Stok NAV',me.navDate)+chip('Fisik SWBL',me.wmsDate)+(me.hasOts?chip('OTS NP',me.otsDate||'dipakai'):'<span class="ccchip off">OTS NP tidak dipakai</span>')+'<span class="ccform">Variance = Fisik SWBL − (Qty NAV'+(me.hasOts?' + OTS':'')+') · nilai = variance × harga per unit</span>';
+  say('');$('ccChips').innerHTML=chip('Stok NAV',me.navDate)+chip('Fisik SWBL',me.wmsDate)+(me.hasOts?chip('OTS NP',me.otsDate||'dipakai'):'<span class="ccchip off">OTS NP tidak dipakai</span>')+'';
   var T=agg(I),days=order([].concat.apply([],[I.map(function(x){return x.day})]).filter(function(v,i,a){return v!==''&&a.indexOf(v)===i})),cls=[];
   var totOts=I.reduce(function(t,x){return t+x.ots},0),otsItems=I.filter(function(x){return x.ots}).length,nosys=I.filter(function(x){return !x.has}).length,noprice=I.filter(function(x){return x.has&&!x.nq&&x.d!==0}).length;
   var cats=I.map(function(x){return x.cat}).filter(function(v,i,a){return a.indexOf(v)===i}).sort();
@@ -695,7 +695,7 @@ function render(){
   $('ccDay').innerHTML=days.map(function(d){var rs=I.filter(function(x){return x.day===d}),a=agg(rs),pc=a.n?a.df/a.n*100:0,nt=a.vo+a.vm;
     return '<div class="dc"><div class="dh"><b>Hari ke-'+esc(d)+'</b><span>'+a.n+' item CC</span></div><div class="dnet '+(nt>0?'up':nt<0?'dn':'')+'">'+rp(nt)+'</div>'+dv(a.vo,a.vm,mxd)+
      '<div class="dl"><span class="up">Over '+rp(a.vo)+'</span><span class="dn">Minus '+rp(a.vm)+'</span></div><div class="ds">'+a.df+' item selisih ('+pc.toFixed(0)+'%) · '+a.ov+' over, '+a.mi+' minus</div></div>'}).join('');
-  $('ccNote').innerHTML='Klik baris category untuk melihat detail itemnya.'+(nosys?' <b>'+nosys+'</b> item CC tidak ada di stok sistem NAV (dianggap Qty NAV 0).':'')+(noprice?' <b>'+noprice+'</b> item selisih tapi Qty NAV 0, sehingga harga tidak bisa dihitung (nilai 0).':'')+(me.hasOts?' OTS NP ditambahkan ke stok sistem: <b>'+nf.format(totOts)+'</b> qty pada <b>'+otsItems+'</b> item CC.':'')+' Stok WMS = Stock On Hand semua lokasi (aktif dan INACT, semua tipe item).';
+  $('ccNote').innerHTML='<p>Variance = Fisik SWBL − (Qty NAV'+(me.hasOts?' + OTS':'')+'); nilai = variance × harga per unit (Value ÷ Qty NAV). Plus berarti over, minus berarti kurang.</p><p>Klik baris category untuk melihat detail itemnya.</p><p>'+(nosys?' <b>'+nosys+'</b> item CC tidak ada di stok sistem NAV (dianggap Qty NAV 0).':'')+(noprice?' <b>'+noprice+'</b> item selisih tapi Qty NAV 0, sehingga harga tidak bisa dihitung (nilai 0).':'')+(me.hasOts?' OTS NP ditambahkan ke stok sistem: <b>'+nf.format(totOts)+'</b> qty pada <b>'+otsItems+'</b> item CC.':'')+' Stok WMS = Stock On Hand semua lokasi (aktif dan INACT, semua tipe item).</p>';
   mpBuild('ccRh',order(IA.map(function(x){return x.day}).filter(function(v,i,a){return v&&a.indexOf(v)===i})).map(function(d){return [d,'Hari ke-'+d]}));mpBuild('ccFc',cats.map(function(c){return [c,c]}));mpBuild('ccFh',days.map(function(d){return [d,'Hari ke-'+d]}));mpBuild('ccFz',[['W','Warehouse'],['T','Topper'],['D','Display'],['O','Lainnya']]);mpBuild('ccFs',[['OVER','Over (Fisik > Sistem)'],['MINUS','Minus (Fisik < Sistem)'],['SAMA','Sesuai'],['NOSYS','Tidak ada di stok NAV']]);
   detail();
 }
