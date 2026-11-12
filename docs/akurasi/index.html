@@ -202,10 +202,10 @@ html body:not(.capture-mode) #greySummaryGrid tfoot td:first-child{letter-spacin
 <section class="panel" id="ccPanel" hidden>
 <div class="sectionhead"><div><h2>Tools SO/CC</h2><div class="small" id="ccSub">Bandingkan stok sistem (NAV + OTS NP) dengan stok fisik SWBL (WMS by lokasi) untuk item Cycle Count.</div></div><div class="controls"><button id="ccToggle" class="secondary" type="button">Buka upload ▾</button></div></div>
 <div class="ccup" id="ccUp" hidden>
-<div class="upload-grid"><div class="field"><label for="ccFItem">1. Item Cycle Count (.xlsx)</label><input type="file" id="ccFItem" accept=".xlsx,.xls"></div><div class="field"><label for="ccFNav">2. Stock Qty and Value / stok sistem NAV (.xlsx)</label><input type="file" id="ccFNav" accept=".xlsx,.xls"></div><div class="field"><label for="ccFLoc">3. Stock Warehouse By Location / WMS (.xlsx)</label><input type="file" id="ccFLoc" accept=".xlsx,.xls"></div><div class="field"><label for="ccFOts">4. Outstanding Nota Penjualan / OTS NP (.xlsx, opsional)</label><input type="file" id="ccFOts" accept=".xlsx,.xls"></div></div>
+<div class="upload-grid"><div class="field"><label for="ccFItem">1. Item Cycle Count (.xlsx)</label><input type="file" id="ccFItem" accept=".xlsx,.xls"></div><div class="field"><label for="ccFNav">2. Stock Qty and Value / stok sistem NAV (.xlsx)</label><input type="file" id="ccFNav" accept=".xlsx,.xls"></div><div class="field"><label for="ccFLoc">3. Stock Warehouse By Location / WMS (.xlsx)</label><input type="file" id="ccFLoc" accept=".xlsx,.xls"></div><div class="field"><label for="ccFOts">4. Outstanding Nota Penjualan / OTS NP (.xlsx, opsional)</label><input type="file" id="ccFOts" accept=".xlsx,.xls"></div><div class="field"><label for="ccFBb">5. Outstanding Failed Delivery TMS / OTS BB (.xlsx, opsional)</label><input type="file" id="ccFBb" accept=".xlsx,.xls"></div></div>
 <div class="actions" style="margin-top:10px"><button id="ccGo" disabled>Generate</button><button id="ccClear" class="secondary" type="button">Hapus data</button></div>
 </div>
-<div id="ccMsg" class="small" style="margin:8px 0">Belum ada data. Buka upload lalu pilih file 1-3 (file 4 OTS opsional).</div>
+<div id="ccMsg" class="small" style="margin:8px 0">Belum ada data. Buka upload lalu pilih file 1-3 (file 4 OTS NP dan file 5 OTS BB opsional).</div>
 <div id="ccBody" hidden>
 <div class="cc-chips" id="ccChips"></div><div class="cc-kpi" id="ccKpi"></div>
 <nav class="ccsub"><button id="ccT1" class="active" type="button">Rekap per Category</button><button id="ccT2" type="button">Detail Item</button></nav>
@@ -706,7 +706,7 @@ async function generate(){
     it.a.slice(it.h.r+1).forEach(function(r){var k=key(r[H['Item Code']]);if(!k||seen[k])return;seen[k]=1;
       items.push({k:k,code:String(r[H['Item Code']]).trim(),name:String(cN>=0?r[cN]:'').trim(),uom:String(cU>=0?r[cU]:'').trim(),brand:String(cB>=0?r[cB]:'').trim(),bar:String(cBar>=0?r[cBar]:'').trim(),cat:String(r[H['Category']]).trim().toUpperCase(),day:cH>=0?String(r[cH]).trim():'',cl:cC>=0?String(r[cC]).trim():'',nq:0,nv:0,has:false,wq:0,locs:[]})});
     if(!items.length)throw new Error('File 1: tidak ada item.');
-    var meta=metaOf(it.a);var fo=$('ccFOts').files[0];meta.files={item:fi.name,nav:fn.name,loc:fl.name,ots:fo?fo.name:''};
+    var meta=metaOf(it.a);var fo=$('ccFOts').files[0];var fb=$('ccFBb').files[0];meta.files={item:fi.name,nav:fn.name,loc:fl.name,ots:fo?fo.name:'',bb:fb?fb.name:''};
     say('Membaca stok sistem NAV...');
     var wn=await readBook(fn),nv=aoa(wn,null,['Item No','Quantity']);
     if(!nv)throw new Error('File 2: kolom "Item No" dan "Quantity" tidak ditemukan (pakai laporan Stock Qty and Value).');
@@ -728,6 +728,13 @@ async function generate(){
       var oi=ot.h.m['item no'],oq=ot.h.m['outstanding qty base'];
       ot.a.slice(ot.h.r+1).forEach(function(r){var x=want[key(r[oi])];if(x)x.ots=(x.ots||0)+num(r[oq])});
       var m3=String(ot.a[0]&&ot.a[0][0]||'').match(/(\d{1,2}-[A-Za-z]{3}-\d{4}[^\n]*)/);meta.otsDate=m3?m3[1].trim():'';hasOts=true}
+    var hasBb=false;
+    if(fb){say('Membaca OTS BB...');var wb2=await readBook(fb),bt=aoa(wb2,null,['Item No','Qty']);
+      if(!bt)throw new Error('File 5: kolom "Item No" dan "Qty" tidak ditemukan (pakai Report Outstanding Failed Delivery TMS).');
+      var bi=bt.h.m['item no'],bq=bt.h.m['qty'];
+      bt.a.slice(bt.h.r+1).forEach(function(r){var x=want[key(r[bi])];if(x)x.bb=(x.bb||0)+num(r[bq])});
+      var m4=String((bt.a[0]&&bt.a[0][0])||'').match(/(\d{1,2}-[A-Za-z]{3}-\d{4}[^\n]*)/);meta.bbDate=m4?m4[1].trim():'';hasBb=true}
+    meta.hasBb=hasBb;items.forEach(function(x){x.bb=Math.round((x.bb||0)*1000)/1000});
     meta.hasOts=hasOts;items.forEach(function(x){x.ots=Math.round((x.ots||0)*1000)/1000});
     meta.at=new Date().toISOString();
     CC={items:items,meta:meta};save();render();shareCC();$('ccUp').hidden=true;$('ccToggle').textContent='Buka upload ▾';
@@ -742,14 +749,14 @@ function load(){try{var d=JSON.parse(localStorage.getItem(KEY)||'null');if(d&&d.
 var ZN={W:'Warehouse',T:'Topper',D:'Display',O:'Lainnya'};function zg(l){var c=String(l||'').charAt(0).toUpperCase();return c==='W'?'W':c==='C'?'T':c==='D'?'D':'O'}
 function zlocs(x,zf){return zf&&zf.length?x.locs.filter(function(l){return zf.indexOf(zg(l[0]))>=0}):x.locs}
 function chip(l,v){return '<span class="ccchip"><b>'+l+'</b> '+esc(v||'-')+'</span>'}
-function calc(x){x.locs.sort(function(a,b){return String(a[0]).localeCompare(String(b[0]),'en',{numeric:true})});var z={W:0,T:0,D:0,O:0};x.locs.forEach(function(l){z[zg(l[0])]+=l[1]});x.zW=Math.round(z.W*1000)/1000;x.zT=Math.round(z.T*1000)/1000;x.zD=Math.round(z.D*1000)/1000;x.zO=Math.round(z.O*1000)/1000;var p=x.nq?x.nv/x.nq:0;x.ots=x.ots||0;x.sq=Math.round((x.nq+x.ots)*1000)/1000;var d=Math.round((x.wq-x.sq)*1000)/1000;x.pr=p;x.d=d;x.val=d*p;x.st=!x.has?'NOSYS':(d>0?'OVER':(d<0?'MINUS':'SAMA'));x.ad=Math.abs(x.val);return x}
+function calc(x){x.locs.sort(function(a,b){return String(a[0]).localeCompare(String(b[0]),'en',{numeric:true})});var z={W:0,T:0,D:0,O:0};x.locs.forEach(function(l){z[zg(l[0])]+=l[1]});x.zW=Math.round(z.W*1000)/1000;x.zT=Math.round(z.T*1000)/1000;x.zD=Math.round(z.D*1000)/1000;x.zO=Math.round(z.O*1000)/1000;var p=x.nq?x.nv/x.nq:0;x.ots=x.ots||0;x.bb=x.bb||0;x.sq=Math.round((x.nq+x.ots+x.bb)*1000)/1000;var d=Math.round((x.wq-x.sq)*1000)/1000;x.pr=p;x.d=d;x.val=d*p;x.st=!x.has?'NOSYS':(d>0?'OVER':(d<0?'MINUS':'SAMA'));x.ad=Math.abs(x.val);return x}
 function order(vals){var pr=['A','B'];return vals.sort(function(a,b){var i=pr.indexOf(a),j=pr.indexOf(b);if(i<0&&j<0)return String(a).localeCompare(String(b),'id',{numeric:true});if(i<0)return 1;if(j<0)return -1;return i-j})}
 function agg(rows){var o={n:rows.length,df:0,ov:0,mi:0,dq:0,vo:0,vm:0};rows.forEach(function(x){if(x.d!==0){o.df++;o.dq+=x.d;if(x.d>0){o.ov++;o.vo+=x.val}else{o.mi++;o.vm+=x.val}}});return o}
 function render(){
   if(!CC)return;var IA=CC.items.map(calc),me=CC.meta||{},hf=mpVals('ccRh'),I=hf.length?IA.filter(function(x){return hf.indexOf(x.day)>=0}):IA;
   $('ccBody').hidden=false;
   $('ccSub').textContent=[me.STORE,me.PERIODE,me.TANGGAL].filter(Boolean).join(' · ')||'Item Cycle Count';
-  say('');$('ccChips').innerHTML=chip('Stok NAV',me.navDate)+chip('Fisik SWBL',me.wmsDate)+(me.hasOts?chip('OTS NP',me.otsDate||'dipakai'):'<span class="ccchip off">OTS NP tidak dipakai</span>')+'';
+  say('');$('ccChips').innerHTML=chip('Stok NAV',me.navDate)+chip('Fisik SWBL',me.wmsDate)+(me.hasOts?chip('OTS NP',me.otsDate||'dipakai'):'<span class="ccchip off">OTS NP tidak dipakai</span>')+(me.hasBb?chip('OTS BB',me.bbDate||'dipakai'):'<span class="ccchip off">OTS BB tidak dipakai</span>')+'';
   var T=agg(I),days=order([].concat.apply([],[I.map(function(x){return x.day})]).filter(function(v,i,a){return v!==''&&a.indexOf(v)===i})),cls=[];
   var totOts=I.reduce(function(t,x){return t+x.ots},0),otsItems=I.filter(function(x){return x.ots}).length,nosys=I.filter(function(x){return !x.has}).length,noprice=I.filter(function(x){return x.has&&!x.nq&&x.d!==0}).length;
   var cats=I.map(function(x){return x.cat}).filter(function(v,i,a){return a.indexOf(v)===i}).sort();
@@ -774,7 +781,7 @@ function render(){
   $('ccDay').innerHTML=days.map(function(d){var rs=I.filter(function(x){return x.day===d}),a=agg(rs),pc=a.n?a.df/a.n*100:0,nt=a.vo+a.vm;
     return '<div class="dc"><div class="dh"><b>Hari ke-'+esc(d)+'</b><span>'+a.n+' item CC</span></div><div class="dnet '+(nt>0?'up':nt<0?'dn':'')+'">'+rp(nt)+'</div>'+dv(a.vo,a.vm,mxd)+
      '<div class="dl"><span class="up">Over '+rp(a.vo)+'</span><span class="dn">Minus '+rp(a.vm)+'</span></div><div class="ds">'+a.df+' item selisih ('+pc.toFixed(0)+'%) · '+a.ov+' over, '+a.mi+' minus</div></div>'}).join('');
-  $('ccNote').innerHTML='<p>Variance = Fisik SWBL − (Qty NAV'+(me.hasOts?' + OTS':'')+'); nilai = variance × harga per unit (Value ÷ Qty NAV). Plus berarti over, minus berarti kurang.</p><p>Klik baris category untuk melihat detail itemnya.</p><p>'+(nosys?' <b>'+nosys+'</b> item CC tidak ada di stok sistem NAV (dianggap Qty NAV 0).':'')+(noprice?' <b>'+noprice+'</b> item selisih tapi Qty NAV 0, sehingga harga tidak bisa dihitung (nilai 0).':'')+(me.hasOts?' OTS NP ditambahkan ke stok sistem: <b>'+nf.format(totOts)+'</b> qty pada <b>'+otsItems+'</b> item CC.':'')+' Stok WMS = Stock On Hand semua lokasi (aktif dan INACT, semua tipe item).</p>';
+  $('ccNote').innerHTML='<p>Variance = Fisik SWBL − (Qty NAV'+(me.hasOts?' + OTS':'')+(me.hasBb?' + BB':'')+'); nilai = variance × harga per unit (Value ÷ Qty NAV). Plus berarti over, minus berarti kurang.</p><p>Klik baris category untuk melihat detail itemnya.</p><p>'+(nosys?' <b>'+nosys+'</b> item CC tidak ada di stok sistem NAV (dianggap Qty NAV 0).':'')+(noprice?' <b>'+noprice+'</b> item selisih tapi Qty NAV 0, sehingga harga tidak bisa dihitung (nilai 0).':'')+(me.hasOts?' OTS NP ditambahkan ke stok sistem: <b>'+nf.format(totOts)+'</b> qty pada <b>'+otsItems+'</b> item CC.':'')+(me.hasBb?' OTS BB (failed delivery TMS) ditambahkan ke stok sistem: <b>'+nf.format(I.reduce(function(t,x){return t+x.bb},0))+'</b> qty pada <b>'+I.filter(function(x){return x.bb}).length+'</b> item CC.':'')+' Stok WMS = Stock On Hand semua lokasi (aktif dan INACT, semua tipe item).</p>';
   mpBuild('ccRh',order(IA.map(function(x){return x.day}).filter(function(v,i,a){return v&&a.indexOf(v)===i})).map(function(d){return [d,'Hari ke-'+d]}));mpBuild('ccFc',cats.map(function(c){return [c,c]}));mpBuild('ccFh',days.map(function(d){return [d,'Hari ke-'+d]}));mpBuild('ccFz',[['W','Warehouse'],['T','Topper'],['D','Display'],['O','Lainnya']]);mpBuild('ccFs',[['OVER','Over (Fisik > Sistem)'],['MINUS','Minus (Fisik < Sistem)'],['SAMA','Sesuai'],['NOSYS','Tidak ada di stok NAV']]);
   detail();
 }
@@ -795,9 +802,9 @@ function detail(){
   if(!CC)return;var L=filt().slice().sort(function(a,b){var k=SORT.k,va=a[k],vb=b[k];if(typeof va==='string')return SORT.d*String(va).localeCompare(String(vb),'id',{numeric:true});return SORT.d*((va||0)-(vb||0))});
   var a=agg(L);$('ccCount').textContent=L.length+' item · '+a.df+' selisih ('+a.ov+' over, '+a.mi+' minus) · nilai over '+rp(a.vo)+' · nilai minus '+rp(a.vm)+' · net '+rp(a.vo+a.vm);
   var th=function(k,t,n){return '<th data-s="'+k+'" class="'+(n?'n':'')+'" style="cursor:pointer">'+t+(SORT.k===k?(SORT.d>0?' ▲':' ▼'):'')+'</th>'};
-  $('ccDet').innerHTML='<thead><tr>'+th('cat','Category')+th('code','Item Code')+'<th>Item Name</th><th>UOM</th>'+th('day','Hari')+th('nq','Qty NAV',1)+th('ots','OTS',1)+th('sq','Qty Sistem',1)+th('wq','Fisik (SWBL)',1)+th('d','Variance',1)+th('pr','Harga/unit',1)+th('val','Nilai selisih',1)+th('st','Status')+'<th>Lokasi WMS (qty)</th></tr></thead><tbody>'+
+  $('ccDet').innerHTML='<thead><tr>'+th('cat','Category')+th('code','Item Code')+'<th>Item Name</th><th>UOM</th>'+th('day','Hari')+th('nq','Qty NAV',1)+th('ots','OTS NP',1)+th('bb','OTS BB',1)+th('sq','Qty Sistem',1)+th('wq','Fisik (SWBL)',1)+th('d','Variance',1)+th('pr','Harga/unit',1)+th('val','Nilai selisih',1)+th('st','Status')+'<th>Lokasi WMS (qty)</th></tr></thead><tbody>'+
    L.map(function(x){var zl=zlocs(x,mpVals('ccFz')),lc=zl.slice(0,4).map(function(l){return esc(l[0])+' ('+nf.format(l[1])+')'}).join(' · ')+(zl.length>4?' +'+(zl.length-4)+' lagi':'');
-    return '<tr><td>'+esc(x.cat)+'</td><td>'+esc(x.k)+'</td><td style="white-space:normal;min-width:220px">'+esc(x.name)+'</td><td>'+esc(x.uom)+'</td><td class="c">'+esc(x.day)+'</td><td class="n">'+nf.format(x.nq)+'</td><td class="n">'+(x.ots?nf.format(x.ots):'<span class="zero">-</span>')+'</td><td class="n">'+nf.format(x.sq)+'</td><td class="n">'+nf.format(x.wq)+'</td>'+'<td class="n">'+fq(x.d)+'</td><td class="n">'+(x.pr?nf0.format(x.pr):'<span class="zero">-</span>')+'</td><td class="n">'+fv(x.val)+'</td><td><span class="st '+x.st+'">'+STL[x.st]+'</span></td><td class="loc">'+(lc||'<span class="zero">tidak ada di lokasi</span>')+'</td></tr>'}).join('')+'</tbody>';
+    return '<tr><td>'+esc(x.cat)+'</td><td>'+esc(x.k)+'</td><td style="white-space:normal;min-width:220px">'+esc(x.name)+'</td><td>'+esc(x.uom)+'</td><td class="c">'+esc(x.day)+'</td><td class="n">'+nf.format(x.nq)+'</td><td class="n">'+(x.ots?nf.format(x.ots):'<span class="zero">-</span>')+'</td><td class="n">'+(x.bb?nf.format(x.bb):'<span class="zero">-</span>')+'</td><td class="n">'+nf.format(x.sq)+'</td><td class="n">'+nf.format(x.wq)+'</td>'+'<td class="n">'+fq(x.d)+'</td><td class="n">'+(x.pr?nf0.format(x.pr):'<span class="zero">-</span>')+'</td><td class="n">'+fv(x.val)+'</td><td><span class="st '+x.st+'">'+STL[x.st]+'</span></td><td class="loc">'+(lc||'<span class="zero">tidak ada di lokasi</span>')+'</td></tr>'}).join('')+'</tbody>';
 }
 /* ---------- Excel berstyle + setting cetak A4 ---------- */
 var XS=null;
@@ -854,7 +861,7 @@ function xrecap(I,me,days,note){
   var row=function(){var a=[];for(var i=0;i<nc;i++)a.push('');return a};
   var r1=row();r1[0]=T('TOOLS SO/CC · REKAP VARIANCE FISIK (SWBL) vs SISTEM (NAV + OTS)',{b:1,sz:16,c:'FFFFFFFF',fill:NAVY,h:'left',ind:1});for(var i=1;i<nc;i++)r1[i]=E({fill:NAVY});rows.push(r1);m.push('A1:'+last+'1');
   var r2=row();r2[0]=T([me.STORE,me.PERIODE,me.TANGGAL].filter(Boolean).join('  ·  ')+(note?'   |   '+note:''),{b:1,sz:12,c:'FFFFFFFF',fill:BLUE,h:'left',ind:1});for(i=1;i<nc;i++)r2[i]=E({fill:BLUE});rows.push(r2);m.push('A2:'+last+'2');
-  var r3=row();r3[0]=T('Stok NAV: '+(me.navDate||'-')+'   |   Fisik SWBL: '+(me.wmsDate||'-')+'   |   OTS NP: '+(me.hasOts?(me.otsDate||'ada'):'tidak dipakai')+'   |   Variance = Fisik SWBL − (Qty NAV'+(me.hasOts?' + OTS':'')+'); nilai = variance × harga per unit',{i:1,sz:9,c:'FF5B6577',h:'left',ind:1});rows.push(r3);m.push('A3:'+last+'3');
+  var r3=row();r3[0]=T('Stok NAV: '+(me.navDate||'-')+'   |   Fisik SWBL: '+(me.wmsDate||'-')+'   |   OTS NP: '+(me.hasOts?(me.otsDate||'ada'):'tidak dipakai')+'   |   Variance = Fisik SWBL − (Qty NAV'+(me.hasOts?' + OTS':'')+(me.hasBb?' + BB':'')+'); nilai = variance × harga per unit',{i:1,sz:9,c:'FF5B6577',h:'left',ind:1});rows.push(r3);m.push('A3:'+last+'3');
   rows.push(row());
   var T0=agg(I),kp=[['ITEM CC',T0.n,0],['ITEM SELISIH',T0.df,0],['VARIANCE QTY',T0.dq,1],['NILAI OVER (Rp)',T0.vo,1],['NILAI MINUS (Rp)',T0.vm,1],['NILAI SELISIH NET (Rp)',T0.vo+T0.vm,1]];
   var sp=[],base=Math.floor(nc/6),ex=nc%6;for(i=0;i<6;i++)sp.push(base+(i<ex?1:0));
@@ -880,13 +887,13 @@ function xrecap(I,me,days,note){
   return {name:'Rekap',grid:0,first:1,w:W,h:{0:30,1:22,5:20,7:20},rows:rows,m:m,print:{o:'landscape',titles:'$8:$9',fl:'Tools SO/CC · Rekap'}}}
 function xdetail(L,me,fdesc,zf){
   var T=function(v,o){return {v:v,s:sty(o)}},E=function(o){return T('',o)};
-  var W=[5,24,12,44,7,7,9,8,10,10,10,15,13,21,9,16],nc=W.length,last=xcol(nc),rows=[],m=[];
+  var W=[5,24,12,44,7,7,9,8,8,10,10,10,15,13,21,9,16],nc=W.length,last=xcol(nc),rows=[],m=[];
   var row=function(){var a=[];for(var i=0;i<nc;i++)a.push('');return a};
   var r1=row();r1[0]=T('TOOLS SO/CC · DETAIL ITEM',{b:1,sz:16,c:'FFFFFFFF',fill:NAVY,h:'left',ind:1});for(var i=1;i<nc;i++)r1[i]=E({fill:NAVY});rows.push(r1);m.push('A1:'+last+'1');
   var r2=row();r2[0]=T([me.STORE,me.PERIODE,me.TANGGAL].filter(Boolean).join('  ·  ')+'   |   Filter: '+fdesc,{b:1,sz:10,c:'FFFFFFFF',fill:BLUE,h:'left',ind:1});for(i=1;i<nc;i++)r2[i]=E({fill:BLUE});rows.push(r2);m.push('A2:'+last+'2');
-  var r3=row();r3[0]=T('Stok NAV: '+(me.navDate||'-')+'   |   Fisik SWBL: '+(me.wmsDate||'-')+'   |   OTS NP: '+(me.hasOts?(me.otsDate||'ada'):'tidak dipakai')+'   |   Variance = Fisik SWBL − (Qty NAV'+(me.hasOts?' + OTS':'')+')',{i:1,sz:9,c:'FF5B6577',h:'left',ind:1});rows.push(r3);m.push('A3:'+last+'3');
+  var r3=row();r3[0]=T('Stok NAV: '+(me.navDate||'-')+'   |   Fisik SWBL: '+(me.wmsDate||'-')+'   |   OTS NP: '+(me.hasOts?(me.otsDate||'ada'):'tidak dipakai')+'   |   Variance = Fisik SWBL − (Qty NAV'+(me.hasOts?' + OTS':'')+(me.hasBb?' + BB':'')+')',{i:1,sz:9,c:'FF5B6577',h:'left',ind:1});rows.push(r3);m.push('A3:'+last+'3');
   var HS={b:1,c:'FFFFFFFF',fill:NAVY,bd:1,h:'center',bc:'FF183153',w:1};
-  rows.push(['No','Category','Item Code','Item Name','UOM','Hari ke-','Qty NAV','OTS','Qty Sistem (NAV+OTS)','Fisik SWBL','Variance qty','Nilai selisih (Rp)','Status','Lokasi WMS','Qty di lokasi','Cek Fisik'].map(function(t,j){return T(t,j===15?{b:1,c:'FFFFFFFF',fill:'FFB57A22',bd:1,h:'center',bc:'FF183153',w:1}:HS)}));
+  rows.push(['No','Category','Item Code','Item Name','UOM','Hari ke-','Qty NAV','OTS NP','OTS BB','Qty Sistem (NAV+OTS+BB)','Fisik SWBL','Variance qty','Nilai selisih (Rp)','Status','Lokasi WMS','Qty di lokasi','Cek Fisik'].map(function(t,j){return T(t,j===16?{b:1,c:'FFFFFFFF',fill:'FFB57A22',bd:1,h:'center',bc:'FF183153',w:1}:HS)}));
   var ST={OVER:{fill:'FFC6EFCE',c:'FF006100'},MINUS:{fill:'FFFFC7CE',c:'FF9C0006'},SAMA:{fill:'FFEDF0F3',c:'FF6D7B88'},NOSYS:{fill:'FFFFEB9C',c:'FF9C5700'}};
   var ht={0:30,1:20,3:34};
   L.forEach(function(x,i){var bg=i%2?'FFEEF4FA':null,zl=zlocs(x,zf),locs=zl.length?zl:[['(tidak ada di lokasi)','']];
@@ -894,8 +901,8 @@ function xdetail(L,me,fdesc,zf){
     locs.forEach(function(l,n){var r=[],first=n===0;
       r.push(first?T(i+1,base({h:'center',c:'FF5B6577'})):E(base({})));
       r.push(T(x.cat,base({sz:10,c:first?'FF1F2933':'FF9AA6B2'})));r.push(T(x.k,base({h:'center',c:first?'FF1F2933':'FF9AA6B2'})));r.push(T(x.name,base({w:first?1:0,c:first?'FF1F2933':'FF9AA6B2'})));
-      if(first){r.push(T(x.uom,base({h:'center'})),T(x.day,base({h:'center'})),q(x.nq),q(x.ots),q(x.sq),q(x.wq),T(x.d,base(vo(x.d))),T(Math.round(x.val),base(vo(Math.round(x.val)))),T(STL[x.st],{b:1,sz:10,h:'center',bd:1,fill:ST[x.st].fill,c:ST[x.st].c}))}
-      else for(var k=0;k<9;k++)r.push(E(base({})));
+      if(first){r.push(T(x.uom,base({h:'center'})),T(x.day,base({h:'center'})),q(x.nq),q(x.ots),q(x.bb),q(x.sq),q(x.wq),T(x.d,base(vo(x.d))),T(Math.round(x.val),base(vo(Math.round(x.val)))),T(STL[x.st],{b:1,sz:10,h:'center',bd:1,fill:ST[x.st].fill,c:ST[x.st].c}))}
+      else for(var k=0;k<10;k++)r.push(E(base({})));
       r.push(T(l[0],base({h:'center',sz:10})));r.push(l[1]===''?E(base({})):q(l[1]));r.push(E({bd:1,bc:'FF8A97A8',fill:'FFFFFFFF'}));rows.push(r);
       if(first){var ln=Math.max(1,Math.ceil(String(x.name).length/46));if(ln>1)ht[rows.length-1]=16*ln}})});
   return {name:'Detail Item',grid:0,first:1,w:W,h:ht,rows:rows,m:m,fz:4,af:'A4:'+last+rows.length,print:{o:'landscape',titles:'$4:$4',fl:'Tools SO/CC · Detail Item'}}}
