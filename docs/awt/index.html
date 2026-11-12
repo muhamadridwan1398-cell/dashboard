@@ -1158,6 +1158,7 @@
             let headers = rows[headerIdx];
             let dateCol = headers.indexOf("Order Date");
             let dnCol = headers.indexOf("DN No ") !== -1 ? headers.indexOf("DN No ") : headers.indexOf("DN No");
+            let npCol = headers.findIndex(h => /^\s*NP No\s*$/i.test((h || '').toString()));
             let typeCol = headers.indexOf("Type") !== -1 ? headers.indexOf("Type") : headers.indexOf("TYPE");
             if (typeCol === -1) {
                 typeCol = 7;
@@ -1250,7 +1251,10 @@
                     uniqueDates.add(dateStr);
                 }
 
-                let dnNoVal = dnCol !== -1 ? (row[dnCol] || '-').toString().trim() : '-';
+                let dnNoVal = dnCol !== -1 ? (row[dnCol] || '').toString().trim() : '';
+                // Nota tanpa DN No (mis. Cash&Carry via Gudang Store): pakai NP No agar tiap nota dihitung sendiri
+                if (!dnNoVal && npCol !== -1) dnNoVal = (row[npCol] || '').toString().trim();
+                if (!dnNoVal) dnNoVal = '-';
                 
                 let notaTypeVal = (typeCol !== -1 && row[typeCol] !== undefined && row[typeCol] !== null) 
                                   ? row[typeCol].toString().trim() 
