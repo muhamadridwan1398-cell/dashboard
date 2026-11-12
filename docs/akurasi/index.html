@@ -200,12 +200,9 @@ html body:not(.capture-mode) #greySummaryGrid tfoot td:first-child{letter-spacin
 <section class="panel upload-panel collapsed" id="uploadPanel"><div class="sectionhead"><div><h2>UPLOAD DATA</h2><div class="small up-desc">Gunakan dua laporan dengan site dan tanggal yang sama.</div></div><button id="uploadToggle" class="secondary" type="button" aria-expanded="false" aria-controls="uploadPanel">Buka ▾</button></div><div class="upload-grid"><div class="field"><label for="wmsUpload">Laporan WMS vs NAV (.xlsx)</label><input type="file" id="wmsUpload" accept=".xlsx"></div><div class="field"><label for="locationUpload">Stok per lokasi dan lot (.xlsx)</label><input type="file" id="locationUpload" accept=".xlsx"></div></div><div class="actions"><button id="applyUpload" disabled>Generate</button><button id="resetDemo" class="secondary">Gunakan data awal</button></div><div class="controls" style="margin-top:12px"><div class="field" hidden><button id="saveSharedData" type="button" hidden>Simpan data</button><button id="reloadSharedData" class="secondary" type="button">Ambil data terbaru</button><span id="sharedDataStatus" class="small">Data terbaru belum diperiksa.</span></div><div id="uploadMessage" class="small" style="margin-top:10px">Memakai data awal.</div><div id="lastUploadTime" class="small" style="margin-top:5px;color:var(--muted)">Waktu pembaruan tampil setelah data dimuat.</div><div id="uploadWarning" class="upload-warning" hidden></div></section>
 <nav class="page-tabs"><button id="tabMain" class="active" type="button">Tampilan utama</button><button id="tabDetails" type="button">Detail item OVER &amp; MINUS</button><button id="tabGrey" type="button">Progress lokasi Grey</button><button id="tabCC" type="button">Tools SO/CC</button><button id="tabSO" type="button">Cek Silang SO</button></nav><section class="panel" id="greyProgPanel" hidden></section>
 <section class="panel" id="ccPanel" hidden>
-<div class="sectionhead"><div><h2>Tools SO/CC</h2><div class="small" id="ccSub">Bandingkan stok sistem (NAV + OTS NP) dengan stok fisik SWBL (WMS by lokasi) untuk item Cycle Count.</div></div><div class="controls"><button id="ccToggle" class="secondary" type="button">Buka upload ▾</button></div></div>
-<div class="ccup" id="ccUp" hidden>
-<div class="upload-grid"><div class="field"><label for="ccFItem">1. Item Cycle Count (.xlsx)</label><input type="file" id="ccFItem" accept=".xlsx,.xls"></div><div class="field"><label for="ccFNav">2. Stock Qty and Value / stok sistem NAV (.xlsx)</label><input type="file" id="ccFNav" accept=".xlsx,.xls"></div><div class="field"><label for="ccFLoc">3. Stock Warehouse By Location / WMS (.xlsx)</label><input type="file" id="ccFLoc" accept=".xlsx,.xls"></div><div class="field"><label for="ccFOts">4. Outstanding Nota Penjualan / OTS NP (.xlsx, opsional)</label><input type="file" id="ccFOts" accept=".xlsx,.xls"></div><div class="field"><label for="ccFBb">5. Outstanding Failed Delivery TMS / OTS BB (.xlsx, opsional)</label><input type="file" id="ccFBb" accept=".xlsx,.xls"></div></div>
-<div class="actions" style="margin-top:10px"><button id="ccGo" disabled>Generate</button><button id="ccClear" class="secondary" type="button">Hapus data</button></div>
-</div>
-<div id="ccMsg" class="small" style="margin:8px 0">Belum ada data. Buka upload lalu pilih file 1-3 (file 4 OTS NP dan file 5 OTS BB opsional).</div>
+<div class="sectionhead"><div><h2>Tools SO/CC</h2><div class="small" id="ccSub">Bandingkan stok sistem (NAV + OTS NP) dengan stok fisik SWBL (WMS by lokasi) untuk item Cycle Count.</div></div><div class="controls"><button id="ccToggle" class="secondary" type="button">Upload data ▾</button></div></div>
+<div class="ccup" id="ccUp" hidden><div class="upg"><div class="upc" id="ccC_item"><div class="uph"><span class="upn">1</span><b>Item Cycle Count</b><em class="rq">Wajib</em></div><div class="upd">Daftar item yang kena CC</div><div class="ups" id="ccS_item"></div><label class="upz" for="ccFItem"><span>Pilih atau tarik file .xlsx ke sini</span><b id="ccP_item"></b></label><input type="file" id="ccFItem" accept=".xlsx,.xls" hidden></div><div class="upc" id="ccC_nav"><div class="uph"><span class="upn">2</span><b>Stok sistem NAV</b><em class="rq">Wajib</em></div><div class="upd">Laporan Stock Qty and Value</div><div class="ups" id="ccS_nav"></div><label class="upz" for="ccFNav"><span>Pilih atau tarik file .xlsx ke sini</span><b id="ccP_nav"></b></label><input type="file" id="ccFNav" accept=".xlsx,.xls" hidden></div><div class="upc" id="ccC_loc"><div class="uph"><span class="upn">3</span><b>Stok fisik WMS</b><em class="rq">Wajib</em></div><div class="upd">Stock Warehouse By Location (SWBL)</div><div class="ups" id="ccS_loc"></div><label class="upz" for="ccFLoc"><span>Pilih atau tarik file .xlsx ke sini</span><b id="ccP_loc"></b></label><input type="file" id="ccFLoc" accept=".xlsx,.xls" hidden></div><div class="upc" id="ccC_ots"><div class="uph"><span class="upn">4</span><b>OTS NP</b><em class="op">Opsional</em></div><div class="upd">Outstanding Nota Penjualan WMS dan NAV</div><div class="ups" id="ccS_ots"></div><label class="upz" for="ccFOts"><span>Pilih atau tarik file .xlsx ke sini</span><b id="ccP_ots"></b></label><input type="file" id="ccFOts" accept=".xlsx,.xls" hidden><button class="upx secondary" type="button" data-x="ots" hidden>Hapus data OTS NP</button></div><div class="upc" id="ccC_bb"><div class="uph"><span class="upn">5</span><b>OTS BB</b><em class="op">Opsional</em></div><div class="upd">Outstanding Failed Delivery TMS</div><div class="ups" id="ccS_bb"></div><label class="upz" for="ccFBb"><span>Pilih atau tarik file .xlsx ke sini</span><b id="ccP_bb"></b></label><input type="file" id="ccFBb" accept=".xlsx,.xls" hidden><button class="upx secondary" type="button" data-x="bb" hidden>Hapus data OTS BB</button></div></div><div class="actions upa"><button id="ccGo" disabled>Generate</button><button id="ccClear" class="secondary" type="button">Hapus semua data</button><span class="small" id="ccHint"></span></div></div>
+<div id="ccMsg" class="small" style="margin:8px 0">Belum ada data. Buka upload lalu pilih file 1, 2 dan 3 (file 4 dan 5 opsional).</div>
 <div id="ccBody" hidden>
 <div class="cc-chips" id="ccChips"></div><div class="cc-kpi" id="ccKpi"></div>
 <nav class="ccsub"><button id="ccT1" class="active" type="button">Rekap per Category</button><button id="ccT2" type="button">Detail Item</button></nav>
@@ -617,6 +614,19 @@ document.getElementById('toggleOverDetails').addEventListener('click',()=>{const
 #ccPanel .dl{display:flex;justify-content:space-between;gap:8px;font-size:12px;flex-wrap:wrap}#ccPanel .dl .up{color:#1d6b43}#ccPanel .dl .dn{color:#a94c4c}
 #ccPanel .ds{font-size:12px;color:#6d7b88}
 @media(max-width:900px){#ccPanel .cc-kpi{grid-template-columns:1fr 1fr}#ccPanel .kc.hero{grid-column:1/-1}}
+#ccPanel .upg{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin:4px 0 12px}
+#ccPanel .upc{background:#fff;border:1px solid var(--line);border-left:4px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;min-width:0}
+#ccPanel .upc.ok{border-left-color:var(--green)}#ccPanel .upc.pend{border-left-color:var(--blue);background:#f6fafd}#ccPanel .upc.miss{border-left-color:var(--amber)}
+#ccPanel .uph{display:flex;align-items:center;gap:8px}#ccPanel .uph b{color:var(--navy);flex:1;font-size:14px}
+#ccPanel .upn{width:22px;height:22px;border-radius:50%;background:var(--navy);color:#fff;font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex:none}
+#ccPanel .uph em{font-style:normal;font-size:11px;padding:2px 8px;border-radius:99px}#ccPanel .uph em.rq{background:#fbf0d9;color:#8a5f12}#ccPanel .uph em.op{background:#eef1f4;color:var(--muted)}
+#ccPanel .upd{font-size:12px;color:var(--muted)}
+#ccPanel .ups{font-size:12px;min-height:34px;word-break:break-word}#ccPanel .ups span{color:var(--muted)}#ccPanel .ups b.g{color:var(--green)}#ccPanel .ups b.a{color:var(--amber)}
+#ccPanel .upz{margin-top:auto;display:block;border:1.5px dashed #b9c5d1;border-radius:8px;padding:10px;text-align:center;font-size:12px;color:var(--blue);cursor:pointer;background:#fafcfe;transition:background .15s,border-color .15s}
+#ccPanel .upz:hover,#ccPanel .upz.drag{background:var(--pale);border-color:var(--blue)}#ccPanel .upz b{display:block;color:var(--navy);margin-top:2px;word-break:break-all}
+#ccPanel .upc.pend .upz{border-style:solid;border-color:var(--blue)}
+#ccPanel .upx{font-size:12px;padding:4px 8px}
+#ccPanel .upa{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:2px}
 #soPanel .ccwrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px}
 #soPanel table.cct{margin:0;font-size:12px}
 #soPanel table.cct th{white-space:nowrap}
@@ -694,56 +704,86 @@ function hdr(a,need){for(var r=0;r<Math.min(a.length,30);r++){var m={},row=a[r].
 function say(t,bad){var e=$('ccMsg');e.textContent=t;e.style.color=bad?'#a94c4c':''}
 function metaOf(a){var o={};a.slice(0,10).forEach(function(r){var l=String(r[0]).trim().toUpperCase();if(l==='STORE'||l==='PERIODE'||l==='TANGGAL'||l==='TANGGAL PELAKSANAAN'){var v='';for(var j=1;j<r.length;j++)if(String(r[j]).trim()){v=String(r[j]).trim();break}o[l==='TANGGAL PELAKSANAAN'?'TANGGAL':l]=v}});return o}
 
+var SRC=[{id:'item',n:1,inp:'ccFItem',t:'Item Cycle Count',d:'Daftar item yang kena CC',req:1},{id:'nav',n:2,inp:'ccFNav',t:'Stok sistem NAV',d:'Laporan Stock Qty and Value',req:1},{id:'loc',n:3,inp:'ccFLoc',t:'Stok fisik WMS',d:'Stock Warehouse By Location (SWBL)',req:1},{id:'ots',n:4,inp:'ccFOts',t:'OTS NP',d:'Outstanding Nota Penjualan WMS dan NAV',req:0},{id:'bb',n:5,inp:'ccFBb',t:'OTS BB',d:'Outstanding Failed Delivery TMS',req:0}];
+function pend(id){var s=SRC.filter(function(x){return x.id===id})[0];return $(s.inp).files[0]||null}
+function fdt(iso){try{return new Intl.DateTimeFormat('id-ID',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'Asia/Jakarta'}).format(new Date(iso))}catch(e){return ''}}
+function upUI(){
+  var meta=CC&&CC.meta||{},src=meta.src||{},n=0;
+  SRC.forEach(function(s){var f=pend(s.id),c=$('ccC_'+s.id),st=$('ccS_'+s.id),pr=$('ccP_'+s.id),li=src[s.id];if(f)n++;
+    c.classList.toggle('pend',!!f);c.classList.toggle('ok',!f&&!!li);c.classList.toggle('miss',!f&&!li&&!!s.req);
+    pr.textContent=f?f.name:'';
+    st.innerHTML=f?'<b>Siap dimuat</b> · '+esc(f.name):li?'<b class="g">✓ Terpasang</b> · '+esc(li.name||'')+'<br><span>'+(li.date?'Laporan '+esc(li.date)+' · ':'')+nf0.format(li.n||0)+' item · diperbarui '+esc(fdt(li.at))+'</span>':(s.req?'<b class="a">Belum ada file</b>':'Belum dipakai (opsional)');
+    var x=document.querySelector('#ccC_'+s.id+' .upx');if(x)x.hidden=!(li&&!f)});
+  var needNew=!!pend('item'),ok=n>0&&(needNew?(!!pend('nav')&&!!pend('loc')):!!CC);
+  $('ccGo').disabled=!ok;$('ccGo').textContent=n?'Generate · '+n+' file diperbarui':'Generate';
+  $('ccHint').textContent=needNew&&!(pend('nav')&&pend('loc'))?'File item CC baru harus disertai stok NAV dan stok WMS yang sesuai.':(!CC&&!needNew?'Mulai dengan file 1, 2 dan 3. File 4 dan 5 boleh menyusul.':(CC?'Pilih file yang ingin diperbarui saja. File lain tetap memakai data yang sudah tersimpan.':''))}
+function parseItems(wb){var it=aoa(wb,'All Item CC',['Item Code','Category']);
+  if(!it)throw new Error('File 1: kolom "Item Code" dan "Category" tidak ditemukan.');
+  var H=it.h.m,col=function(n){return H[n.toLowerCase()]},items=[],seen={};
+  var cH=col('hari ke-'),cC=col('item class'),cN=col('item name'),cU=col('uom'),cB=col('brand'),cBar=col('barcode');
+  it.a.slice(it.h.r+1).forEach(function(r){var k=key(r[H['Item Code']]);if(!k||seen[k])return;seen[k]=1;
+    items.push({k:k,code:String(r[H['Item Code']]).trim(),name:String(cN>=0?r[cN]:'').trim(),uom:String(cU>=0?r[cU]:'').trim(),brand:String(cB>=0?r[cB]:'').trim(),bar:String(cBar>=0?r[cBar]:'').trim(),cat:String(r[H['Category']]).trim().toUpperCase(),day:cH>=0?String(r[cH]).trim():'',cl:cC>=0?String(r[cC]).trim():'',nq:0,nv:0,has:false,wq:0,locs:[],ots:0,bb:0})});
+  if(!items.length)throw new Error('File 1: tidak ada item.');return {items:items,a:it.a}}
+function rdate(a){var m=String((a[0]&&a[0][0])||'').match(/(\d{1,2}-[A-Za-z]{3}-\d{4}[^\n]*)/);return m?m[1].trim():''}
 async function generate(){
-  var fi=$('ccFItem').files[0],fn=$('ccFNav').files[0],fl=$('ccFLoc').files[0];
-  if(!fi||!fn||!fl){say('Pilih ketiga file terlebih dahulu.',1);return}
-  $('ccGo').disabled=true;say('Membaca file item CC...');
+  var F={};SRC.forEach(function(s){F[s.id]=pend(s.id)});
+  var newItems=!!F.item,n=SRC.filter(function(s){return F[s.id]}).length;
+  if(!n){say('Pilih minimal satu file.',1);return}
+  if(newItems&&(!F.nav||!F.loc)){say('File item CC baru harus disertai stok NAV dan stok WMS.',1);return}
+  if(!newItems&&!CC){say('Belum ada data. Upload file 1, 2 dan 3 dulu.',1);return}
+  $('ccGo').disabled=true;
   try{
-    var wi=await readBook(fi),it=aoa(wi,'All Item CC',['Item Code','Category']);
-    if(!it)throw new Error('File 1: kolom "Item Code" dan "Category" tidak ditemukan.');
-    var H=it.h.m,col=function(n){return H[n.toLowerCase()]},items=[],seen={};
-    var cH=col('hari ke-'),cC=col('item class'),cN=col('item name'),cU=col('uom'),cB=col('brand'),cBar=col('barcode');
-    it.a.slice(it.h.r+1).forEach(function(r){var k=key(r[H['Item Code']]);if(!k||seen[k])return;seen[k]=1;
-      items.push({k:k,code:String(r[H['Item Code']]).trim(),name:String(cN>=0?r[cN]:'').trim(),uom:String(cU>=0?r[cU]:'').trim(),brand:String(cB>=0?r[cB]:'').trim(),bar:String(cBar>=0?r[cBar]:'').trim(),cat:String(r[H['Category']]).trim().toUpperCase(),day:cH>=0?String(r[cH]).trim():'',cl:cC>=0?String(r[cC]).trim():'',nq:0,nv:0,has:false,wq:0,locs:[]})});
-    if(!items.length)throw new Error('File 1: tidak ada item.');
-    var meta=metaOf(it.a);var fo=$('ccFOts').files[0];var fb=$('ccFBb').files[0];meta.files={item:fi.name,nav:fn.name,loc:fl.name,ots:fo?fo.name:'',bb:fb?fb.name:''};
-    say('Membaca stok sistem NAV...');
-    var wn=await readBook(fn),nv=aoa(wn,null,['Item No','Quantity']);
-    if(!nv)throw new Error('File 2: kolom "Item No" dan "Quantity" tidak ditemukan (pakai laporan Stock Qty and Value).');
-    var vi=-1;Object.keys(nv.h.m).forEach(function(c){if(c.indexOf('value')===0&&vi<0)vi=nv.h.m[c]});
+    var meta=CC?JSON.parse(JSON.stringify(CC.meta||{})):{},items,now=new Date().toISOString();meta.src=meta.src||{};
+    if(newItems){say('Membaca file item CC...');var wi=await readBook(F.item),pi=parseItems(wi);items=pi.items;
+      var mo=metaOf(pi.a);['STORE','PERIODE','TANGGAL'].forEach(function(k){meta[k]=mo[k]||''});
+      if(CC){var old={};CC.items.forEach(function(x){old[x.k]=x});items.forEach(function(x){var o=old[x.k];if(o){x.ots=o.ots||0;x.bb=o.bb||0}})}
+      meta.src.item={name:F.item.name,at:now,date:'',n:items.length}}
+    else items=JSON.parse(JSON.stringify(CC.items));
     var want={};items.forEach(function(x){want[x.k]=x});
-    var M=nv.h.m,sq=[],gs=function(r,n){return M[n]>=0&&M[n]!==undefined?String(r[M[n]]==null?'':r[M[n]]).trim().toUpperCase():''};
-    nv.a.slice(nv.h.r+1).forEach(function(r){var k=key(r[nv.h.m['Item No'.toLowerCase()]]);if(k)sq.push({k:k,name:String(r[M['item name']]||'').trim(),cat:gs(r,'category name'),sub:gs(r,'sub category name'),fn:gs(r,'function name'),sfn:gs(r,'sub function name'),mb:gs(r,'master brand name'),br:gs(r,'brand name'),uom:String(r[M['uom']]||'').trim(),type:gs(r,'type'),q:num(r[M['quantity']]),v:vi>=0?num(r[vi]):0});var x=want[k];if(!x)return;x.has=true;x.nq+=num(r[nv.h.m['quantity']]);x.nv+=vi>=0?num(r[vi]):0});
-    window.__qbigSqv=sq;var m=String(nv.a[2]&&nv.a[2][0]||'').match(/Stock Date:\s*([^,]+)/i);meta.navDate=m?m[1].trim():'';
-    say('Membaca stok WMS by lokasi...');
-    var wl=await readBook(fl),lc=aoa(wl,null,['Item No','Stock On Hand Qty']);
-    if(!lc)throw new Error('File 3: kolom "Item No" dan "Stock On Hand Qty" tidak ditemukan (pakai Stock Warehouse By Location).');
-    var cS=lc.h.m['storage location id'],cI=lc.h.m['item no'],cQ=lc.h.m['stock on hand qty'],lm={};
-    lc.a.slice(lc.h.r+1).forEach(function(r){var k=key(r[cI]);var x=want[k];if(!x)return;var q=num(r[cQ]);x.wq+=q;var l=String(cS>=0?r[cS]:'').trim()||'-';lm[k]=lm[k]||{};lm[k][l]=(lm[k][l]||0)+q});
-    items.forEach(function(x){var o=lm[x.k]||{};x.locs=Object.keys(o).map(function(l){return [l,o[l]]}).sort(function(a,b){return b[1]-a[1]});x.wq=Math.round(x.wq*1000)/1000;x.nq=Math.round(x.nq*1000)/1000});
-    var m2=String(lc.a[0]&&lc.a[0][0]||'').match(/(\d{1,2}-[A-Za-z]{3}-\d{4}[^\n]*)/);meta.wmsDate=m2?m2[1].trim():'';
-    var hasOts=false;
-    if(fo){say('Membaca OTS NP...');var wo=await readBook(fo),ot=aoa(wo,null,['Item No','Outstanding Qty Base']);
+    if(F.nav){say('Membaca stok sistem NAV...');
+      var wn=await readBook(F.nav),nv=aoa(wn,null,['Item No','Quantity']);
+      if(!nv)throw new Error('File 2: kolom "Item No" dan "Quantity" tidak ditemukan (pakai laporan Stock Qty and Value).');
+      var vi=-1;Object.keys(nv.h.m).forEach(function(c){if(c.indexOf('value')===0&&vi<0)vi=nv.h.m[c]});
+      items.forEach(function(x){x.nq=0;x.nv=0;x.has=false});
+      var M=nv.h.m,sq=[],gs=function(r,n){return M[n]>=0&&M[n]!==undefined?String(r[M[n]]==null?'':r[M[n]]).trim().toUpperCase():''};
+      nv.a.slice(nv.h.r+1).forEach(function(r){var k=key(r[M['item no']]);if(k)sq.push({k:k,name:String(r[M['item name']]||'').trim(),cat:gs(r,'category name'),sub:gs(r,'sub category name'),fn:gs(r,'function name'),sfn:gs(r,'sub function name'),mb:gs(r,'master brand name'),br:gs(r,'brand name'),uom:String(r[M['uom']]||'').trim(),type:gs(r,'type'),q:num(r[M['quantity']]),v:vi>=0?num(r[vi]):0});var x=want[k];if(!x)return;x.has=true;x.nq+=num(r[M['quantity']]);x.nv+=vi>=0?num(r[vi]):0});
+      items.forEach(function(x){x.nq=Math.round(x.nq*1000)/1000});
+      window.__qbigSqv=sq;var m=String(nv.a[2]&&nv.a[2][0]||'').match(/Stock Date:\s*([^,]+)/i);meta.navDate=m?m[1].trim():'';
+      meta.src.nav={name:F.nav.name,at:now,date:meta.navDate,n:items.filter(function(x){return x.has}).length}}
+    if(F.loc){say('Membaca stok WMS by lokasi...');
+      var wl=await readBook(F.loc),lc=aoa(wl,null,['Item No','Stock On Hand Qty']);
+      if(!lc)throw new Error('File 3: kolom "Item No" dan "Stock On Hand Qty" tidak ditemukan (pakai Stock Warehouse By Location).');
+      var cS=lc.h.m['storage location id'],cI=lc.h.m['item no'],cQ=lc.h.m['stock on hand qty'],lm={};
+      items.forEach(function(x){x.wq=0;x.locs=[]});
+      lc.a.slice(lc.h.r+1).forEach(function(r){var k=key(r[cI]);var x=want[k];if(!x)return;var q=num(r[cQ]);x.wq+=q;var l=String(cS>=0?r[cS]:'').trim()||'-';lm[k]=lm[k]||{};lm[k][l]=(lm[k][l]||0)+q});
+      items.forEach(function(x){var o=lm[x.k]||{};x.locs=Object.keys(o).map(function(l){return [l,o[l]]}).sort(function(a,b){return b[1]-a[1]});x.wq=Math.round(x.wq*1000)/1000});
+      meta.wmsDate=rdate(lc.a);meta.src.loc={name:F.loc.name,at:now,date:meta.wmsDate,n:items.filter(function(x){return x.locs.length}).length}}
+    if(F.ots){say('Membaca OTS NP...');var wo=await readBook(F.ots),ot=aoa(wo,null,['Item No','Outstanding Qty Base']);
       if(!ot)throw new Error('File 4: kolom "Item No" dan "Outstanding Qty Base" tidak ditemukan (pakai Report Outstanding Nota Penjualan WMS dan NAV).');
-      var oi=ot.h.m['item no'],oq=ot.h.m['outstanding qty base'];
-      ot.a.slice(ot.h.r+1).forEach(function(r){var x=want[key(r[oi])];if(x)x.ots=(x.ots||0)+num(r[oq])});
-      var m3=String(ot.a[0]&&ot.a[0][0]||'').match(/(\d{1,2}-[A-Za-z]{3}-\d{4}[^\n]*)/);meta.otsDate=m3?m3[1].trim():'';hasOts=true}
-    var hasBb=false;
-    if(fb){say('Membaca OTS BB...');var wb2=await readBook(fb),bt=aoa(wb2,null,['Item No','Qty']);
+      var oi=ot.h.m['item no'],oq=ot.h.m['outstanding qty base'];items.forEach(function(x){x.ots=0});
+      ot.a.slice(ot.h.r+1).forEach(function(r){var x=want[key(r[oi])];if(x)x.ots+=num(r[oq])});
+      meta.otsDate=rdate(ot.a);meta.hasOts=true;items.forEach(function(x){x.ots=Math.round(x.ots*1000)/1000});
+      meta.src.ots={name:F.ots.name,at:now,date:meta.otsDate,n:items.filter(function(x){return x.ots}).length}}
+    if(F.bb){say('Membaca OTS BB...');var wb2=await readBook(F.bb),bt=aoa(wb2,null,['Item No','Qty']);
       if(!bt)throw new Error('File 5: kolom "Item No" dan "Qty" tidak ditemukan (pakai Report Outstanding Failed Delivery TMS).');
-      var bi=bt.h.m['item no'],bq=bt.h.m['qty'];
-      bt.a.slice(bt.h.r+1).forEach(function(r){var x=want[key(r[bi])];if(x)x.bb=(x.bb||0)+num(r[bq])});
-      var m4=String((bt.a[0]&&bt.a[0][0])||'').match(/(\d{1,2}-[A-Za-z]{3}-\d{4}[^\n]*)/);meta.bbDate=m4?m4[1].trim():'';hasBb=true}
-    meta.hasBb=hasBb;items.forEach(function(x){x.bb=Math.round((x.bb||0)*1000)/1000});
-    meta.hasOts=hasOts;items.forEach(function(x){x.ots=Math.round((x.ots||0)*1000)/1000});
-    meta.at=new Date().toISOString();
-    CC={items:items,meta:meta};save();render();shareCC();$('ccUp').hidden=true;$('ccToggle').textContent='Buka upload ▾';
+      var bi=bt.h.m['item no'],bq=bt.h.m['qty'];items.forEach(function(x){x.bb=0});
+      bt.a.slice(bt.h.r+1).forEach(function(r){var x=want[key(r[bi])];if(x)x.bb+=num(r[bq])});
+      meta.bbDate=rdate(bt.a);meta.hasBb=true;items.forEach(function(x){x.bb=Math.round(x.bb*1000)/1000});
+      meta.src.bb={name:F.bb.name,at:now,date:meta.bbDate,n:items.filter(function(x){return x.bb}).length}}
+    meta.hasOts=!!meta.src.ots;meta.hasBb=!!meta.src.bb;
+    meta.files={item:(meta.src.item||{}).name||'',nav:(meta.src.nav||{}).name||'',loc:(meta.src.loc||{}).name||'',ots:(meta.src.ots||{}).name||'',bb:(meta.src.bb||{}).name||''};
+    meta.at=now;
+    CC={items:items,meta:meta};save();SRC.forEach(function(s){$(s.inp).value=''});render();upUI();shareCC();$('ccUp').hidden=true;$('ccToggle').textContent='Perbarui data ▾';
   }catch(e){say(e.message||String(e),1)}
-  $('ccGo').disabled=false;
+  upUI();
 }
+function dropOpt(id){var x=SRC.filter(function(s){return s.id===id})[0];if(!CC)return;var it=CC.items;
+  it.forEach(function(i){if(id==='ots')i.ots=0;else i.bb=0});
+  if(id==='ots'){CC.meta.hasOts=false;delete CC.meta.otsDate}else{CC.meta.hasBb=false;delete CC.meta.bbDate}
+  if(CC.meta.src)delete CC.meta.src[id];CC.meta.at=new Date().toISOString();save();render();upUI();shareCC()}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(CC))}catch(e){}}
 function shareCC(){if(!window.__shr||!CC)return;say('Menyimpan ke server untuk semua pengguna...');window.__shr.put('cc',CC).then(function(){say('Data tersimpan di server. Semua pengguna melihat data ini.')}).catch(function(e){say('Tersimpan di browser ini saja. '+(e&&e.message||''),1)})}
-var _ccRemote=false;function remoteCC(){if(_ccRemote||!window.__shr)return;_ccRemote=true;window.__shr.get('cc').then(function(j){if(!j)return;var d=j.data;if(!d||!d.items||!d.items.length)return;if(CC&&CC.meta&&CC.meta.at&&d.meta&&d.meta.at&&CC.meta.at>=d.meta.at)return;CC=d;save();render()})}
+var _ccRemote=false;function remoteCC(){if(_ccRemote||!window.__shr)return;_ccRemote=true;window.__shr.get('cc').then(function(j){if(!j)return;var d=j.data;if(!d||!d.items||!d.items.length)return;if(CC&&CC.meta&&CC.meta.at&&d.meta&&d.meta.at&&CC.meta.at>=d.meta.at)return;CC=d;save();render();upUI()})}
 function load(){try{var d=JSON.parse(localStorage.getItem(KEY)||'null');if(d&&d.items&&d.items.length){CC=d;return true}}catch(e){}return false}
 
 var ZN={W:'Warehouse',T:'Topper',D:'Display',O:'Lainnya'};function zg(l){var c=String(l||'').charAt(0).toUpperCase();return c==='W'?'W':c==='C'?'T':c==='D'?'D':'O'}
@@ -922,14 +962,17 @@ function xls(which){
 function tab(n){$('ccV1').hidden=n!==1;$('ccV2').hidden=n!==2;$('ccT1').classList.toggle('active',n===1);$('ccT2').classList.toggle('active',n===2)}
 function show(on){['accuracyPanel','adjustmentPanel','minusPanel','detailsPanel','greyProgPanel'].forEach(function(i){var e=$(i);if(e&&on)e.hidden=true});
   $('ccPanel').hidden=!on;['tabMain','tabDetails','tabGrey'].forEach(function(i){if(on)$(i).classList.remove('active')});$('tabCC').classList.toggle('active',on);
-  if(on&&!CC){load();}if(on&&CC)render();if(on)remoteCC()}
+  if(on&&!CC){load();}if(on&&CC)render();if(on){upUI();remoteCC()}}
 var orig=window.switchPage;
 window.switchPage=function(mode){if(mode==='cc'){show(true);return}$('ccPanel').hidden=true;$('tabCC').classList.remove('active');return orig(mode)};
 $('tabCC').addEventListener('click',function(){window.switchPage('cc')});
-$('ccToggle').addEventListener('click',function(){var u=$('ccUp');u.hidden=!u.hidden;this.textContent=u.hidden?'Buka upload ▾':'Tutup upload ▴'});
-['ccFItem','ccFNav','ccFLoc'].forEach(function(i){$(i).addEventListener('change',function(){$('ccGo').disabled=!($('ccFItem').files[0]&&$('ccFNav').files[0]&&$('ccFLoc').files[0])})});
+$('ccToggle').addEventListener('click',function(){var u=$('ccUp');u.hidden=!u.hidden;this.textContent=u.hidden?'Upload data ▾':'Tutup upload ▴'});
+SRC.forEach(function(s){var inp=$(s.inp),z=document.querySelector('#ccC_'+s.id+' .upz');inp.addEventListener('change',upUI);
+  ['dragenter','dragover'].forEach(function(ev){z.addEventListener(ev,function(e){e.preventDefault();z.classList.add('drag')})});['dragleave','drop'].forEach(function(ev){z.addEventListener(ev,function(){z.classList.remove('drag')})});
+  z.addEventListener('drop',function(e){e.preventDefault();if(e.dataTransfer&&e.dataTransfer.files.length){inp.files=e.dataTransfer.files;upUI()}})});
+[].forEach.call(document.querySelectorAll('#ccUp .upx'),function(b){b.addEventListener('click',function(){dropOpt(b.dataset.x)})});upUI();
 $('ccGo').addEventListener('click',generate);
-$('ccClear').addEventListener('click',function(){CC=null;try{localStorage.removeItem(KEY)}catch(e){}$('ccBody').hidden=true;say('Data dihapus. Upload 3 file untuk memulai.')});
+$('ccClear').addEventListener('click',function(){CC=null;try{localStorage.removeItem(KEY)}catch(e){}$('ccBody').hidden=true;say('Data dihapus. Upload file 1, 2 dan 3 untuk memulai.');upUI()});
 $('ccT1').addEventListener('click',function(){tab(1)});$('ccT2').addEventListener('click',function(){tab(2);detail()});
 $('ccRh').addEventListener('change',function(e){if(e.target.dataset.all){mpClear('ccRh')}else{mpSync('ccRh')}render()});
 ['ccFc','ccFh','ccFz','ccFs'].forEach(function(i){$(i).addEventListener('change',function(e){var t=e.target;if(t.dataset.all){mpClear(i)}else{mpSync(i)}detail()})});document.addEventListener('click',function(e){[].forEach.call(document.querySelectorAll('#ccPanel .ccmp[open]'),function(d){if(!d.contains(e.target))d.open=false})});$('ccFq').addEventListener('input',detail);
@@ -1072,7 +1115,7 @@ function xls(){var X=window.__qbigX;if(!X){say('Tools Excel belum siap. Buka tab
 /* ---------- wiring ---------- */
 var MP=null;function initMP(){MP=window.__qbigMP}
 function wire(){initMP();
-  $('soToggle').addEventListener('click',function(){var u=$('soUp');u.hidden=!u.hidden;this.textContent=u.hidden?'Buka upload ▾':'Tutup upload ▴';var has=window.__qbigSqv&&window.__qbigSqv.length;$('soSqvNote').textContent=has?'Opsional: SQV dari tab Tools SO/CC ('+nf0.format(window.__qbigSqv.length)+' item) otomatis dipakai.':'Wajib jika tab Tools SO/CC belum di-generate pada sesi ini.'});
+  $('soToggle').addEventListener('click',function(){var u=$('soUp');u.hidden=!u.hidden;this.textContent=u.hidden?'Upload data ▾':'Tutup upload ▴';var has=window.__qbigSqv&&window.__qbigSqv.length;$('soSqvNote').textContent=has?'Opsional: SQV dari tab Tools SO/CC ('+nf0.format(window.__qbigSqv.length)+' item) otomatis dipakai.':'Wajib jika tab Tools SO/CC belum di-generate pada sesi ini.'});
   $('soFSo').addEventListener('change',function(){$('soGo').disabled=!$('soFSo').files[0]});$('soGo').addEventListener('click',generate);
   $('soClear').addEventListener('click',function(){R=null;try{localStorage.removeItem(KEY)}catch(e){}$('soBody').hidden=true;say('Data dihapus. Upload laporan SO untuk memulai.')});
   $('soMode').addEventListener('change',view);$('soFq').addEventListener('input',view);
