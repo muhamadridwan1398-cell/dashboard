@@ -866,7 +866,7 @@ function pmRgb(c){c=String(c||'').replace(/^FF/,'');return [parseInt(c.substr(0,
 function pmLum(c){var r=pmRgb(c);return (0.299*r[0]+0.587*r[1]+0.114*r[2])/255}
 function pm(o){o=Object.assign({},o);delete o.fill;
   var cl=o.c||'FF1F2933';o.c=pmLum(cl)>0.55&&pmLum(cl)<0.9?'FF595959':'FF000000';
-  if(o.bd)o.bc='FF000000';return o}
+  if(o.bd)o.bc='FF000000';if(o.hid)o.c='FFFFFFFF';return o}
 function sty(o){o=pm(o);var k=JSON.stringify(o);if(k in XS.map)return XS.map[k];
   var f='<font>'+(o.b?'<b/>':'')+(o.i?'<i/>':'')+'<sz val="'+(o.sz||11)+'"/><color rgb="'+(o.c||'FF1F2933')+'"/><name val="Calibri"/></font>';
   var fi=pushU(XS.fonts,f);
@@ -952,10 +952,10 @@ function xdetail(L,me,fdesc,zf){
   L.forEach(function(x,i){var bg=i%2?'FFEEF4FA':null,zl=zlocs(x,zf),locs=zl.length?zl:[['(tidak ada di lokasi)','']];
     var base=function(o){if(bg)o.fill=bg;o.bd=1;return o},q=function(v,vv){return T(v,base({h:'right',nf:v%1?ND:NI}))};
     locs.forEach(function(l,n){var r=[],first=n===0;
-      r.push(first?T(i+1,base({h:'center',c:'FF5B6577'})):E(base({})));
-      if(first){r.push(T(x.cat,base({sz:10})));r.push(T(x.k,base({h:'center'})));r.push(T(x.name,base({w:1})))}else{r.push(E(base({})),E(base({})),E(base({})))}
+      r.push(first?T(i+1,base({h:'center',c:'FF5B6577'})):T(i+1,base({h:'center',hid:1})));
+      if(first){r.push(T(x.cat,base({sz:10})));r.push(T(x.k,base({h:'center'})));r.push(T(x.name,base({w:1})))}else{r.push(T(x.cat,base({sz:10,hid:1})),T(x.k,base({h:'center',hid:1})),T(x.name,base({hid:1})))}
       if(first){r.push(T(x.uom,base({h:'center'})),T(x.day,base({h:'center'})),q(x.nq),q(x.ots),q(x.bb),q(x.sq),q(x.wq),T(x.d,base(vo(x.d))),T(Math.round(x.val),base(vo(Math.round(x.val)))),T(XSTL[x.st],{b:1,sz:10,h:'center',bd:1,fill:ST[x.st].fill,c:ST[x.st].c}))}
-      else for(var k=0;k<10;k++)r.push(E(base({})));
+      else{r.push(T(x.uom,base({h:'center',hid:1})),T(x.day,base({h:'center',hid:1})));for(var k=0;k<7;k++)r.push(E(base({})));r.push(T(XSTL[x.st],base({h:'center',hid:1})))}
       r.push(T(l[0],base({h:'center',sz:10})));r.push(l[1]===''?E(base({})):q(l[1]));r.push(E({bd:1,bc:'FF8A97A8',fill:'FFFFFFFF'}));rows.push(r);
       if(first){var ln=Math.max(1,Math.ceil(String(x.name).length/46));if(ln>1)ht[rows.length-1]=16*ln}})});
   return {name:'Detail Item',grid:0,first:1,w:W,h:ht,rows:rows,m:m,fz:1,af:'A1:'+last+rows.length,print:{o:'landscape',titles:'$1:$1',fl:'Tools SO/CC · Detail Item'}}}
