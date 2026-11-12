@@ -748,13 +748,13 @@ function xrecap(I,me,days){
   return {name:'Rekap',grid:0,first:1,w:W,h:{0:30,1:22,5:20,7:20},rows:rows,m:m,print:{o:'landscape',titles:'$8:$9',fl:'Tools SO/CC · Rekap'}}}
 function xdetail(L,me,fdesc){
   var T=function(v,o){return {v:v,s:sty(o)}},E=function(o){return T('',o)};
-  var W=[5,24,12,44,7,7,9,8,10,10,10,15,13,21,9],nc=W.length,last=xcol(nc),rows=[],m=[];
+  var W=[5,24,12,44,7,7,9,8,10,10,10,15,13,21,9,16],nc=W.length,last=xcol(nc),rows=[],m=[];
   var row=function(){var a=[];for(var i=0;i<nc;i++)a.push('');return a};
   var r1=row();r1[0]=T('TOOLS SO/CC · DETAIL ITEM',{b:1,sz:16,c:'FFFFFFFF',fill:NAVY,h:'left',ind:1});for(var i=1;i<nc;i++)r1[i]=E({fill:NAVY});rows.push(r1);m.push('A1:'+last+'1');
   var r2=row();r2[0]=T([me.STORE,me.PERIODE,me.TANGGAL].filter(Boolean).join('  ·  ')+'   |   Filter: '+fdesc,{b:1,sz:10,c:'FFFFFFFF',fill:BLUE,h:'left',ind:1});for(i=1;i<nc;i++)r2[i]=E({fill:BLUE});rows.push(r2);m.push('A2:'+last+'2');
   var r3=row();r3[0]=T('Stok NAV: '+(me.navDate||'-')+'   |   Fisik SWBL: '+(me.wmsDate||'-')+'   |   OTS NP: '+(me.hasOts?(me.otsDate||'ada'):'tidak dipakai')+'   |   Variance = Fisik SWBL − (Qty NAV'+(me.hasOts?' + OTS':'')+')',{i:1,sz:9,c:'FF5B6577',h:'left',ind:1});rows.push(r3);m.push('A3:'+last+'3');
   var HS={b:1,c:'FFFFFFFF',fill:NAVY,bd:1,h:'center',bc:'FF183153',w:1};
-  rows.push(['No','Category','Item Code','Item Name','UOM','Hari ke-','Qty NAV','OTS','Qty Sistem (NAV+OTS)','Fisik SWBL','Variance qty','Nilai selisih (Rp)','Status','Lokasi WMS','Qty di lokasi'].map(function(t){return T(t,HS)}));
+  rows.push(['No','Category','Item Code','Item Name','UOM','Hari ke-','Qty NAV','OTS','Qty Sistem (NAV+OTS)','Fisik SWBL','Variance qty','Nilai selisih (Rp)','Status','Lokasi WMS','Qty di lokasi','Cek Fisik'].map(function(t,j){return T(t,j===15?{b:1,c:'FFFFFFFF',fill:'FFB57A22',bd:1,h:'center',bc:'FF183153',w:1}:HS)}));
   var ST={OVER:{fill:'FFC6EFCE',c:'FF006100'},MINUS:{fill:'FFFFC7CE',c:'FF9C0006'},SAMA:{fill:'FFEDF0F3',c:'FF6D7B88'},NOSYS:{fill:'FFFFEB9C',c:'FF9C5700'}};
   var ht={0:30,1:20,3:34};
   L.forEach(function(x,i){var bg=i%2?'FFEEF4FA':null,locs=x.locs.length?x.locs:[['(tidak ada di lokasi)','']];
@@ -764,7 +764,7 @@ function xdetail(L,me,fdesc){
       r.push(T(x.cat,base({sz:10,c:first?'FF1F2933':'FF9AA6B2'})));r.push(T(x.k,base({h:'center',c:first?'FF1F2933':'FF9AA6B2'})));r.push(T(x.name,base({w:first?1:0,c:first?'FF1F2933':'FF9AA6B2'})));
       if(first){r.push(T(x.uom,base({h:'center'})),T(x.day,base({h:'center'})),q(x.nq),q(x.ots),q(x.sq),q(x.wq),T(x.d,base(vo(x.d))),T(Math.round(x.val),base(vo(Math.round(x.val)))),T(STL[x.st],{b:1,sz:10,h:'center',bd:1,fill:ST[x.st].fill,c:ST[x.st].c}))}
       else for(var k=0;k<9;k++)r.push(E(base({})));
-      r.push(T(l[0],base({h:'center',sz:10})));r.push(l[1]===''?E(base({})):q(l[1]));rows.push(r);
+      r.push(T(l[0],base({h:'center',sz:10})));r.push(l[1]===''?E(base({})):q(l[1]));r.push(E({bd:1,bc:'FF8A97A8',fill:'FFFFFFFF'}));rows.push(r);
       if(first){var ln=Math.max(1,Math.ceil(String(x.name).length/46));if(ln>1)ht[rows.length-1]=16*ln}})});
   return {name:'Detail Item',grid:0,first:1,w:W,h:ht,rows:rows,m:m,fz:4,af:'A4:'+last+rows.length,print:{o:'landscape',titles:'$4:$4',fl:'Tools SO/CC · Detail Item'}}}
 function today(){var d=new Date(Date.now()+7*3600e3);return d.toISOString().slice(0,10)}
