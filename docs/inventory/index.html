@@ -562,10 +562,11 @@ function di(t){if(!DI){DI={};S.dict.forEach(function(x,i){DI[x]=i})}var i=DI[t];
 function idb(fn){return new Promise(function(res,rej){try{var q=indexedDB.open('qbig_inv_db',1);q.onupgradeneeded=function(){q.result.createObjectStore('kv')};q.onerror=function(){rej(q.error)};q.onsuccess=function(){var d=q.result,t=d.transaction('kv',fn.w?'readwrite':'readonly'),st=t.objectStore('kv'),r=fn(st);t.oncomplete=function(){d.close();res(r&&r.result)};t.onerror=function(){rej(t.error)};t.onabort=function(){rej(t.error)}}}catch(e){rej(e)}})}
 function mvBlob(){var nm=S.nm||{};return {sal:S.sal,nm:nm,sv:S.sv,dict:S.dict,mt:S.meta.sal||'',pf:S.meta.salFrom||'',pt:S.meta.salTo||'',nw:S.nw||null,cage:S.cage||null}}
 var _pmt;function persistMv(){clearTimeout(_pmt);_pmt=setTimeout(function(){if(!S.sal&&!S.sv&&!S.cage)return;var b=mvBlob();var f=function(st){return st.put(b,'mv')};f.w=1;idb(f).then(function(){try{localStorage.removeItem(MVKEY)}catch(e){}}).catch(function(e){say('Data penjualan tidak tersimpan di browser ini ('+((e&&e.message)||'penyimpanan penuh')+'). Data tetap bisa dipakai selama halaman terbuka; simpan online dengan Login Editor supaya tidak hilang.',1)})},150);return true}
-function applyMv(d){if(d&&!d.sal&&(d.cage||d.nw)){S.nw=d.nw||null;S.cage=d.cage||null;return true}if(d&&d.sal){S.nw=d.nw||null;S.cage=d.cage||null;S.sal=d.sal;S.nm=d.nm||{};S.sv=d.sv||{};S.dict=d.dict||[];DI=null;S.meta.sal=d.mt||'tersimpan';S.meta.salFrom=d.pf||'';S.meta.salTo=d.pt||'';return true}return false}
+function applyCage(d){if(d&&d.cage){S.cage=d.cage;S.nw=d.nw||null;return true}return false}
+function applySal(d){if(d&&d.sal){S.sal=d.sal;S.nm=d.nm||{};S.sv=d.sv||{};S.dict=d.dict||[];DI=null;S.meta.sal=d.mt||'tersimpan';S.meta.salFrom=d.pf||'';S.meta.salTo=d.pt||'';return true}return false}
 function restoreMv(){
-  try{var d=JSON.parse(localStorage.getItem(MVKEY)||'null');if(applyMv(d)){persistMv()}}catch(e){}
-  idb(function(st){return st.get('mv')}).then(function(d){if(!S.sal&&!S.cage&&applyMv(d)){labelFiles();if(!$('#tab-moving').classList.contains('hide'))renderMv()}}).catch(function(){});
+  try{var d=JSON.parse(localStorage.getItem(MVKEY)||'null');if(d){applySal(d);applyCage(d);persistMv()}}catch(e){}
+  idb(function(st){return st.get('mv')}).then(function(d){if(!d)return;var ch=false;if(!S.sal&&applySal(d))ch=true;if(!S.cage&&applyCage(d))ch=true;if(ch){labelFiles();if(!$('#tab-moving').classList.contains('hide'))renderMv()}}).catch(function(){});
 }
 function mvFromSales(r,name){
   var m={},n=0;S.nm=S.nm||{};
@@ -848,7 +849,7 @@ async function shLoad(){
     if(!r.ok)throw new Error('Data tidak dapat dimuat ('+r.status+').');
     var sh=await r.json(),d=sh&&sh.data;
     if(!d||!Array.isArray(d.plano)||!d.plano.length||!d.stk||!d.rep)return;
-    S.plano=d.plano;S.stk=d.stk;S.rep=d.rep;S.cls=d.cls||null;S.inv=d.inv||null;S.dsc=d.dsc||null;if(d.sal||d.cage){S.nw=d.nw||null;S.cage=d.cage||null;if(d.sal){S.sal=d.sal;S.nm=d.nm||{};S.sv=d.sv||{};S.dict=d.dict||[];DI=null}}S.meta=d.meta||{};if(d.sal||d.cage)persistMv();S.meta.savedAt=sh.savedAt;S.meta.by=sh.by||'';
+    S.plano=d.plano;S.stk=d.stk;S.rep=d.rep;S.cls=d.cls||null;S.inv=d.inv||null;S.dsc=d.dsc||null;var ml=S.meta;applyCage(d);if(d.sal){S.sal=d.sal;S.nm=d.nm||{};S.sv=d.sv||{};S.dict=d.dict||[];DI=null}S.meta=d.meta||{};['sal','salFrom','salTo'].forEach(function(k){if(!S.meta[k]&&ml[k])S.meta[k]=ml[k]});if(d.sal||d.cage)persistMv();S.meta.savedAt=sh.savedAt;S.meta.by=sh.by||'';
     labelFiles();build();persist();$('#dataBox').open=false;
     say('Data terakhir disimpan: '+shStamp(sh.savedAt)+(sh.by?' oleh '+String(sh.by).split('@')[0]:'')+'. Semua pengguna melihat data ini.');
   }catch(e){say((e&&e.message)||'Data online belum tersedia.',1)}
