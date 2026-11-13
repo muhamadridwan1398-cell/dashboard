@@ -11,6 +11,7 @@
 .dsl .dslrep{max-width:780px}.dsl .dslrf{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:14px 0 10px}.dsl .dslrf label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--ink2);font-weight:600}.dsl .dslrf input{padding:8px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;font-size:14px;font-weight:400}
 .dsl .dslrk{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px}.dsl .dslrk span{background:#eef2f8;border-radius:99px;padding:4px 12px;font-size:13px}.dsl .dslrk b{font-family:var(--head);color:var(--ok)}
 .dsl #dslrt{width:100%;box-sizing:border-box;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:13.5px;line-height:1.5;padding:12px 14px;border:1px solid #dfe6f1;border-radius:12px;background:#f8fafd;color:#1d2735;resize:vertical}
+.dsl .dslh4{font-family:var(--head);font-size:14px;font-weight:700;margin:16px 0 0;color:var(--navy)}
 .dsl tr.dslsub td{background:#e6e9ee;font-weight:700}.dsl h3{font-size:14px;font-weight:800;color:var(--navy)}.dsl .dslx{font-size:11px;background:#fdecec;color:#a33;border-radius:4px;padding:1px 6px;margin-left:4px;white-space:nowrap}
 .dsl .dslerr{background:#fdf2f2;border:1px solid #efc4c4;color:#8a2d2d;border-radius:8px;padding:10px 12px;font-size:13px;margin:8px 0}
 .dsl .dslset{margin:8px 0;font-size:13px}.dsl .dslset summary{cursor:pointer;font-weight:600;color:var(--navy)}
@@ -2516,7 +2517,7 @@ function dParseNp(rows){
   var M=H.m,g=function(r,n){var j=M[n];return j===undefined?'':String(r[j]==null?'':r[j]).trim()},map={},list=[];
   for(var i=H.r+1;i<rows.length;i++){var r=rows[i],np=g(r,'npno');if(!np||!/^MS/i.test(np))continue;
     var o=map[np];if(!o){o={np:np,cu:g(r,'cust name'),ty:g(r,'type np'),sp:g(r,'sales person name')||g(r,'sales person'),od:dDate(g(r,'order date')),pd:dDate(g(r,'promised delivery date')),cl:dDate(g(r,'close date')),w:dWs(dDate(g(r,'order date')),dDate(g(r,'promised delivery date')),g(r,'pdd status')),k:dKirim(g(r,'comment'),g(r,'amsen/kirim')),on:false,lt:false,it:0,q:0,st:''};map[np]=o;list.push(o)}
-    var s=g(r,'status dsl').toUpperCase();if(s==='EARLY'||s==='ONTIME')o.on=true;else if(s)o.lt=true;if(!o.st||s==='LATE'||s==='OTS')o.st=s||o.st;
+    var s=g(r,'status dsl').toUpperCase();if(s)(o.sc||(o.sc={}))[s]=(o.sc[s]||0)+1;if(s==='EARLY'||s==='ONTIME')o.on=true;else if(s)o.lt=true;if(!o.st||s==='LATE'||s==='OTS')o.st=s||o.st;
     var ddv=g(r,'delivery detail');if(ddv&&!o.dd)o.dd=ddv;o.it++;o.q+=dNum(g(r,'qty np'))||0;if(o.pd==null)o.pd=dDate(g(r,'promised delivery date'))}
   /* tabel riwayat bulanan di sisi kanan sheet (Bulan | INTERNAL ... | ALL NP | Ontime Early | Late) */
   var hist={};
@@ -2594,6 +2595,19 @@ function dRepHtml(){var day=DR.d!=null?DR.d:dRepDefault();if(day==null)return '<
     +'<textarea id="dslrt" readonly rows="22" aria-label="Teks report">'+esc(R.text)+'</textarea>'
     +'<div style="display:flex;gap:8px;align-items:center;margin-top:8px"><button type="button" class="btn" data-dsl="copy">Salin teks</button><span class="sub" id="dslrm" style="margin:0"></span></div>'
     +'<p class="sub" style="margin-top:10px">T1/T2/T3 = telat 1 hari / 2 hari / 3 hari atau lebih dari PDD (sampai tanggal close, atau hari ini kalau belum close). Teks di bawah nomor NP diambil dari kolom <b>Delivery Detail</b> di REASON LATE (atau NP NAV). NP berstatus Exclude = Y dihitung OT. Persen Sameday dan seterusnya adalah porsi dari NP yang OT.</p></div>'}
+function dDiff(pm){var mp={};D.np.forEach(function(x){mp[x.np]=x});var late=dLate(pm),ls={};late.forEach(function(x){ls[x.np]=1});
+  var noRs=late.filter(function(x){var z=D.rs[x.np];return !(z&&z.r)}),extra=[];
+  Object.keys(D.rs).forEach(function(np){var z=D.rs[np];if(z.x||!z.r||ls[np]||!z.m)return;if(((z.y||D.yr)*12+z.m-1)!==pm)return;var x=mp[np],why,st='';
+    if(!x)why='NP tidak ada di NP NAV';else{var sc=x.sc||{};st=Object.keys(sc).map(function(k){return k+(sc[k]>1?' x'+sc[k]:'')}).join(' + ');
+      if(!x.k)why='NP Titip/Amsen (tidak dihitung)';else if(x.on&&(sc.OTS||sc.LATE))why='Sebagian item telat, NP dianggap tepat waktu';else if(x.on)why='Semua item tepat waktu';else why='PDD NP NAV beda bulan'}
+    extra.push({np:np,cu:(x&&x.cu)||z.c||'',st:st,why:why,r:z.r})});
+  return {late:late,noRs:noRs,ok:late.length-noRs.length,extra:extra}}
+function dDiffHtml(pm){var F=dDiff(pm),tb=function(h,rows,mx){return '<div class="tablewrap" style="max-height:'+(mx||300)+'px;overflow:auto;margin-top:8px"><table><thead><tr>'+h+'</tr></thead><tbody>'+rows+'</tbody></table></div>'};
+  var h='<p class="sub" style="margin:0 0 8px">Membandingkan NP telat di NP NAV dengan baris di REASON LATE untuk bulan <b>'+monLab(pm)+'</b>. NP telat = tidak punya item EARLY/ONTIME sama sekali.</p>'
+   +'<div class="dslrk"><span><b>'+fmt(F.late.length)+'</b> NP telat (NP NAV)</span><span><b>'+fmt(F.ok)+'</b> sudah ada reason</span><span><b>'+fmt(F.noRs.length)+'</b> belum ada reason</span><span><b>'+fmt(F.extra.length)+'</b> reason di luar NP telat</span></div>';
+  if(F.noRs.length)h+='<h4 class="dslh4">NP telat yang belum ada reason</h4>'+tb('<th>No NP</th><th>Customer</th><th>Sales</th><th>PDD</th><th>Status item</th>',F.noRs.slice(0,300).map(function(x){var sc=x.sc||{};return '<tr><td class="num id">'+esc(x.np)+'</td><td>'+esc(x.cu)+'</td><td>'+esc(x.sp)+'</td><td class="num">'+dds(dEP(x))+'</td><td>'+esc(Object.keys(sc).join(' + '))+'</td></tr>'}).join(''));
+  if(F.extra.length)h+='<h4 class="dslh4">Reason diisi, tapi NP tidak dihitung telat di NP NAV</h4>'+tb('<th>No NP</th><th>Customer</th><th>Reason</th><th>Status item di NP NAV</th><th>Penyebab selisih</th>',F.extra.slice(0,300).map(function(o){return '<tr><td class="num id">'+esc(o.np)+'</td><td>'+esc(o.cu)+'</td><td>'+esc(o.r)+'</td><td>'+esc(o.st||'–')+'</td><td>'+esc(o.why)+'</td></tr>'}).join(''));
+  return h}
 function dOrig(){var m={};(S.rows||[]).forEach(function(r){if(r.pdD!=null&&r.np&&(m[r.np]==null||r.pdD<m[r.np]))m[r.np]=r.pdD});return m}
 function dEP(x){if(DS.useOrig){var o=DS._o||(DS._o=dOrig());if(o[x.np]!=null)return o[x.np]*864e5}return x.pd}
 function dPdd(){DS._o=null;var o=dOrig(),n=0,same=0,L=[],dm=0;D.np.forEach(function(x){if(!x.k||x.pd==null)return;var a=o[x.np];if(a==null)return;n++;var b=Math.floor(x.pd/864e5);if(a===b){same++;return}
@@ -2668,6 +2682,7 @@ function dslPanel(){
       +'<div class="dslch">'+RS.map(function(o){return '<span><i class="dslcd" style="background:'+(DRC[o.r]||'#6b7b8c')+'"></i><b>'+o.r+'</b> '+fmt(o.v)+' · '+pf(o.v/tt*100)+'</span>'}).join('')+'</div>'
       +'<div class="dslbars">'+F.slice(0,lim).map(function(o){var pz=o.v/tt*100,mxv=F[0].v;return '<div class="dslbr"><div class="dslbl" title="'+esc(o.k)+'">'+esc(o.k)+'</div><div class="dslbt"><i style="width:'+(o.v/mxv*100).toFixed(1)+'%;background:'+(DRC[o.r]||'#6b7b8c')+'"></i></div><div class="dslbv"><b>'+fmt(o.v)+'</b> · '+pf(pz)+'</div></div>'}).join('')+'<p class="sub" style="margin:6px 0 0">Total '+fmt(tt)+' alasan</p></div>'
       +(F.length>10?'<div style="margin-top:8px"><button type="button" class="btn ghost" data-dsl="anall">'+(DS.anAll?'Ringkas (10 teratas)':'Tampilkan semua ('+F.length+')')+'</button></div>':'')}
+  if(cur.live)h+='<h3 style="margin:18px 0 6px">Cek selisih Late vs Reason · '+monLab(cur.pm)+'</h3>'+dDiffHtml(cur.pm);
   var PD=dPdd(),dd=function(v){return dds(v*864e5)};
   h+='<h3 style="margin:18px 0 6px">Cek PDD vs Outstanding</h3>';
   if(!PD.has)h+='<p class="sub">Data Outstanding (OTS NP WMS vs NAV) belum ada, jadi PDD belum bisa dibandingkan.</p>';
