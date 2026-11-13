@@ -5,7 +5,7 @@
 .dsl .dslmon{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.dsl .dslmon button{border:1px solid var(--line);background:#fff;border-radius:99px;padding:5px 12px;font-size:13px;cursor:pointer;color:var(--ink)}
 .dsl .dslmon button[aria-pressed=true]{background:var(--navy);color:#fff;border-color:var(--navy);font-weight:700}
 .dsl .dslbar{height:4px;background:#e8edf3;border-radius:2px;margin-top:3px;min-width:70px}.dsl .dslbar i{display:block;height:100%;background:var(--navy2);border-radius:2px}
-.dsl tr.dslsel td{background:#f1f5fb}.dsl h3{font-size:14px;font-weight:800;color:var(--navy)}.dsl .dslx{font-size:11px;background:#fdecec;color:#a33;border-radius:4px;padding:1px 6px;margin-left:4px;white-space:nowrap}
+.dsl tr.dslsel td{background:#f1f5fb}.dsl .dslck{display:flex;gap:8px;align-items:center;font-size:13px;cursor:pointer}.dsl h3{font-size:14px;font-weight:800;color:var(--navy)}.dsl .dslx{font-size:11px;background:#fdecec;color:#a33;border-radius:4px;padding:1px 6px;margin-left:4px;white-space:nowrap}
 .dsl .dslerr{background:#fdf2f2;border:1px solid #efc4c4;color:#8a2d2d;border-radius:8px;padding:10px 12px;font-size:13px;margin:8px 0}
 .dsl .dslset{margin:8px 0;font-size:13px}.dsl .dslset summary{cursor:pointer;font-weight:600;color:var(--navy)}
 .dsl .dslgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px;margin-top:10px}.dsl .dslgrid label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--ink2)}
@@ -2463,7 +2463,7 @@ function shSave(){
 /* ================= Tab DSL (Delivery Service Level) ================= */
 var DSL_ID='1Uj8TdJVNBfEPGnRnaHX1CLpkVntKpiiIIT59BmnykvA',DSL_GNP='467539596',DSL_GRS='435810186',DSL_KEY='qbig_dsl_cfg_v1';
 var D={st:'idle',err:'',src:'',at:'',np:[],rs:{},hist:{},hasEx:false,yr:new Date().getFullYear()};
-var DS={mon:null,rs:'',q:'',shown:100,cfg:{u1:'',u2:''}};
+var DS={mon:null,rs:'',q:'',shown:100,useOrig:false,cfg:{u1:'',u2:''}};
 try{var _c=JSON.parse(localStorage.getItem(DSL_KEY)||'{}');DS.cfg.u1=_c.u1||'';DS.cfg.u2=_c.u2||''}catch(e){}
 var DMONS={JANUARI:0,FEBRUARI:1,MARET:2,APRIL:3,MEI:4,JUNI:5,JULI:6,AGUSTUS:7,SEPTEMBER:8,OKTOBER:9,NOVEMBER:10,DESEMBER:11};
 var DRS=['INTERNAL','RESCHEDULE','TBDC','TBSPL','TBT'];
@@ -2515,8 +2515,13 @@ function dApply(np,rs,src){
   D.np=np.list;D.hist=np.hist;D.rs=rs;D.src=src;D.at=new Date().toISOString();D.st='ok';
   var mx=0;D.np.forEach(function(x){if(x.pd!=null){var y=new Date(x.pd).getUTCFullYear();if(y>mx)mx=y}});if(mx)D.yr=mx;
   DS.mon=null;DS.shown=100;render()}
+function dOrig(){var m={};(S.rows||[]).forEach(function(r){if(r.pdD!=null&&r.np&&(m[r.np]==null||r.pdD<m[r.np]))m[r.np]=r.pdD});return m}
+function dEP(x){if(DS.useOrig){var o=DS._o||(DS._o=dOrig());if(o[x.np]!=null)return o[x.np]*864e5}return x.pd}
+function dPdd(){DS._o=null;var o=dOrig(),n=0,same=0,L=[],dm=0;D.np.forEach(function(x){if(!x.k||x.pd==null)return;var a=o[x.np];if(a==null)return;n++;var b=Math.floor(x.pd/864e5);if(a===b){same++;return}
+  var ma=monIdx(a),mb=monIdx(b);if(ma!==mb)dm++;L.push({x:x,nav:b,org:a,sel:b-a,bm:mb,om:ma})});
+  L.sort(function(p,q){return (p.om-q.om)||(p.org-q.org)});return {n:n,same:same,beda:L,dm:dm,has:Object.keys(o).length>0}}
 function dMonths(){
-  var T={};D.np.forEach(function(x){if(x.pd==null||!x.k)return;var d=new Date(x.pd),pm=d.getUTCFullYear()*12+d.getUTCMonth(),t=T[pm]||(T[pm]={pm:pm,all:0,on:0,nd:0,ndOn:0,d2:0,d2On:0,live:true,ex:0,rs:[0,0,0,0,0]});
+  var T={};D.np.forEach(function(x){var ep=dEP(x);if(ep==null||!x.k)return;var d=new Date(ep),pm=d.getUTCFullYear()*12+d.getUTCMonth(),t=T[pm]||(T[pm]={pm:pm,all:0,on:0,nd:0,ndOn:0,d2:0,d2On:0,live:true,ex:0,rs:[0,0,0,0,0]});
     t.all++;var ok=x.on||!!(D.rs[x.np]&&D.rs[x.np].x);if(ok)t.on++;if(!x.on&&ok)t.ex++;var w=String(x.w).toUpperCase();if(w==='NEXT DAY'){t.nd++;if(ok)t.ndOn++}else if(w==='2 DAY'){t.d2++;if(ok)t.d2On++}});
   Object.keys(D.hist).forEach(function(m){var pm=D.yr*12+(+m),h=D.hist[m];if(!T[pm]&&h.all){T[pm]={pm:pm,all:h.all,on:h.on||0,nd:null,ndOn:null,d2:null,d2On:null,live:false,ex:null,rs:[0,0,0,0,0]}}});
   /* alasan dari tab REASON LATE */
@@ -2524,13 +2529,13 @@ function dMonths(){
   Object.keys(T).forEach(function(k){var t=T[k],h=D.hist[t.pm%12];if(!t.rs.some(function(x){return x})&&h&&t.pm===D.yr*12+(t.pm%12))t.rs=h.rs.slice();t.late=t.all==null?null:t.all-t.on});
   var ks=Object.keys(T).map(Number).sort(function(a,b){return a-b});return ks.map(function(k){return T[k]})}
 var pc=function(a,b){return b?(a/b*100):null},pf=function(v){return v==null?'–':v.toFixed(2).replace('.',',')+'%'};
-function dLate(pm){return D.np.filter(function(x){if(!x.k||x.on||x.pd==null||(D.rs[x.np]&&D.rs[x.np].x))return false;var d=new Date(x.pd);return d.getUTCFullYear()*12+d.getUTCMonth()===pm})}
+function dLate(pm){return D.np.filter(function(x){var ep=dEP(x);if(!x.k||x.on||ep==null||(D.rs[x.np]&&D.rs[x.np].x))return false;var d=new Date(ep);return d.getUTCFullYear()*12+d.getUTCMonth()===pm})}
 function dDetailRows(pm){var q=DS.q.trim().toLowerCase();return dLate(pm).map(function(x){var z=D.rs[x.np]||{};return {x:x,r:z.r||'',d:z.d||'',ex:!!z.x}}).filter(function(o){if(DS.rs==='__none'){if(o.r)return false}else if(DS.rs==='__ex'){if(!o.ex)return false}else if(DS.rs&&o.r!==DS.rs)return false;
-  return !q||(o.x.np+' '+o.x.cu+' '+o.x.sp+' '+o.x.ty+' '+o.d).toLowerCase().indexOf(q)>=0}).sort(function(a,b){return (a.x.pd||0)-(b.x.pd||0)})}
+  return !q||(o.x.np+' '+o.x.cu+' '+o.x.sp+' '+o.x.ty+' '+o.d).toLowerCase().indexOf(q)>=0}).sort(function(a,b){return (dEP(a.x)||0)-(dEP(b.x)||0)})}
 function dds(v){if(v==null)return '–';var d=new Date(v);return d.getUTCDate()+' '+MON[d.getUTCMonth()]+' '+String(d.getUTCFullYear()).slice(2)}
 function dDetailHtml(pm){var L=dDetailRows(pm),all=dLate(pm).length;
   var h='<p class="sub" style="margin:0 0 8px">'+fmt(L.length)+' dari '+fmt(all)+' NP telat'+(DS.rs||DS.q?' (sesuai filter)':'')+'. Telat = NP tanpa item EARLY/ONTIME.</p><div class="tablewrap" style="max-height:520px;overflow:auto"><table><thead><tr><th>No NP</th><th>Customer</th><th>Tipe NP</th><th>Sales</th><th>PDD</th><th>Close</th><th>Status</th><th>Reason</th><th>Keterangan</th></tr></thead><tbody>';
-  h+=L.length?L.slice(0,DS.shown).map(function(o){var x=o.x;return '<tr><td class="num id">'+esc(x.np)+'</td><td>'+esc(x.cu)+'</td><td>'+esc(x.ty)+'</td><td>'+esc(x.sp)+'</td><td class="num">'+dds(x.pd)+'</td><td class="num">'+dds(x.cl)+'</td><td>'+esc(x.st)+'</td><td>'+(o.r?'<b>'+esc(o.r)+'</b>':'<em style="color:var(--ink3)">belum diisi</em>')+(o.ex?' <span class="dslx">tidak dihitung</span>':'')+'</td><td>'+esc(o.d)+'</td></tr>'}).join(''):'<tr><td colspan="9" class="empty">Tidak ada NP telat untuk filter ini.</td></tr>';
+  h+=L.length?L.slice(0,DS.shown).map(function(o){var x=o.x;return '<tr><td class="num id">'+esc(x.np)+'</td><td>'+esc(x.cu)+'</td><td>'+esc(x.ty)+'</td><td>'+esc(x.sp)+'</td><td class="num">'+dds(dEP(x))+'</td><td class="num">'+dds(x.cl)+'</td><td>'+esc(x.st)+'</td><td>'+(o.r?'<b>'+esc(o.r)+'</b>':'<em style="color:var(--ink3)">belum diisi</em>')+(o.ex?' <span class="dslx">tidak dihitung</span>':'')+'</td><td>'+esc(o.d)+'</td></tr>'}).join(''):'<tr><td colspan="9" class="empty">Tidak ada NP telat untuk filter ini.</td></tr>';
   h+='</tbody></table></div>';if(L.length>DS.shown)h+='<div style="margin-top:10px"><button type="button" class="btn ghost" data-dsl="more">Tampilkan lebih banyak ('+fmt(L.length-DS.shown)+' lagi)</button></div>';return h}
 function dslPanel(){
   if(D.st==='idle')dLoad();
@@ -2559,6 +2564,12 @@ function dslPanel(){
     +MA.map(function(t){var tot=t.rs.reduce(function(s,v){return s+v},0);return '<tr><td class="num"><b>'+monLab(t.pm)+'</b></td>'+t.rs.map(function(v){return '<td class="r num">'+(v?fmt(v):'–')+'</td>'}).join('')+'<td class="r num"><b>'+fmt(tot)+'</b></td><td class="r num">'+(t.late==null?'–':fmt(t.late))+'</td><td class="r num">'+(t.late==null?'–':t.late>=tot?fmt(t.late-tot):'–')+'</td></tr>'}).join('')+'</tbody></table></div>';
   h+='<h3 style="margin:18px 0 6px">Next Day dan 2 Days</h3><p class="sub" style="margin:0 0 6px">Next Day = PDD 1 hari setelah order, 2 Days = 2 hari. Kontribusi = porsi dari semua NP bulan itu. Hanya bulan yang datanya ada di tab NP NAV.</p><div class="tablewrap"><table><thead><tr><th>Bulan PDD</th><th class="r">Next Day</th><th class="r">Kontribusi</th><th class="r">Tepat waktu</th><th class="r">Ach Next Day</th><th class="r">2 Days</th><th class="r">Kontribusi</th><th class="r">Tepat waktu</th><th class="r">Ach 2 Days</th></tr></thead><tbody>'
     +M.map(function(t){var n=function(v){return v==null?'–':fmt(v)};return '<tr><td class="num"><b>'+monLab(t.pm)+'</b></td><td class="r num">'+n(t.nd)+'</td><td class="r num">'+pf(t.nd==null?null:pc(t.nd,t.all))+'</td><td class="r num">'+n(t.ndOn)+'</td><td class="r num"><b>'+pf(t.nd==null?null:pc(t.ndOn,t.nd))+'</b></td><td class="r num">'+n(t.d2)+'</td><td class="r num">'+pf(t.d2==null?null:pc(t.d2,t.all))+'</td><td class="r num">'+n(t.d2On)+'</td><td class="r num"><b>'+pf(t.d2==null?null:pc(t.d2On,t.d2))+'</b></td></tr>'}).join('')+'</tbody></table></div>';
+  var PD=dPdd(),dd=function(v){return dds(v*864e5)};
+  h+='<h3 style="margin:18px 0 6px">Cek PDD vs Outstanding</h3>';
+  if(!PD.has)h+='<p class="sub">Data Outstanding (OTS NP WMS vs NAV) belum ada, jadi PDD belum bisa dibandingkan.</p>';
+  else{h+='<p class="sub" style="margin:0 0 8px">PDD di tab NP NAV dibandingkan dengan PDD asli di laporan Outstanding. Hanya NP yang masih outstanding yang ada di laporan itu: <b>'+fmt(PD.n)+'</b> NP ketemu, <b>'+fmt(PD.same)+'</b> PDD-nya sama, <b>'+fmt(PD.beda.length)+'</b> beda (<b>'+fmt(PD.dm)+'</b> di antaranya beda bulan).</p>'
+    +'<label class="dslck"><input type="checkbox" id="dslorig"'+(DS.useOrig?' checked':'')+'> Pakai PDD asli (Outstanding) untuk menentukan bulan</label>';
+    if(PD.beda.length)h+='<div class="tablewrap" style="max-height:320px;overflow:auto;margin-top:8px"><table><thead><tr><th>No NP</th><th>Customer</th><th>PDD NP NAV</th><th>PDD asli</th><th class="r">Selisih (hari)</th><th>Bulan NP NAV</th><th>Bulan asli</th></tr></thead><tbody>'+PD.beda.slice(0,300).map(function(o){return '<tr><td class="num id">'+esc(o.x.np)+'</td><td>'+esc(o.x.cu)+'</td><td class="num">'+dd(o.nav)+'</td><td class="num">'+dd(o.org)+'</td><td class="r num">'+(o.sel>0?'+':'')+o.sel+'</td><td>'+monLab(o.bm)+'</td><td>'+(o.bm!==o.om?'<b>'+monLab(o.om)+'</b>':monLab(o.om))+'</td></tr>'}).join('')+'</tbody></table></div>'+(PD.beda.length>300?'<p class="sub">Menampilkan 300 pertama dari '+fmt(PD.beda.length)+'. Selengkapnya ada di Excel.</p>':'')}
   var rsOpts=['<option value="">Semua reason</option>'].concat(DRS.map(function(r){return '<option value="'+r+'"'+(DS.rs===r?' selected':'')+'>'+r+'</option>'})).concat(['<option value="__none"'+(DS.rs==='__none'?' selected':'')+'>Belum diisi</option>']).join('');
   h+='<h3 style="margin:18px 0 6px">Detail NP telat · '+monLab(cur.pm)+'</h3>'+'<div class="dslf"><input type="search" id="dslq" placeholder="Cari NP, customer, sales…" value="'+esc(DS.q)+'"><select id="dslrs">'+rsOpts+'</select></div><div id="dsldet">'+(cur.live?dDetailHtml(cur.pm):'<p class="sub">Detail NP hanya tersedia untuk bulan yang datanya ada di tab NP NAV.</p>')+'</div></section>';
   return h}
@@ -2566,13 +2577,15 @@ function dXl(){var M=dMonths().filter(function(t){return !t.stub});if(!M.length)
   var wb=XLSX.utils.book_new(),r1=[['Bulan PDD','Semua NP','Early/Ontime','Late','Ach %','Ach + RC'].concat(DRS)];
   M.forEach(function(t){r1.push([monLab(t.pm),t.all,t.on,t.late,t.all?Math.round(t.on/t.all*10000)/100:'',t.all?Math.round((t.on+t.rs[1])/t.all*10000)/100:''].concat(t.rs))});
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(r1),'Rekap DSL');
-  var r2=[['No NP','Customer','Tipe NP','Sales','PDD','Close','Status','Reason','Keterangan']];dDetailRows(cur.pm).forEach(function(o){var x=o.x;r2.push([x.np,x.cu,x.ty,x.sp,dds(x.pd),dds(x.cl),x.st,o.r,o.d])});
+  var PX=dPdd();if(PX.has){var r3=[['No NP','Customer','PDD NP NAV','PDD asli (Outstanding)','Selisih hari','Bulan NP NAV','Bulan asli']];PX.beda.forEach(function(o){r3.push([o.x.np,o.x.cu,dds(o.nav*864e5),dds(o.org*864e5),o.sel,monLab(o.bm),monLab(o.om)])});XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(r3),'Beda PDD')}
+  var r2=[['No NP','Customer','Tipe NP','Sales','PDD','Close','Status','Reason','Keterangan']];dDetailRows(cur.pm).forEach(function(o){var x=o.x;r2.push([x.np,x.cu,x.ty,x.sp,dds(dEP(x)),dds(x.cl),x.st,o.r,o.d])});
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(r2),'NP telat '+monLab(cur.pm).slice(0,20));XLSX.writeFile(wb,'DSL_'+monLab(cur.pm).replace(' ','_')+'.xlsx')}
 function dFile(f){return new Promise(function(ok,no){var rd=new FileReader();if(/\.csv$/i.test(f.name)){rd.onload=function(){ok(dCsv(String(rd.result)))};rd.onerror=no;rd.readAsText(f)}
   else{rd.onload=function(){try{var wb=XLSX.read(rd.result,{type:'array',cellDates:false}),ws=wb.Sheets[wb.SheetNames[0]];ok(XLSX.utils.sheet_to_json(ws,{header:1,raw:false,defval:'',dateNF:'m/d/yyyy'}))}catch(e){no(e)}};rd.onerror=no;rd.readAsArrayBuffer(f)}})}
 var _df={};
 document.addEventListener('change',function(e){var t=e.target;if(!t||!t.id)return;
   if(t.id==='dslf1'||t.id==='dslf2'){var f=t.files&&t.files[0];if(!f)return;D.st='loading';D.err='';render();dFile(f).then(function(rows){_df[t.id]=rows;if(_df.dslf1&&_df.dslf2){var a=dParseNp(_df.dslf1),b=dParseRs(_df.dslf2);_df={};dApply(a,b,'File upload')}else{D.st='err';D.err='File '+(t.id==='dslf1'?'NP NAV':'REASON LATE')+' dibaca. Pilih juga file '+(t.id==='dslf1'?'REASON LATE':'NP NAV')+'.';render()}}).catch(function(er){_df={};D.st='err';D.err=(er&&er.message)||'File tidak bisa dibaca.';render()});return}
+  if(t.id==='dslorig'){DS.useOrig=t.checked;DS._o=null;DS.mon=null;DS.shown=100;render();return}
   if(t.id==='dslrs'){DS.rs=t.value;DS.shown=100;dDet()}});
 document.addEventListener('input',function(e){var t=e.target;if(t&&t.id==='dslq'){DS.q=t.value;DS.shown=100;dDet()}});
 function dDet(){var el=document.getElementById('dsldet');if(el&&DS.mon!=null)el.innerHTML=dDetailHtml(DS.mon)}
