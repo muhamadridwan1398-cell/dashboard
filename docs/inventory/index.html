@@ -249,7 +249,7 @@ table.dd td.n{text-align:right}
   <div class="card hide" id="mcard">
     <h2>Detail item moving <span id="mcount" style="font-weight:400;color:var(--mut)"></span></h2>
     <div class="flt">
-      <label style="font-size:13.5px">Periode penjualan dari <input id="mpa" type="date"></label><label style="font-size:13.5px">sampai <input id="mpb" type="date"></label><span id="mpdn" style="font-size:13.5px;color:var(--mut)"></span>
+      <label style="font-size:13.5px">Periode penjualan dari <input id="mpa" type="date"></label><label style="font-size:13.5px">sampai <input id="mpb" type="date"></label><label style="font-size:13.5px;display:flex;align-items:center;gap:6px"><input id="mpx" type="checkbox"> Sertakan item DI/ STP/ CP/ J/ (tanggung jawab toko)</label><span id="mpdn" style="font-size:13.5px;color:var(--mut)"></span>
       <label style="font-size:13.5px">Fast = top % nilai jual <input id="mpf" type="number" min="1" max="100" step="1" style="width:66px;text-align:right"></label>
       <label style="font-size:13.5px">Slow = stock cukup lebih dari (hari) <input id="mps" type="number" min="1" step="1" style="width:76px;text-align:right"></label>
     </div>
@@ -570,14 +570,15 @@ function mvFromSqv(r,m){
   S.sv=sv;persistMv();
 }
 function mvDays(){var a=S.meta.salFrom,b=S.meta.salTo;if(!a||!b)return 0;var d=Math.round((Date.parse(b)-Date.parse(a))/864e5)+1;return d>0?d:0}
-function mvParams(){var p={d:mvDays(),f:80,s:180};try{var o=JSON.parse(localStorage.getItem(MPKEY)||'{}');['f','s'].forEach(function(k){if(o[k]>0)p[k]=+o[k]})}catch(e){}return p}
+function mvParams(){var p={d:mvDays(),f:80,s:180,x:0};try{var o=JSON.parse(localStorage.getItem(MPKEY)||'{}');['f','s'].forEach(function(k){if(o[k]>0)p[k]=+o[k]});p.x=o.x?1:0}catch(e){}return p}
 function mvCalc(){
   if(!S.sal||!S.stk||!mvDays())return null;
-  var P=mvParams(),keys={},items=[],noinfo=0,dn=function(i){return i>=0&&S.dict[i]!==undefined?S.dict[i]:''};
+  var P=mvParams(),keys={},items=[],noinfo=0,excl=0,dn=function(i){return i>=0&&S.dict[i]!==undefined?S.dict[i]:''};
   Object.keys(S.sal).forEach(function(k){keys[k]=1});Object.keys(S.stk).forEach(function(k){if(S.stk[k]>0)keys[k]=1});
   var pn={};(S.plano||[]).forEach(function(x){if(x.k&&x.d&&!pn[x.k])pn[x.k]=x.d});
   Object.keys(keys).forEach(function(k){
     var st=Object.prototype.hasOwnProperty.call(S.stk,k)?S.stk[k]:0,sl=S.sal[k],sv=S.sv&&S.sv[k];
+    var nmx=S.nm[k]||pn[k]||'';if(!P.x&&/^(DI|STP|CP|J)\//i.test(nmx)){excl++;return}
     var ci=sv?sv[1]:sl?sl[2]:-1,cat=dn(ci)||'(tanpa info kategori)';if(st>0&&!sv)noinfo++;
     items.push({k:k,d:S.nm[k]||pn[k]||'',c:cat,st:st,sv:sv?sv[0]:0,q:sl?sl[0]:0,v:sl?sl[1]:0,cons:(sv?sv[3]:0)||(sl?sl[4]:0)||0,cv:null,m:0,t:'',o:false})});
   var tv=0,sellers=items.filter(function(i){return i.q>0});sellers.forEach(function(i){tv+=i.v});
@@ -586,7 +587,7 @@ function mvCalc(){
   items.forEach(function(i){
     i.m=i.q/P.d*30;i.cv=i.st>0&&i.q>0?i.st/(i.q/P.d):null;i.o=i.fast&&i.st<=0;
     if(i.q<=0)i.t='dead';else if(i.fast)i.t='fast';else if(i.cv!==null&&i.cv>P.s)i.t='slow';else i.t='norm'});
-  return {P:P,items:items,noinfo:noinfo,tv:tv}
+  return {P:P,items:items,noinfo:noinfo,excl:excl,tv:tv}
 }
 var MTX={fast:'Fast moving',norm:'Normal',slow:'Slow moving',dead:'Dead moving'},MCL={fast:'#1e7a4a',norm:'#33414f',slow:'#c98a1b',dead:'#b3261e'};
 function mvFiltered(){
@@ -602,7 +603,7 @@ function mvFiltered(){
 }
 function renderMv(){
   MC=mvCalc();var P=mvParams();
-  $('#mpa').value=S.meta.salFrom||'';$('#mpb').value=S.meta.salTo||'';$('#mpf').value=P.f;$('#mps').value=P.s;$('#mpdn').textContent=P.d?'= '+nf(P.d)+' hari':'';
+  $('#mpa').value=S.meta.salFrom||'';$('#mpb').value=S.meta.salTo||'';$('#mpf').value=P.f;$('#mpx').checked=!!P.x;$('#mps').value=P.s;$('#mpdn').textContent=P.d?'= '+nf(P.d)+' hari':'';
   if(!MC){['#mkpi','#mrec','#mcard'].forEach(function(x){$(x).classList.add('hide')});$('#mmsgc').classList.remove('hide');
     if(S.sal&&S.stk&&!mvDays()){$('#mcard').classList.remove('hide');$('#mmsgc').classList.remove('hide');$('#mmsg').innerHTML='<b>Isi periode penjualan.</b> Tanggal tarikan data di file tidak tersimpan, jadi isi tanggal awal dan akhir sesuai data yang kamu tarik (mis. 6 bulan terakhir) di kolom Periode penjualan di bawah. Rata-rata jual dan status fast atau dead dihitung dari periode ini.';
       $('#mb').innerHTML='';$('#mrb').innerHTML='';$('#mn').innerHTML='';$('#mcount').textContent='';return}
@@ -630,9 +631,10 @@ function renderMv(){
   $('#mn').innerHTML=(rows.length>MLIM?'Layar menampilkan '+nf(MLIM)+' item pertama. Unduh Excel untuk semua '+nf(rows.length)+' item sesuai filter.<br>':'')
    +'<b>Cara membaca.</b> Penjualan dari file '+esc(S.meta.sal||'penjualan')+' dibagi periode '+nf(P.d)+' hari ('+esc(S.meta.salFrom)+' sampai '+esc(S.meta.salTo)+'). Stock dan nilai stock dari SQV. <b>Dead moving</b>: ada stock di SQV tetapi tidak ada penjualan selama periode. <b>Fast moving</b>: item dengan nilai jual terbesar yang bersama-sama mencapai '+P.f+'% dari total nilai jual. <b>Slow moving</b>: bukan fast dan stock cukup lebih dari '+nf(P.s)+' hari dengan laju jual rata-rata. <b>Normal</b>: sisanya. Stock cukup (hari) = stock ÷ rata-rata jual per hari. Stock minus tidak dihitung sebagai stock. Angka di kartu dan rekap hanya menghitung item yang ada stock di SQV. Fast, stock habis = item fast moving yang stock SQV-nya nol atau minus, kandidat untuk diorder. Item yang pernah laku tetapi tidak ada stock tampil di daftar bawah.'
    +(MC.noinfo?'<br><b style="color:#b3261e">'+nf(MC.noinfo)+' item ber-stock belum punya nama atau kategori dari SQV. Upload ulang file SQV supaya terbaca.</b>':'')
-   +(S.meta.salN?'':'');
+   +(MC.excl?'<br>'+nf(MC.excl)+' item berawalan DI/, STP/, CP/, atau J/ tidak dihitung karena tanggung jawab toko. Centang Sertakan di atas untuk memasukkannya.':'');
 }
 document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('#mkpi button[data-ms]');if(b){MF.s=b.getAttribute('data-ms');renderMv()}});
+$('#mpx').onchange=function(){var o={};try{o=JSON.parse(localStorage.getItem(MPKEY)||'{}')}catch(e){}o.x=this.checked?1:0;try{localStorage.setItem(MPKEY,JSON.stringify(o))}catch(e){}renderMv()};
 ['#mpf:f','#mps:s'].forEach(function(x){var a=x.split(':');$(a[0]).onchange=function(){var o={};try{o=JSON.parse(localStorage.getItem(MPKEY)||'{}')}catch(e){}var v=parseFloat(this.value);if(v>0)o[a[1]]=v;if(a[1]==='f'&&o.f>100)o.f=100;try{localStorage.setItem(MPKEY,JSON.stringify(o))}catch(e){}renderMv()}});
 var mvPer=function(){S.meta.salFrom=$('#mpa').value;S.meta.salTo=$('#mpb').value;persistMv();persist();renderMv();if(mvDays())shSave()};$('#mpa').onchange=mvPer;$('#mpb').onchange=mvPer;
 $('#mfc').onchange=function(){MF.c=this.value;renderMv()};$('#mfs').onchange=function(){MF.s=this.value;renderMv()};$('#mft').onchange=function(){MF.t=this.value;renderMv()};
