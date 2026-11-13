@@ -2,6 +2,8 @@
 (function(){
   var me=document.currentScript,base=me?new URL('.',me.src).href:location.href;
   if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost')){
+    var had=!!navigator.serviceWorker.controller,rl=false;
+    navigator.serviceWorker.addEventListener('controllerchange',function(){if(!had||rl)return;rl=true;try{if(sessionStorage.getItem('qbigSwReload')==='1')return;sessionStorage.setItem('qbigSwReload','1')}catch(e){}location.reload()});
     window.addEventListener('load',function(){navigator.serviceWorker.register(new URL('sw.js',base).href,{scope:base}).catch(function(){})})}
   var sa=function(){return (window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true};
   window.qbigStandalone=sa;
