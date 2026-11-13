@@ -2474,7 +2474,7 @@ function dCsv(t){var rows=[],row=[],f='',q=false,i=0,n=t.length;
   if(f!==''||row.length){row.push(f);rows.push(row)}return rows}
 function dNum(v){v=String(v==null?'':v).trim().replace(/%$/,'');if(!v||/^#/.test(v))return null;if(/^\d{1,3}(\.\d{3})+(,\d+)?$/.test(v))v=v.replace(/\./g,'');v=v.replace(',','.');var n=parseFloat(v);return isNaN(n)?null:n}
 function dDate(v){var m=String(v||'').trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);if(!m)return null;var a=+m[1],b=+m[2],y=+m[3];if(y<100)y+=2000;var mo=a,d=b;if(a>12&&b<=12){mo=b;d=a}return Date.UTC(y,mo-1,d)}
-function dHdr(rows,need){for(var i=0;i<Math.min(rows.length,40);i++){var h=rows[i].map(function(x){return String(x||'').trim().toLowerCase()}),ok=need.every(function(n){return h.indexOf(n)>=0});if(ok){var m={};h.forEach(function(x,j){if(x&&!(x in m))m[x]=j});return {r:i,m:m}}}return null}
+function dHdr(rows,need){for(var i=0;i<Math.min(rows.length,40);i++){var h=rows[i].map(function(x){return String(x||'').trim().toLowerCase()}),ok=need.every(function(n){return h.indexOf(n)>=0});if(ok){var m={};h.forEach(function(x,j){if(x&&!(x in m))m[x]=j});return {r:i,m:m,hs:h}}}return null}
 function dParseNp(rows){
   var H=dHdr(rows,['npno','status dsl','promised delivery date']);if(!H)throw new Error('Tab NP NAV: kolom NPNo, STATUS DSL, dan Promised Delivery Date tidak ditemukan.');
   var M=H.m,g=function(r,n){var j=M[n];return j===undefined?'':String(r[j]==null?'':r[j]).trim()},map={},list=[];
@@ -2490,14 +2490,20 @@ function dParseNp(rows){
     c=rr.length}}}
   return {list:list,hist:hist}}
 function dRsn(s){s=String(s||'').toUpperCase().replace(/\(RC\)/g,'').replace(/[^A-Z]/g,'');return s==='RESCHEDULE'||s==='RC'?'RESCHEDULE':s}
+var MONID={januari:1,februari:2,maret:3,april:4,mei:5,juni:6,juli:7,agustus:8,september:9,oktober:10,november:11,desember:12,jan:1,feb:2,mar:3,apr:4,jun:6,jul:7,agu:8,agt:8,aug:8,sep:9,okt:10,oct:10,nov:11,des:12,dec:12,may:5};
+function dRsMonth(r,mcols,pdj,yj){
+  var pd=pdj!==undefined?dDate(r[pdj]):null;if(pd!=null){var t=new Date(pd);return [t.getUTCMonth()+1,t.getUTCFullYear()]}
+  var m=null;mcols.forEach(function(j){if(m)return;var v=String(r[j]==null?'':r[j]).trim().toLowerCase();if(!v)return;var n=MONID[v]||(/^\d+$/.test(v)&&+v>=1&&+v<=12?+v:null);if(n)m=n});
+  return [m,yj!==undefined?dNum(r[yj]):null]}
 function dParseRs(rows){
   var H=dHdr(rows,['no nota penjualan','reason late customer']);if(!H)throw new Error('Tab REASON LATE: kolom "No Nota Penjualan" dan "Reason Late Customer" tidak ditemukan.');
   var M=H.m,g=function(r,n){var j=M[n];return j===undefined?'':String(r[j]==null?'':r[j]).trim()},out={},mj=-1,yj=M['year'];
   var xj=-1;Object.keys(M).forEach(function(k){if(k==='month'&&mj<0)mj=M[k];if(xj<0&&/^(exclude|excluded|tidak dihitung|tidak dihitung\?|abaikan|diabaikan|skip)$/.test(k))xj=M[k]});
-  D.hasEx=xj>=0;
+  D.hasEx=xj>=0;var pdj=M['tanggalpdd']!==undefined?M['tanggalpdd']:(M['tanggal pdd']!==undefined?M['tanggal pdd']:M['pdd']),mcols=[];H.hs.forEach(function(x,j){if(x==='month')mcols.push(j)});
   for(var i=H.r+1;i<rows.length;i++){var r=rows[i],np=g(r,'no nota penjualan');if(!np||!/^MS/i.test(np))continue;
+    var my=dRsMonth(r,mcols,pdj,yj);
     var xv=xj>=0&&/^(y|ya|yes|x|1|true|v|merah|✓|✔)$/i.test(String(r[xj]||'').trim());
-    out[np]={r:dRsn(g(r,'reason late customer')),d:g(r,'keterangan detail late customer'),m:mj>=0?dNum(r[mj]):null,y:yj!==undefined?dNum(r[yj]):null,c:g(r,'nama customer'),x:xv||!!(out[np]&&out[np].x)}}
+    out[np]={r:dRsn(g(r,'reason late customer')),d:g(r,'keterangan detail late customer'),m:my[0],y:my[1],c:g(r,'nama customer'),x:xv||!!(out[np]&&out[np].x)}}
   return out}
 function dGviz(gid){return 'https://docs.google.com/spreadsheets/d/'+DSL_ID+'/gviz/tq?tqx=out:csv&gid='+gid}
 function dFetch(url){return fetch(url,{cache:'no-store'}).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text()}).then(function(t){if(/^\s*<(!doctype|html)/i.test(t))throw new Error('Sheet belum bisa diakses publik (diminta login).');return dCsv(t)})}
@@ -2514,8 +2520,8 @@ function dMonths(){
     t.all++;var ok=x.on||!!(D.rs[x.np]&&D.rs[x.np].x);if(ok)t.on++;if(!x.on&&ok)t.ex++;var w=String(x.w).toUpperCase();if(w==='NEXT DAY'){t.nd++;if(ok)t.ndOn++}else if(w==='2 DAY'){t.d2++;if(ok)t.d2On++}});
   Object.keys(D.hist).forEach(function(m){var pm=D.yr*12+(+m),h=D.hist[m];if(!T[pm]&&h.all){T[pm]={pm:pm,all:h.all,on:h.on||0,nd:null,ndOn:null,d2:null,d2On:null,live:false,ex:null,rs:[0,0,0,0,0]}}});
   /* alasan dari tab REASON LATE */
-  Object.keys(D.rs).forEach(function(np){var z=D.rs[np],i=DRS.indexOf(z.r);if(i<0)return;var y=z.y||D.yr,pm=y*12+((z.m||0)-1);if(T[pm])T[pm].rs[i]++});
-  Object.keys(T).forEach(function(k){var t=T[k],h=D.hist[t.pm%12];if(!t.rs.some(function(x){return x})&&h&&t.pm===D.yr*12+(t.pm%12))t.rs=h.rs.slice();t.late=t.all-t.on});
+  Object.keys(D.rs).forEach(function(np){var z=D.rs[np],i=DRS.indexOf(z.r);if(i<0||!z.m)return;var y=z.y||D.yr,pm=y*12+(z.m-1);if(!T[pm])T[pm]={pm:pm,all:null,on:null,nd:null,ndOn:null,d2:null,d2On:null,live:false,ex:null,stub:true,rs:[0,0,0,0,0]};T[pm].rs[i]++});
+  Object.keys(T).forEach(function(k){var t=T[k],h=D.hist[t.pm%12];if(!t.rs.some(function(x){return x})&&h&&t.pm===D.yr*12+(t.pm%12))t.rs=h.rs.slice();t.late=t.all==null?null:t.all-t.on});
   var ks=Object.keys(T).map(Number).sort(function(a,b){return a-b});return ks.map(function(k){return T[k]})}
 var pc=function(a,b){return b?(a/b*100):null},pf=function(v){return v==null?'–':v.toFixed(2).replace('.',',')+'%'};
 function dLate(pm){return D.np.filter(function(x){if(!x.k||x.on||x.pd==null||(D.rs[x.np]&&D.rs[x.np].x))return false;var d=new Date(x.pd);return d.getUTCFullYear()*12+d.getUTCMonth()===pm})}
@@ -2540,7 +2546,7 @@ function dslPanel(){
     +'<label>Upload manual tab NP NAV (.csv / .xlsx)<input type="file" id="dslf1" accept=".csv,.xlsx,.xls"></label><label>Upload manual tab REASON LATE (.csv / .xlsx)<input type="file" id="dslf2" accept=".csv,.xlsx,.xls"></label>'
     +'</div><p class="sub" style="margin:8px 0 0">Kosongkan link untuk memakai spreadsheet bawaan. Upload manual dipakai kalau akses Google ditolak: unduh kedua tab sebagai CSV, pilih keduanya, lalu data dihitung otomatis.</p></details>';
   if(D.st!=='ok'){return h+(D.st==='loading'?'<p class="empty" style="margin-top:16px">Memuat…</p>':'')+'</section>'}
-  var M=dMonths();if(!M.length)return h+'<p class="empty">Belum ada NP Kirim dengan tanggal PDD di data.</p></section>';
+  var MA=dMonths(),M=MA.filter(function(t){return !t.stub});if(!M.length)return h+'<p class="empty">Belum ada NP Kirim dengan tanggal PDD di data.</p></section>';
   var live=M.filter(function(t){return t.live});if(DS.mon==null||!M.some(function(t){return t.pm===DS.mon}))DS.mon=(live.length?live[live.length-1]:M[M.length-1]).pm;
   var cur=M.filter(function(t){return t.pm===DS.mon})[0],ci=M.indexOf(cur),prev=ci>0?M[ci-1]:null,a=pc(cur.on,cur.all),rc=cur.rs[1],arc=pc(cur.on+rc,cur.all),pa=prev?pc(prev.on,prev.all):null;
   h+='<div class="dslmon">'+M.map(function(t){return '<button type="button" data-dsl="mon" data-pm="'+t.pm+'" aria-pressed="'+(t.pm===DS.mon)+'">'+monLab(t.pm)+'</button>'}).join('')+'</div>';
@@ -2550,13 +2556,13 @@ function dslPanel(){
     +M.map(function(t,i){var x=pc(t.on,t.all),y=pc(t.on+t.rs[1],t.all),p=i?M[i-1]:null,px=p?pc(p.on,p.all):null,dl=p&&x!=null&&px!=null?x-px:null;
       return '<tr'+(t.pm===DS.mon?' class="dslsel"':'')+'><td class="num"><b>'+monLab(t.pm)+'</b></td><td class="r num">'+fmt(t.all)+'</td><td class="r num">'+fmt(t.on)+'</td><td class="r num">'+fmt(t.late)+'</td><td class="r num"><b>'+pf(x)+'</b><div class="dslbar"><i style="width:'+Math.min(100,x||0).toFixed(1)+'%"></i></div></td><td class="r num">'+pf(y)+'</td><td class="r num">'+(dl==null?'–':(dl>=0?'▲ ':'▼ ')+Math.abs(dl).toFixed(2).replace('.',',')+'')+'</td></tr>'}).join('')+'</tbody></table></div>';
   h+='<h3 style="margin:18px 0 6px">Alasan telat per bulan</h3><div class="tablewrap"><table><thead><tr><th>Bulan PDD</th>'+DRS.map(function(r){return '<th class="r">'+r+'</th>'}).join('')+'<th class="r">Total alasan</th><th class="r">NP telat</th><th class="r">Belum diisi</th></tr></thead><tbody>'
-    +M.map(function(t){var tot=t.rs.reduce(function(s,v){return s+v},0);return '<tr><td class="num"><b>'+monLab(t.pm)+'</b></td>'+t.rs.map(function(v){return '<td class="r num">'+(v?fmt(v):'–')+'</td>'}).join('')+'<td class="r num"><b>'+fmt(tot)+'</b></td><td class="r num">'+fmt(t.late)+'</td><td class="r num">'+(t.late>=tot?fmt(t.late-tot):'–')+'</td></tr>'}).join('')+'</tbody></table></div>';
+    +MA.map(function(t){var tot=t.rs.reduce(function(s,v){return s+v},0);return '<tr><td class="num"><b>'+monLab(t.pm)+'</b></td>'+t.rs.map(function(v){return '<td class="r num">'+(v?fmt(v):'–')+'</td>'}).join('')+'<td class="r num"><b>'+fmt(tot)+'</b></td><td class="r num">'+(t.late==null?'–':fmt(t.late))+'</td><td class="r num">'+(t.late==null?'–':t.late>=tot?fmt(t.late-tot):'–')+'</td></tr>'}).join('')+'</tbody></table></div>';
   h+='<h3 style="margin:18px 0 6px">Next Day dan 2 Days</h3><p class="sub" style="margin:0 0 6px">Next Day = PDD 1 hari setelah order, 2 Days = 2 hari. Kontribusi = porsi dari semua NP bulan itu. Hanya bulan yang datanya ada di tab NP NAV.</p><div class="tablewrap"><table><thead><tr><th>Bulan PDD</th><th class="r">Next Day</th><th class="r">Kontribusi</th><th class="r">Tepat waktu</th><th class="r">Ach Next Day</th><th class="r">2 Days</th><th class="r">Kontribusi</th><th class="r">Tepat waktu</th><th class="r">Ach 2 Days</th></tr></thead><tbody>'
     +M.map(function(t){var n=function(v){return v==null?'–':fmt(v)};return '<tr><td class="num"><b>'+monLab(t.pm)+'</b></td><td class="r num">'+n(t.nd)+'</td><td class="r num">'+pf(t.nd==null?null:pc(t.nd,t.all))+'</td><td class="r num">'+n(t.ndOn)+'</td><td class="r num"><b>'+pf(t.nd==null?null:pc(t.ndOn,t.nd))+'</b></td><td class="r num">'+n(t.d2)+'</td><td class="r num">'+pf(t.d2==null?null:pc(t.d2,t.all))+'</td><td class="r num">'+n(t.d2On)+'</td><td class="r num"><b>'+pf(t.d2==null?null:pc(t.d2On,t.d2))+'</b></td></tr>'}).join('')+'</tbody></table></div>';
   var rsOpts=['<option value="">Semua reason</option>'].concat(DRS.map(function(r){return '<option value="'+r+'"'+(DS.rs===r?' selected':'')+'>'+r+'</option>'})).concat(['<option value="__none"'+(DS.rs==='__none'?' selected':'')+'>Belum diisi</option>']).join('');
   h+='<h3 style="margin:18px 0 6px">Detail NP telat · '+monLab(cur.pm)+'</h3>'+'<div class="dslf"><input type="search" id="dslq" placeholder="Cari NP, customer, sales…" value="'+esc(DS.q)+'"><select id="dslrs">'+rsOpts+'</select></div><div id="dsldet">'+(cur.live?dDetailHtml(cur.pm):'<p class="sub">Detail NP hanya tersedia untuk bulan yang datanya ada di tab NP NAV.</p>')+'</div></section>';
   return h}
-function dXl(){var M=dMonths();if(!M.length)return;var cur=M.filter(function(t){return t.pm===DS.mon})[0];
+function dXl(){var M=dMonths().filter(function(t){return !t.stub});if(!M.length)return;var cur=M.filter(function(t){return t.pm===DS.mon})[0];
   var wb=XLSX.utils.book_new(),r1=[['Bulan PDD','Semua NP','Early/Ontime','Late','Ach %','Ach + RC'].concat(DRS)];
   M.forEach(function(t){r1.push([monLab(t.pm),t.all,t.on,t.late,t.all?Math.round(t.on/t.all*10000)/100:'',t.all?Math.round((t.on+t.rs[1])/t.all*10000)/100:''].concat(t.rs))});
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(r1),'Rekap DSL');
