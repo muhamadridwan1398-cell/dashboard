@@ -244,7 +244,7 @@ table.dd td.n{text-align:right}
   <div class="kpi hide" id="mkpi" aria-label="Ringkasan fast dan dead moving"></div>
   <div class="card hide" id="mrec">
     <h2>Rekap per kategori <span style="font-weight:400;color:var(--mut)">· jumlah item ber-stock per kelompok, stock dari SQV</span></h2>
-    <div class="dt"><table class="dd"><thead><tr><th>Kategori</th><th style="text-align:right">Fast</th><th style="text-align:right">Normal</th><th style="text-align:right">Slow</th><th style="text-align:right">Dead</th><th style="text-align:right">New belum laku</th><th style="text-align:right">Item ber-stock</th><th style="text-align:right">Nilai stock</th><th style="text-align:right">Nilai stock dead</th><th style="text-align:right">% dead</th></tr></thead><tbody id="mrb"></tbody></table></div>
+    <div class="dt"><table class="dd"><thead><tr><th>Kategori</th><th style="text-align:right">Fast</th><th style="text-align:right">Normal</th><th style="text-align:right">Slow</th><th style="text-align:right">Dead</th><th style="text-align:right">Item ber-stock</th><th style="text-align:right">Nilai stock</th><th style="text-align:right">Nilai stock dead</th><th style="text-align:right">% dead</th></tr></thead><tbody id="mrb"></tbody></table></div>
   </div>
   <div class="card hide" id="mcard">
     <h2>Detail item moving <span id="mcount" style="font-weight:400;color:var(--mut)"></span></h2>
@@ -256,14 +256,14 @@ table.dd td.n{text-align:right}
     <div id="mrest">
     <div class="flt">
       <select id="mfc"></select>
-      <select id="mfs"><option value="">Semua status</option><option value="fast">Fast moving</option><option value="norm">Normal</option><option value="slow">Slow moving</option><option value="dead">Dead moving</option><option value="newd">New item, belum laku</option><option value="out">Fast moving, stock habis</option></select>
+      <select id="mfs"><option value="">Semua status</option><option value="fast">Fast moving</option><option value="norm">Normal</option><option value="slow">Slow moving</option><option value="dead">Dead moving</option><option value="out">Fast moving, stock habis</option></select>
       <select id="mfn"><option value="">Semua item</option><option value="Y">Hanya new item</option><option value="N">Tanpa new item</option></select>
       <select id="mft"><option value="">Retail + Konsinyasi</option><option value="R">Retail</option><option value="K">Konsinyasi</option></select>
       <input id="mfq" type="search" placeholder="Cari item no / deskripsi" style="min-width:220px">
       <button class="x" id="mfr">Reset</button>
       <button class="g" id="mbx">⬇️ Unduh Excel</button>
     </div>
-    <div class="dt"><table class="dd"><thead><tr><th>Item No</th><th>Deskripsi</th><th>Kategori</th><th>Status</th><th style="text-align:right">Stock</th><th style="text-align:right">Nilai stock</th><th style="text-align:right">Terjual</th><th style="text-align:right">Nilai jual</th><th style="text-align:right">Rata-rata / bulan</th><th style="text-align:right">Stock cukup (hari)</th></tr></thead><tbody id="mb"></tbody></table></div>
+    <div class="dt"><table class="dd"><thead><tr><th>Item No</th><th>Deskripsi</th><th>Kategori</th><th>Status</th><th>New item</th><th style="text-align:right">Stock</th><th style="text-align:right">Nilai stock</th><th style="text-align:right">Terjual</th><th style="text-align:right">Nilai jual</th><th style="text-align:right">Rata-rata / bulan</th><th style="text-align:right">Stock cukup (hari)</th></tr></thead><tbody id="mb"></tbody></table></div>
     <div class="note" id="mn"></div>
     </div>
   </div>
@@ -595,7 +595,7 @@ function mvCalc(){
   sellers.forEach(function(i){var before=cum;cum+=i.v;i.fast=before<lim});
   items.forEach(function(i){
     i.m=i.q/P.d*30;i.cv=i.st>0&&i.q>0?i.st/(i.q/P.d):null;i.o=i.fast&&i.st<=0;
-    if(i.q<=0)i.t=i.nw?'newd':'dead';else if(i.fast)i.t='fast';else if(i.cv!==null&&i.cv>P.s)i.t='slow';else i.t='norm'});
+    if(i.q<=0)i.t='dead';else if(i.fast)i.t='fast';else if(i.cv!==null&&i.cv>P.s)i.t='slow';else i.t='norm'});
   return {P:P,items:items,noinfo:noinfo,excl:excl,tv:tv}
 }
 var MTX={fast:'Fast moving',norm:'Normal',slow:'Slow moving',dead:'Dead moving',newd:'New item, belum laku'},MCL={fast:'#1e7a4a',norm:'#33414f',slow:'#c98a1b',dead:'#b3261e',newd:'#2f6fb0'};
@@ -624,22 +624,23 @@ function renderMv(){
     var r=rec[i.c]||(rec[i.c]={fast:0,norm:0,slow:0,dead:0,newd:0,n:0,v:0,dv:0});
     if(i.st>0){g[i.t][0]++;g[i.t][1]+=i.sv;r[i.t]++;r.n++;r.v+=i.sv;if(i.t==='dead')r.dv+=i.sv}
     if(i.o){out++;outv+=i.v}});
+  var dnw=I.filter(function(i){return i.t==='dead'&&i.st>0&&i.nw}).length;
   var kb=function(l,n,s,c){return '<button type="button" data-ms="'+c+'"><span class="l">'+l+'</span><span class="n'+(c==='dead'||c==='out'?' y':'')+'">'+nf(n)+'</span><span class="s">'+s+'</span></button>'};
   var rp=function(v){return 'Rp '+nf(Math.round(v/1e6))+' jt'};
-  $('#mkpi').innerHTML=kb('Fast moving',g.fast[0],'stock '+rp(g.fast[1]),'fast')+kb('Normal',g.norm[0],'stock '+rp(g.norm[1]),'norm')+kb('Slow moving',g.slow[0],'stock '+rp(g.slow[1]),'slow')+kb('Dead moving',g.dead[0],'stock '+rp(g.dead[1])+(g.newd[0]?' · di luar '+nf(g.newd[0])+' new item':''),'dead')+kb('Fast, stock habis',out,'penjualan '+rp(outv),'out');
+  $('#mkpi').innerHTML=kb('Fast moving',g.fast[0],'stock '+rp(g.fast[1]),'fast')+kb('Normal',g.norm[0],'stock '+rp(g.norm[1]),'norm')+kb('Slow moving',g.slow[0],'stock '+rp(g.slow[1]),'slow')+kb('Dead moving',g.dead[0],'stock '+rp(g.dead[1])+(dnw?' · '+nf(dnw)+' new item':''),'dead')+kb('Fast, stock habis',out,'penjualan '+rp(outv),'out');
   var cs=Object.keys(rec).sort(function(a,b){return rec[b].v-rec[a].v}),tot={fast:0,norm:0,slow:0,dead:0,newd:0,n:0,v:0,dv:0},rh='';
   cs.forEach(function(c){var r=rec[c];['fast','norm','slow','dead','newd','n','v','dv'].forEach(function(k){tot[k]+=r[k]});
-    rh+='<tr><td>'+esc(c)+'</td><td class="n">'+nf(r.fast)+'</td><td class="n">'+nf(r.norm)+'</td><td class="n">'+nf(r.slow)+'</td><td class="n">'+nf(r.dead)+'</td><td class="n">'+nf(r.newd)+'</td><td class="n">'+nf(r.n)+'</td><td class="n">'+nf(Math.round(r.v))+'</td><td class="n">'+nf(Math.round(r.dv))+'</td><td class="n">'+(r.v?(r.dv/r.v*100).toFixed(1).replace('.',',')+'%':'–')+'</td></tr>'});
-  rh+='<tr class="cc"><td><b>Total</b></td><td class="n"><b>'+nf(tot.fast)+'</b></td><td class="n"><b>'+nf(tot.norm)+'</b></td><td class="n"><b>'+nf(tot.slow)+'</b></td><td class="n"><b>'+nf(tot.dead)+'</b></td><td class="n"><b>'+nf(tot.newd)+'</b></td><td class="n"><b>'+nf(tot.n)+'</b></td><td class="n"><b>'+nf(Math.round(tot.v))+'</b></td><td class="n"><b>'+nf(Math.round(tot.dv))+'</b></td><td class="n"><b>'+(tot.v?(tot.dv/tot.v*100).toFixed(1).replace('.',',')+'%':'–')+'</b></td></tr>';
+    rh+='<tr><td>'+esc(c)+'</td><td class="n">'+nf(r.fast)+'</td><td class="n">'+nf(r.norm)+'</td><td class="n">'+nf(r.slow)+'</td><td class="n">'+nf(r.dead)+'</td><td class="n">'+nf(r.n)+'</td><td class="n">'+nf(Math.round(r.v))+'</td><td class="n">'+nf(Math.round(r.dv))+'</td><td class="n">'+(r.v?(r.dv/r.v*100).toFixed(1).replace('.',',')+'%':'–')+'</td></tr>'});
+  rh+='<tr class="cc"><td><b>Total</b></td><td class="n"><b>'+nf(tot.fast)+'</b></td><td class="n"><b>'+nf(tot.norm)+'</b></td><td class="n"><b>'+nf(tot.slow)+'</b></td><td class="n"><b>'+nf(tot.dead)+'</b></td><td class="n"><b>'+nf(tot.n)+'</b></td><td class="n"><b>'+nf(Math.round(tot.v))+'</b></td><td class="n"><b>'+nf(Math.round(tot.dv))+'</b></td><td class="n"><b>'+(tot.v?(tot.dv/tot.v*100).toFixed(1).replace('.',',')+'%':'–')+'</b></td></tr>';
   $('#mrb').innerHTML=rh;
   var fc=$('#mfc'),cur=MF.c;fc.innerHTML='<option value="">Semua kategori</option>'+cs.map(function(c){return '<option value="'+esc(c)+'"'+(c===cur?' selected':'')+'>'+esc(c)+'</option>'}).join('');
   $('#mfs').value=MF.s;$('#mft').value=MF.t;$('#mfn').value=MF.n;
   var rows=mvFiltered(),h='';
-  rows.slice(0,MLIM).forEach(function(i){h+='<tr><td>'+esc(i.k)+'</td><td>'+esc(i.d||'-')+(i.cons?' <small>(konsinyasi)</small>':'')+(i.nw?' <small style="color:#2f6fb0"><b>NEW</b></small>':'')+'</td><td>'+esc(i.c)+'</td><td><b style="color:'+MCL[i.t]+'">'+MTX[i.t]+'</b>'+(i.o?' <small style="color:#b3261e">stock habis</small>':'')+'</td><td class="n">'+nf(i.st)+'</td><td class="n">'+nf(i.sv)+'</td><td class="n">'+nf(i.q)+'</td><td class="n">'+nf(i.v)+'</td><td class="n">'+(i.q?i.m.toFixed(1).replace('.',','):'–')+'</td><td class="n">'+(i.cv===null?'–':nf(Math.round(i.cv)))+'</td></tr>'});
-  $('#mb').innerHTML=h||'<tr><td colspan="10" style="padding:18px;color:var(--mut)">Tidak ada data.</td></tr>';
+  rows.slice(0,MLIM).forEach(function(i){h+='<tr><td>'+esc(i.k)+'</td><td>'+esc(i.d||'-')+(i.cons?' <small>(konsinyasi)</small>':'')+'</td><td>'+esc(i.c)+'</td><td><b style="color:'+MCL[i.t]+'">'+MTX[i.t]+'</b>'+(i.o?' <small style="color:#b3261e">stock habis</small>':'')+'</td><td>'+(i.nw?'<b style="color:#2f6fb0">Ya</b>':(S.nw?'Tidak':'–'))+'</td><td class="n">'+nf(i.st)+'</td><td class="n">'+nf(i.sv)+'</td><td class="n">'+nf(i.q)+'</td><td class="n">'+nf(i.v)+'</td><td class="n">'+(i.q?i.m.toFixed(1).replace('.',','):'–')+'</td><td class="n">'+(i.cv===null?'–':nf(Math.round(i.cv)))+'</td></tr>'});
+  $('#mb').innerHTML=h||'<tr><td colspan="11" style="padding:18px;color:var(--mut)">Tidak ada data.</td></tr>';
   $('#mcount').textContent='· '+nf(rows.length)+' item';
   $('#mn').innerHTML=(rows.length>MLIM?'Layar menampilkan '+nf(MLIM)+' item pertama. Unduh Excel untuk semua '+nf(rows.length)+' item sesuai filter.<br>':'')
-   +'<b>Cara membaca.</b> Penjualan dari file '+esc(S.meta.sal||'penjualan')+' dibagi periode '+nf(P.d)+' hari ('+esc(S.meta.salFrom)+' sampai '+esc(S.meta.salTo)+'). Stock dan nilai stock dari SQV. <b>Dead moving</b>: ada stock di SQV tetapi tidak ada penjualan selama periode. <b>Fast moving</b>: item dengan nilai jual terbesar yang bersama-sama mencapai '+P.f+'% dari total nilai jual. <b>Slow moving</b>: bukan fast dan stock cukup lebih dari '+nf(P.s)+' hari dengan laju jual rata-rata. <b>New item, belum laku</b>: item bertanda New Item = Yes di file Replenishment yang belum ada penjualan, dipisah dari dead moving karena belum waktunya dinilai. <b>Normal</b>: sisanya. Stock cukup (hari) = stock ÷ rata-rata jual per hari. Stock minus tidak dihitung sebagai stock. Angka di kartu dan rekap hanya menghitung item yang ada stock di SQV. Fast, stock habis = item fast moving yang stock SQV-nya nol atau minus, kandidat untuk diorder. Item yang pernah laku tetapi tidak ada stock tampil di daftar bawah.'
+   +'<b>Cara membaca.</b> Penjualan dari file '+esc(S.meta.sal||'penjualan')+' dibagi periode '+nf(P.d)+' hari ('+esc(S.meta.salFrom)+' sampai '+esc(S.meta.salTo)+'). Stock dan nilai stock dari SQV. <b>Dead moving</b>: ada stock di SQV tetapi tidak ada penjualan selama periode. <b>Fast moving</b>: item dengan nilai jual terbesar yang bersama-sama mencapai '+P.f+'% dari total nilai jual. <b>Slow moving</b>: bukan fast dan stock cukup lebih dari '+nf(P.s)+' hari dengan laju jual rata-rata. Kolom <b>New item</b> diambil dari kolom New Item di file Replenishment (Ya = new item). New item yang belum laku tetap masuk dead moving; pakai filter New item untuk memisahkannya. <b>Normal</b>: sisanya. Stock cukup (hari) = stock ÷ rata-rata jual per hari. Stock minus tidak dihitung sebagai stock. Angka di kartu dan rekap hanya menghitung item yang ada stock di SQV. Fast, stock habis = item fast moving yang stock SQV-nya nol atau minus, kandidat untuk diorder. Item yang pernah laku tetapi tidak ada stock tampil di daftar bawah.'
    +(MC.noinfo?'<br><b style="color:#b3261e">'+nf(MC.noinfo)+' item ber-stock belum punya nama atau kategori dari SQV. Upload ulang file SQV supaya terbaca.</b>':'')
    +(S.rep&&!S.nw?'<br><b style="color:#b3261e">Kolom New Item belum terbaca. Upload ulang file Replenishment Calculation by Date supaya item baru terdeteksi.</b>':'')+(MC.excl?'<br>'+nf(MC.excl)+' item berawalan DI/, STP/, CP/, atau J/ tidak dihitung karena tanggung jawab toko. Centang Sertakan di atas untuk memasukkannya.':'');
 }
@@ -655,9 +656,9 @@ $('#mbx').onclick=function(){
   var dr=[['Item No','Deskripsi','Kategori','Status','Stock habis (laku)','Konsinyasi','New item','Stock','Nilai stock','Terjual','Nilai jual','Rata-rata per bulan','Stock cukup (hari)'].map(function(t){return T(t,1)})];
   rows.forEach(function(i){dr.push([T(i.k,2),T(i.d,2),T(i.c,2),T(MTX[i.t],2),T(i.o?'Ya':'',2),T(i.cons?'Ya':'',2),T(i.nw?'Ya':'',2),T(i.st,3),T(i.sv,3),T(i.q,3),T(i.v,3),i.q?Math.round(i.m*10)/10:'',i.cv===null?'':T(Math.round(i.cv),3)])});
   var rc={};MC.items.forEach(function(i){if(i.st>0){var r=rc[i.c]||(rc[i.c]={fast:0,norm:0,slow:0,dead:0,newd:0,n:0,v:0,dv:0});r[i.t]++;r.n++;r.v+=i.sv;if(i.t==='dead')r.dv+=i.sv}});
-  var rr=[['Kategori','Fast','Normal','Slow','Dead','New belum laku','Item ber-stock','Nilai stock','Nilai stock dead'].map(function(t){return T(t,1)})];
-  Object.keys(rc).sort(function(a,b){return rc[b].v-rc[a].v}).forEach(function(c){var r=rc[c];rr.push([T(c,2),T(r.fast,3),T(r.norm,3),T(r.slow,3),T(r.dead,3),T(r.newd,3),T(r.n,3),T(Math.round(r.v),3),T(Math.round(r.dv),3)])});
-  xsave(xbuild([{name:'Rekap kategori',w:[28,10,10,10,10,14,14,16,16],fz:1,rows:rr,h:{0:30}},{name:'Item moving',w:[13,46,24,15,12,11,9,10,15,10,15,13,13],fz:1,af:'A1:M'+dr.length,rows:dr,h:{0:30}}]),'Inventory_Moving_'+today()+'.xlsx');
+  var rr=[['Kategori','Fast','Normal','Slow','Dead','Item ber-stock','Nilai stock','Nilai stock dead'].map(function(t){return T(t,1)})];
+  Object.keys(rc).sort(function(a,b){return rc[b].v-rc[a].v}).forEach(function(c){var r=rc[c];rr.push([T(c,2),T(r.fast,3),T(r.norm,3),T(r.slow,3),T(r.dead,3),T(r.n,3),T(Math.round(r.v),3),T(Math.round(r.dv),3)])});
+  xsave(xbuild([{name:'Rekap kategori',w:[28,10,10,10,10,14,16,16],fz:1,rows:rr,h:{0:30}},{name:'Item moving',w:[13,46,24,15,12,11,9,10,15,10,15,13,13],fz:1,af:'A1:M'+dr.length,rows:dr,h:{0:30}}]),'Inventory_Moving_'+today()+'.xlsx');
   say('✔ Excel diunduh ('+nf(rows.length)+' item sesuai filter, periode '+nf(P.d)+' hari).');
 };
 /* ---------- Excel berstyle ---------- */
