@@ -253,6 +253,7 @@ table.dd td.n{text-align:right}
       <label style="font-size:13.5px">Fast = top % nilai jual <input id="mpf" type="number" min="1" max="100" step="1" style="width:66px;text-align:right"></label>
       <label style="font-size:13.5px">Slow = stock cukup lebih dari (hari) <input id="mps" type="number" min="1" step="1" style="width:76px;text-align:right"></label>
     </div>
+    <div id="mrest">
     <div class="flt">
       <select id="mfc"></select>
       <select id="mfs"><option value="">Semua status</option><option value="fast">Fast moving</option><option value="norm">Normal</option><option value="slow">Slow moving</option><option value="dead">Dead moving</option><option value="newd">New item, belum laku</option><option value="out">Fast moving, stock habis</option></select>
@@ -264,6 +265,7 @@ table.dd td.n{text-align:right}
     </div>
     <div class="dt"><table class="dd"><thead><tr><th>Item No</th><th>Deskripsi</th><th>Kategori</th><th>Status</th><th style="text-align:right">Stock</th><th style="text-align:right">Nilai stock</th><th style="text-align:right">Terjual</th><th style="text-align:right">Nilai jual</th><th style="text-align:right">Rata-rata / bulan</th><th style="text-align:right">Stock cukup (hari)</th></tr></thead><tbody id="mb"></tbody></table></div>
     <div class="note" id="mn"></div>
+    </div>
   </div>
   </div>
   <div class="foot">Created Ridwan</div>
@@ -612,9 +614,10 @@ function renderMv(){
   MC=mvCalc();var P=mvParams();
   $('#mpa').value=S.meta.salFrom||'';$('#mpb').value=S.meta.salTo||'';$('#mpf').value=P.f;$('#mpx').checked=!!P.x;$('#mps').value=P.s;$('#mpdn').textContent=P.d?'= '+nf(P.d)+' hari':'';
   if(!MC){['#mkpi','#mrec','#mcard'].forEach(function(x){$(x).classList.add('hide')});$('#mmsgc').classList.remove('hide');
-    if(S.sal&&S.stk&&!mvDays()){$('#mcard').classList.remove('hide');$('#mmsgc').classList.remove('hide');$('#mmsg').innerHTML='<b>Isi periode penjualan.</b> Tanggal tarikan data di file tidak tersimpan, jadi isi tanggal awal dan akhir sesuai data yang kamu tarik (mis. 6 bulan terakhir) di kolom Periode penjualan di bawah. Rata-rata jual dan status fast atau dead dihitung dari periode ini.';
-      $('#mb').innerHTML='';$('#mrb').innerHTML='';$('#mn').innerHTML='';$('#mcount').textContent='';return}
+    if(S.sal&&S.stk&&!mvDays()){$('#mcard').classList.remove('hide');$('#mmsgc').classList.remove('hide');$('#mmsg').innerHTML='<b style="color:#b3261e">Langkah terakhir: isi periode penjualan.</b> File penjualan tidak memuat tanggal tarikan, jadi pilih tanggal awal dan akhir sesuai data yang kamu tarik (mis. 6 bulan terakhir) di kotak <b>Periode penjualan dari … sampai …</b> di bawah ini. Tabel akan muncul setelah kedua tanggal terisi. Rata-rata jual dan status fast atau dead dihitung dari periode ini.';
+      $('#mrest').classList.add('hide');$('#mcount').textContent='';return}
     $('#mmsg').innerHTML='<b>'+(!S.stk?'File SQV belum dimuat. ':'')+(!S.sal?'File penjualan belum dimuat. ':'')+'</b>Unggah file SQV dan file Penjualan per item (kolom Item Code, Base Sales Qty, Sales Exclude Tax) lewat kotak Data di atas. Jenis file dikenali dari kolomnya.';return}
+  $('#mrest').classList.remove('hide');
   if(MC.noinfo){$('#mmsgc').classList.remove('hide');$('#mmsg').innerHTML='<b style="color:#b3261e">'+nf(MC.noinfo)+' item ber-stock belum punya nama, kategori, dan nilai stock.</b> Data SQV yang tersimpan dibuat sebelum tab Moving ada. <b>Upload ulang file SQV</b> lewat kotak Data di atas (cukup SQV saja), lalu angka dead moving lengkap dengan detailnya.'}else $('#mmsgc').classList.add('hide');['#mkpi','#mrec','#mcard'].forEach(function(x){$(x).classList.remove('hide')});
   var I=MC.items,g={fast:[0,0],norm:[0,0],slow:[0,0],dead:[0,0],newd:[0,0]},out=0,outv=0,rec={};
   I.forEach(function(i){var sk=i.st>0;if(sk||i.q>0){}
