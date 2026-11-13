@@ -472,16 +472,18 @@ function capParams(){var m={};CAPDEF.forEach(function(r){m[r[0]+'|'+r[1]]={j:r[0
 function capSave(k,f,v){var o={};try{o=JSON.parse(localStorage.getItem(CAPKEY)||'{}')}catch(e){}(o[k]=o[k]||{})[f]=v;try{localStorage.setItem(CAPKEY,JSON.stringify(o))}catch(e){}}
 function capSize(t){var m=String(t).match(/(\d{2,3})\s*[xX*]\s*(\d{2,3})/);if(!m)return '';var a=+m[1],b=+m[2];return Math.min(a,b)+'X'+Math.max(a,b)}
 function capItems(){var P=capParams(),def={};CAPDEF.forEach(function(r){def[r[1]]=r[0]});var rows={};
-  if(!S.stk)return {rows:rows,P:P,n:0,uom:{}};var n=0,uom={},src={},cat={};
+  if(!S.stk)return {rows:rows,P:P,n:0,uom:{}};var n=0,uom={},src={},cat={},skip=[];
   (S.inv||[]).forEach(function(v){cat[v[0]]=v[5]||''});
   (S.plano||[]).forEach(function(p){if(p.k&&capSize(p.d))src[p.k]=[p.d,'',cat[p.k]||p.c||'']});
   if(S.dsc)Object.keys(S.dsc).forEach(function(k){src[k]=S.dsc[k]});
   Object.keys(src).forEach(function(k){var d=src[k],t=d[0],c=d[2]||'',sz=capSize(t);if(!sz)return;
-    var j=/GRANIT/i.test(t+' '+c)?'Granite':/KERAMIK|CERAMIC/i.test(t+' '+c)?'Keramik':(def[sz]||'');
+    if(!/FLOOR/i.test(c))return;
+    var j=/GRANIT/i.test(t)?'Granite':/KERAMIK|CERAMIC|KRMK/i.test(t)?'Keramik':'';
+    if(!j){skip.push({k:k,d:t,c:c});return}
     if(!j&&!/TILE|LANTAI|FLOOR|KERAMIK|GRANIT/i.test(t+' '+c))return;
     j=j||'Lainnya';var kk=j+'|'+sz,q=Object.prototype.hasOwnProperty.call(S.stk,k)?S.stk[k]:0;
     var o=rows[kk]||(rows[kk]={j:j,s:sz,stock:0,items:[]});o.stock+=q;o.items.push({k:k,d:t,q:q,u:d[1]});n++;uom[d[1]]=(uom[d[1]]||0)+1});
-  return {rows:rows,P:P,n:n,uom:uom}}
+  return {rows:rows,P:P,n:n,uom:uom,skip:skip}}
 function renderCap(){if(!R.length)return;$('#ckpi').classList.remove('hide');$('#ccard').classList.remove('hide');
   var C=capItems(),P=C.P,L=[];
   Object.keys(P).forEach(function(k){var p=P[k],o=C.rows[k];L.push({k:k,j:p.j,s:p.s,l:p.l,t:p.t,q:p.q,cap:p.l*p.t*p.q,stock:o?o.stock:0,items:o?o.items:[],has:true})});
@@ -505,7 +507,7 @@ function renderCap(){if(!R.length)return;$('#ckpi').classList.remove('hide');$('
   $('#ckpi').innerHTML=[['Utilisasi flooring',tot.cap?(tot.stock/tot.cap*100).toFixed(1).replace('.',',')+'%':'–',''],['Keramik',pj('Keramik'),''],['Granite',pj('Granite'),''],['Total capacity',nf(tot.cap),''],['Item tanpa capacity',nf(nocap),nocap?'y':'']].map(function(k){return '<button type="button" tabindex="-1"><span class="l">'+k[0]+'</span><span class="n '+k[2]+'">'+k[1]+'</span></button>'}).join('');
   var um=Object.keys(C.uom).map(function(x){return (x||'?')+' ('+nf(C.uom[x])+' item)'}).join(', ');
   $('#cn').innerHTML=(S.dsc?'':'<b style="color:#b3261e">'+(S.meta.sqvDone?'Kolom deskripsi tidak ditemukan di file SQV (kolom yang terbaca: '+esc(S.meta.sqvCols||'-')+'). Sementara dipakai deskripsi dari file ITEM PLANO.':'Deskripsi SQV belum terbaca karena data tersimpan sebelum tab ini ada. Upload ulang file SQV supaya semua item flooring terbaca. Sementara dipakai deskripsi dari file ITEM PLANO.')+'</b> ')+(C.n?'':'<b style="color:#b3261e">Belum ada item flooring (ukuran seperti 60X60 di deskripsi) yang terbaca. </b>')
-   +'Capacity = Total Lokasi × Tumpukan Pallet × Qty per Pallet. Angka di tiga kolom itu bisa diubah dan tersimpan di browser ini. Stock = Quantity SQV per item, dikelompokkan dari ukuran di deskripsi (mis. 60X60) dan jenis dari kata GRANIT/KERAMIK; kalau tidak ada, jenis mengikuti tabel capacity. Satuan stock di SQV: '+(um||'-')+'. Samakan satuan capacity (dus/pcs) dengan satuan SQV. Klik ukuran untuk melihat item.'}
+   +'Capacity = Total Lokasi × Tumpukan Pallet × Qty per Pallet. Angka di tiga kolom itu bisa diubah dan tersimpan di browser ini. Stock = Quantity SQV per item, dikelompokkan dari ukuran di deskripsi (mis. 60X60) dan jenis dari kata GRANIT/KERAMIK; kalau tidak ada, jenis mengikuti tabel capacity. Satuan stock di SQV: '+(um||'-')+'. Samakan satuan capacity (dus/pcs) dengan satuan SQV. Klik ukuran untuk melihat item. Hanya item di kategori FLOORING AND WALL yang dihitung.'+(C.skip&&C.skip.length?'<details style="margin-top:8px"><summary style="cursor:pointer"><b>'+nf(C.skip.length)+' item flooring bertuliskan ukuran tapi tidak ada kata KERAMIK/GRANIT, jadi tidak dihitung</b></summary><div style="max-height:220px;overflow:auto;margin-top:6px;font-size:12.5px">'+C.skip.slice(0,300).map(function(x){return esc(x.k)+' · '+esc(x.d)}).join('<br>')+'</div></details>':'')}
 document.addEventListener('click',function(e){var td=e.target.closest&&e.target.closest('#cb tr[data-ro] td:first-child');if(td){var k=td.parentNode.getAttribute('data-ro');COPEN[k]=!COPEN[k];renderCap()}});
 document.addEventListener('change',function(e){var t=e.target;if(t&&t.getAttribute&&t.getAttribute('data-cf')&&t.closest('#cb')){var v=Math.max(0,parseFloat(t.value)||0);capSave(t.getAttribute('data-ck'),t.getAttribute('data-cf'),v);renderCap()}});
 $('#cres').onclick=function(){try{localStorage.removeItem(CAPKEY)}catch(e){}renderCap()};
