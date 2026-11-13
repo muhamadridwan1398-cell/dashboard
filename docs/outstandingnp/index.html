@@ -8,6 +8,9 @@
 .dsl tr.dslsel td{background:#f1f5fb}.dsl .dslck{display:flex;gap:8px;align-items:center;font-size:13px;cursor:pointer}.dsl .dslexp{border:0;background:none;cursor:pointer;font-size:13px;color:var(--navy);padding:0 4px}.dsl tr.dslwk td{background:#f7f9fc;font-size:12.5px}.dsl tr.dslwk td:first-child{padding-left:34px}.dsl .dslch{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 8px}.dsl .dslch span{font-size:12.5px;background:#eef2f8;border-radius:999px;padding:3px 10px}.dsl .dslsubnav{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:14px 0 4px}.dsl .dslsubnav button{border:0;background:none;padding:8px 14px;font:inherit;font-weight:700;color:var(--ink3);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1px}.dsl .dslsubnav button[aria-selected=true]{color:var(--navy);border-bottom-color:var(--navy)}.dsl .dslchart{margin:4px 0 10px;border:1px solid var(--line);border-radius:10px;padding:8px 8px 6px;background:#fff}.dsl .dslleg{display:flex;gap:14px;justify-content:center;font-size:12px;color:var(--ink3)}.dsl .dslleg i,.dsl .dslcd{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px}
 .dsl .dslbars{display:grid;gap:7px;margin:4px 0 6px}.dsl .dslbr{display:grid;grid-template-columns:minmax(120px,42%) 1fr auto;gap:10px;align-items:center;font-size:13px}.dsl .dslbl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.dsl .dslbt{background:#eef1f5;border-radius:5px;height:16px;overflow:hidden}.dsl .dslbt i{display:block;height:100%;border-radius:5px}.dsl .dslbv{white-space:nowrap;min-width:86px;text-align:right}
 @media(max-width:640px){.dsl .dslbr{grid-template-columns:1fr auto}.dsl .dslbt{grid-column:1/3;order:3}}
+.dsl .dslrep{max-width:780px}.dsl .dslrf{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:14px 0 10px}.dsl .dslrf label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--ink2);font-weight:600}.dsl .dslrf input{padding:8px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;font-size:14px;font-weight:400}
+.dsl .dslrk{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px}.dsl .dslrk span{background:#eef2f8;border-radius:99px;padding:4px 12px;font-size:13px}.dsl .dslrk b{font-family:var(--head);color:var(--ok)}
+.dsl #dslrt{width:100%;box-sizing:border-box;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:13.5px;line-height:1.5;padding:12px 14px;border:1px solid #dfe6f1;border-radius:12px;background:#f8fafd;color:#1d2735;resize:vertical}
 .dsl tr.dslsub td{background:#e6e9ee;font-weight:700}.dsl h3{font-size:14px;font-weight:800;color:var(--navy)}.dsl .dslx{font-size:11px;background:#fdecec;color:#a33;border-radius:4px;padding:1px 6px;margin-left:4px;white-space:nowrap}
 .dsl .dslerr{background:#fdf2f2;border:1px solid #efc4c4;color:#8a2d2d;border-radius:8px;padding:10px 12px;font-size:13px;margin:8px 0}
 .dsl .dslset{margin:8px 0;font-size:13px}.dsl .dslset summary{cursor:pointer;font-weight:600;color:var(--navy)}
@@ -2514,7 +2517,7 @@ function dParseNp(rows){
   for(var i=H.r+1;i<rows.length;i++){var r=rows[i],np=g(r,'npno');if(!np||!/^MS/i.test(np))continue;
     var o=map[np];if(!o){o={np:np,cu:g(r,'cust name'),ty:g(r,'type np'),sp:g(r,'sales person name')||g(r,'sales person'),od:dDate(g(r,'order date')),pd:dDate(g(r,'promised delivery date')),cl:dDate(g(r,'close date')),w:dWs(dDate(g(r,'order date')),dDate(g(r,'promised delivery date')),g(r,'pdd status')),k:dKirim(g(r,'comment'),g(r,'amsen/kirim')),on:false,lt:false,it:0,q:0,st:''};map[np]=o;list.push(o)}
     var s=g(r,'status dsl').toUpperCase();if(s==='EARLY'||s==='ONTIME')o.on=true;else if(s)o.lt=true;if(!o.st||s==='LATE'||s==='OTS')o.st=s||o.st;
-    o.it++;o.q+=dNum(g(r,'qty np'))||0;if(o.pd==null)o.pd=dDate(g(r,'promised delivery date'))}
+    var ddv=g(r,'delivery detail');if(ddv&&!o.dd)o.dd=ddv;o.it++;o.q+=dNum(g(r,'qty np'))||0;if(o.pd==null)o.pd=dDate(g(r,'promised delivery date'))}
   /* tabel riwayat bulanan di sisi kanan sheet (Bulan | INTERNAL ... | ALL NP | Ontime Early | Late) */
   var hist={};
   for(var a=0;a<rows.length;a++){var rr=rows[a];for(var c=0;c<rr.length;c++){if(String(rr[c]).trim().toUpperCase()==='BULAN'&&String(rr[c+7]||'').toUpperCase().indexOf('ALL')>=0){
@@ -2531,6 +2534,7 @@ function dRsMonth(r,mcols,pdj,yj){
   if(m)return [m,y||(pd!=null?new Date(pd).getUTCFullYear():null)];
   if(pd!=null){var t=new Date(pd);return [t.getUTCMonth()+1,t.getUTCFullYear()]}
   return [null,y]}
+function dScr(r,hs){for(var j=0;j<hs.length;j++)if(/^screenshoot|^screenshot/.test(hs[j]))return String(r[j]==null?'':r[j]).trim();return ''}
 function dParseRs(rows){
   var H=dHdr(rows,['no nota penjualan','reason late customer']);if(!H)throw new Error('Tab REASON LATE: kolom "No Nota Penjualan" dan "Reason Late Customer" tidak ditemukan.');
   var M=H.m,g=function(r,n){var j=M[n];return j===undefined?'':String(r[j]==null?'':r[j]).trim()},out={},mj=-1,yj=M['year'];
@@ -2539,7 +2543,7 @@ function dParseRs(rows){
   for(var i=H.r+1;i<rows.length;i++){var r=rows[i],np=g(r,'no nota penjualan');if(!np||!/^MS/i.test(np))continue;
     var my=dRsMonth(r,mcols,pdj,yj);
     var xv=xj>=0&&/^(y|ya|yes|x|1|true|v|merah|✓|✔)$/i.test(String(r[xj]||'').trim());
-    out[np]={r:dRsn(g(r,'reason late customer')),d:g(r,'keterangan detail late customer'),m:my[0],y:my[1],c:g(r,'nama customer'),x:xv||!!(out[np]&&out[np].x)}}
+    out[np]={r:dRsn(g(r,'reason late customer')),d:g(r,'keterangan detail late customer'),m:my[0],y:my[1],c:g(r,'nama customer'),dd:g(r,'delivery detail'),sc:dScr(r,H.hs),x:xv||!!(out[np]&&out[np].x)}}
   return out}
 function dGviz(gid){return 'https://docs.google.com/spreadsheets/d/'+DSL_ID+'/gviz/tq?tqx=out:csv&gid='+gid}
 function dFetch(url){return fetch(url,{cache:'no-store'}).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text()}).then(function(t){if(/^\s*<(!doctype|html)/i.test(t))throw new Error('Sheet belum bisa diakses publik (diminta login).');return dCsv(t)})}
@@ -2566,6 +2570,30 @@ function dLine(M){var P=M.filter(function(t){return t.all}).map(function(t){retu
    +'<polyline points="'+pb+'" fill="none" stroke="#1d8a8a" stroke-width="2" stroke-dasharray="5 4"/><polyline points="'+pa+'" fill="none" stroke="#2f4b7c" stroke-width="2.5"/>'
    +P.map(function(o,i){return '<circle cx="'+X(i)+'" cy="'+Y(o.b)+'" r="3" fill="#1d8a8a"/><circle cx="'+X(i)+'" cy="'+Y(o.a)+'" r="4" fill="#2f4b7c"/><text x="'+X(i)+'" y="'+(Y(o.a)+(o.b-o.a<2.5?16:-9))+'" text-anchor="middle" font-size="12" font-weight="700" fill="#2f4b7c">'+pf(o.a)+'</text><text x="'+X(i)+'" y="'+(H-12)+'" text-anchor="middle" font-size="12" fill="#3b4656">'+o.l+'</text>'}).join('')
    +'</svg><div class="dslleg"><span><i style="background:#2f4b7c"></i>Ach %</span><span><i style="background:#1d8a8a"></i>Ach + RC</span></div></div>'}
+var DREP_KEY='qbig_dsl_rep_v1',DR=(function(){var o={n:'',s:'Mitra 10 QBIG',d:null};try{var j=JSON.parse(localStorage.getItem(DREP_KEY)||'{}');if(j.n)o.n=j.n;if(j.s)o.s=j.s}catch(e){}return o})();
+var DBLN=['JANUARI','FEBRUARI','MARET','APRIL','MEI','JUNI','JULI','AGUSTUS','SEPTEMBER','OKTOBER','NOVEMBER','DESEMBER'];
+function dRepDefault(){var t=todayWIB(),best=null;D.np.forEach(function(x){var e=dEP(x);if(!x.k||e==null)return;var dy=Math.floor(e/864e5);if(dy<=t&&(best==null||dy>best))best=dy});return best}
+function dRep(day){var fl=function(v){return (Math.floor(v*100)/100).toFixed(2)},P=[],O={s:0,n:0,t:0,g:0},late=[];
+  D.np.forEach(function(x){var e=dEP(x);if(!x.k||e==null||Math.floor(e/864e5)!==day)return;P.push(x);var rs=D.rs[x.np]||{},ok=x.on||!!rs.x;
+    if(ok){var w=String(x.w).toUpperCase();if(w==='SAME DAY')O.s++;else if(w==='NEXT DAY')O.n++;else if(w==='2 DAY')O.t++;else O.g++}else late.push({x:x,z:rs})});
+  var pd=P.length,ot=pd-late.length,otn=O.s+O.n+O.t+O.g,pct=function(v){return otn?fl(v/otn*100):'0.00'};
+  var tiers=[[],[],[]];late.forEach(function(o){var cl=o.x.cl!=null?Math.floor(o.x.cl/864e5):todayWIB(),n=Math.max(1,cl-day);tiers[Math.min(n,3)-1].push(o)});
+  var dt=new Date(day*864e5),tg=dt.getUTCDate()+' '+DBLN[dt.getUTCMonth()]+' '+dt.getUTCFullYear(),L=[];
+  if(DR.n)L.push(DR.n);L.push('Berikut Reports DSL',DR.s,'Tgl '+tg,'','PD= '+pd,'OT=  '+ot+' ('+(pd?fl(ot/pd*100):'0.00')+'%)','',
+    'Sameday = '+O.s+' ('+pct(O.s)+'%)','Nextday.  = '+O.n+' ('+pct(O.n)+'%)','2 day.       = '+O.t+' ('+pct(O.t)+'%)','>2 day.    = '+O.g+' ('+pct(O.g)+'%)','','');
+  var noScr=0;
+  tiers.forEach(function(T,i){if(i&&tiers[i-1].length)L.push('','');L.push('T'+(i+1)+'='+T.length+(T.length?' MS':''));if(!T.length)return;
+    var by={},ks=[];T.forEach(function(o){var c=(o.x.cu||'-').toUpperCase();if(!by[c]){by[c]=[];ks.push(c)}by[c].push(o)});
+    ks.forEach(function(c,ci){L.push(' '+(ci+1)+'. '+c+' ('+by[c].length+'MS)');by[c].forEach(function(o){L.push(o.x.np);var dd=o.z.dd||o.x.dd||'';if(dd)L.push(dd);if(!o.z.sc)noScr++})})});
+  L.push('','');var nl=late.length;L.push('Bukti Chat = '+(!nl?'-':(noScr===0?'ADA':(noScr===nl?'TIDAK ADA':'SEBAGIAN ('+(nl-noScr)+' dari '+nl+')'))));
+  return {text:L.join('\n'),pd:pd,ot:ot,late:nl,tg:tg}}
+function dRepHtml(){var day=DR.d!=null?DR.d:dRepDefault();if(day==null)return '<p class="empty">Belum ada NP Kirim dengan tanggal PDD di data.</p>';DR.d=day;
+  var iso=new Date(day*864e5).toISOString().slice(0,10),R=dRep(day);
+  return '<div class="dslrep"><div class="dslrf"><label>Tanggal PDD<input type="date" id="dslrd" value="'+iso+'"></label><label>Sapaan (baris pertama)<input type="text" id="dslrn" placeholder="mis. Bu Novi Octarina SM" value="'+esc(DR.n)+'"></label><label>Nama toko<input type="text" id="dslrs" value="'+esc(DR.s)+'"></label></div>'
+    +'<div class="dslrk"><span><b>'+R.pd+'</b> PD</span><span><b>'+R.ot+'</b> OT</span><span><b>'+R.late+'</b> telat</span></div>'
+    +'<textarea id="dslrt" readonly rows="22" aria-label="Teks report">'+esc(R.text)+'</textarea>'
+    +'<div style="display:flex;gap:8px;align-items:center;margin-top:8px"><button type="button" class="btn" data-dsl="copy">Salin teks</button><span class="sub" id="dslrm" style="margin:0"></span></div>'
+    +'<p class="sub" style="margin-top:10px">T1/T2/T3 = telat 1 hari / 2 hari / 3 hari atau lebih dari PDD (sampai tanggal close, atau hari ini kalau belum close). Teks di bawah nomor NP diambil dari kolom <b>Delivery Detail</b> di REASON LATE (atau NP NAV). NP berstatus Exclude = Y dihitung OT. Persen Sameday dan seterusnya adalah porsi dari NP yang OT.</p></div>'}
 function dOrig(){var m={};(S.rows||[]).forEach(function(r){if(r.pdD!=null&&r.np&&(m[r.np]==null||r.pdD<m[r.np]))m[r.np]=r.pdD});return m}
 function dEP(x){if(DS.useOrig){var o=DS._o||(DS._o=dOrig());if(o[x.np]!=null)return o[x.np]*864e5}return x.pd}
 function dPdd(){DS._o=null;var o=dOrig(),n=0,same=0,L=[],dm=0;D.np.forEach(function(x){if(!x.k||x.pd==null)return;var a=o[x.np];if(a==null)return;n++;var b=Math.floor(x.pd/864e5);if(a===b){same++;return}
@@ -2649,7 +2677,7 @@ function dslPanel(){
   var hRekap=h;h='';
   var rsOpts=['<option value="">Semua reason</option>'].concat(DRS.map(function(r){return '<option value="'+r+'"'+(DS.rs===r?' selected':'')+'>'+r+'</option>'})).concat(['<option value="__none"'+(DS.rs==='__none'?' selected':'')+'>Belum diisi</option>']).join('');
   h+='<h3 style="margin:18px 0 6px">Detail NP telat · '+monLab(cur.pm)+'</h3>'+'<div class="dslf"><input type="search" id="dslq" placeholder="Cari NP, customer, sales…" value="'+esc(DS.q)+'"><select id="dslrs">'+rsOpts+'</select></div><div id="dsldet">'+(cur.live?dDetailHtml(cur.pm):'<p class="sub">Detail NP hanya tersedia untuk bulan yang datanya ada di tab NP NAV.</p>')+'</div></section>';
-  return hHead+'<div class="dslsubnav" role="tablist">'+[['rekap','Rekap DSL'],['detail','Detail NP telat']].map(function(s){return '<button type="button" role="tab" data-dsl="sub" data-v="'+s[0]+'" aria-selected="'+((DS.sub||'rekap')===s[0])+'">'+s[1]+'</button>'}).join('')+'</div>'+((DS.sub||'rekap')==='detail'?h:hRekap)}
+  var SB=DS.sub||'rekap';return (SB==='report'?'':hHead)+'<div class="dslsubnav" role="tablist">'+[['rekap','Rekap DSL'],['detail','Detail NP telat'],['report','Report harian']].map(function(s){return '<button type="button" role="tab" data-dsl="sub" data-v="'+s[0]+'" aria-selected="'+((DS.sub||'rekap')===s[0])+'">'+s[1]+'</button>'}).join('')+'</div>'+(SB==='report'?dRepHtml():SB==='detail'?h:hRekap)}
 function dXl(){var M=dMonths().filter(function(t){return !t.stub});if(!M.length)return;var cur=M.filter(function(t){return t.pm===DS.mon})[0];
   var wb=XLSX.utils.book_new(),r1=[['Bulan PDD','Semua NP','Early/Ontime','Late','Ach %','Ach + RC'].concat(DRS)];
   M.forEach(function(t){r1.push([monLab(t.pm),t.all,t.on,t.late,t.all?Math.round(t.on/t.all*10000)/100:'',t.all?Math.round((t.on+(t.rc||0))/t.all*10000)/100:''].concat(t.rs))});
@@ -2665,13 +2693,17 @@ function dFile(f){return new Promise(function(ok,no){var rd=new FileReader();if(
 var _df={};
 document.addEventListener('change',function(e){var t=e.target;if(!t||!t.id)return;
   if(t.id==='dslf1'||t.id==='dslf2'){var f=t.files&&t.files[0];if(!f)return;D.st='loading';D.err='';render();dFile(f).then(function(rows){_df[t.id]=rows;if(_df.dslf1&&_df.dslf2){var a=dParseNp(_df.dslf1),b=dParseRs(_df.dslf2);_df={};dApply(a,b,'File upload')}else{D.st='err';D.err='File '+(t.id==='dslf1'?'NP NAV':'REASON LATE')+' dibaca. Pilih juga file '+(t.id==='dslf1'?'REASON LATE':'NP NAV')+'.';render()}}).catch(function(er){_df={};D.st='err';D.err=(er&&er.message)||'File tidak bisa dibaca.';render()});return}
+  if(t.id==='dslrd'){var q=String(t.value||'').split('-');if(q.length===3){DR.d=Math.floor(Date.UTC(+q[0],+q[1]-1,+q[2])/864e5);render()}return}
   if(t.id==='dslorig'){DS.useOrig=t.checked;DS._o=null;DS.mon=null;DS.shown=100;render();return}
   if(t.id==='dslan'){DS.anm=t.value===''?null:+t.value;render();return}
   if(t.id==='dslrs'){DS.rs=t.value;DS.shown=100;dDet()}});
-document.addEventListener('input',function(e){var t=e.target;if(t&&t.id==='dslq'){DS.q=t.value;DS.shown=100;dDet()}});
+document.addEventListener('input',function(e){var t=e.target;if(t&&t.id==='dslq'){DS.q=t.value;DS.shown=100;dDet()}
+  if(t&&(t.id==='dslrn'||t.id==='dslrs')){if(t.id==='dslrn')DR.n=t.value;else DR.s=t.value;try{localStorage.setItem(DREP_KEY,JSON.stringify({n:DR.n,s:DR.s}))}catch(er){}dRepRefresh()}});
+function dRepRefresh(){var ta=document.getElementById('dslrt');if(ta&&DR.d!=null){var R=dRep(DR.d);ta.value=R.text}}
 function dDet(){var el=document.getElementById('dsldet');if(el&&DS.mon!=null)el.innerHTML=dDetailHtml(DS.mon)}
 document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-dsl]');if(!b)return;var k=b.dataset.dsl;
-  if(k==='sub'){DS.sub=b.dataset.v;render()}
+  if(k==='copy'){var ta=document.getElementById('dslrt'),m=document.getElementById('dslrm'),ok=function(){if(m)m.textContent='Tersalin.'};if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(ta.value).then(ok,function(){ta.select();document.execCommand('copy');ok()});else{ta.select();document.execCommand('copy');ok()}}
+  else if(k==='sub'){DS.sub=b.dataset.v;render()}
   else if(k==='anall'){DS.anAll=!DS.anAll;render()}
   else if(k==='rd'){var q2=+b.dataset.pm;DS.openR[q2]=!DS.openR[q2];render()}
   else if(k==='wk'){var q=+b.dataset.pm;DS.open[q]=!DS.open[q];render()}
