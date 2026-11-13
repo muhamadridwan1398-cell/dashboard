@@ -18,4 +18,17 @@
   window.addEventListener('appinstalled',function(){dp=null;document.dispatchEvent(new Event('qbig-installed'))});
   window.qbigInstall=function(){if(!dp)return Promise.resolve('none');dp.prompt();return dp.userChoice.then(function(c){dp=null;return c.outcome})};
   window.qbigCanInstall=function(){return !!dp};
+
+  /* ringkasan angka untuk kartu menu: ditulis dari dashboard, dibaca halaman menu */
+  (function(){
+    var pg=(location.pathname.match(/\/(akurasi|awt|outstandingnp)\/?(?:index\.html)?$/)||[])[1];if(!pg)return;
+    var tx=function(id){var e=document.getElementById(id);return e?e.textContent.trim():''};
+    var get={
+      akurasi:function(){var c=document.querySelector('#accuracyCards .card');var m=c&&c.textContent.match(/(\d+(?:[.,]\d+)?)\s*%/);return m?{v:m[1]+'%',l:'akurasi WMS vs NAV'}:null},
+      awt:function(){var n=parseInt(tx('kpi-total-val').replace(/\D/g,''),10)||0;if(!n)return null;return {v:tx('kpi-pct-val'),l:'nota melebihi SLA 30 menit ('+n.toLocaleString('id-ID')+' nota)'}},
+      outstandingnp:function(){try{var n=S&&S.rows?S.rows.length:0;if(!n)return null;return {v:n.toLocaleString('id-ID'),l:'baris OTS NP'+(S.reportLabel?' · '+S.reportLabel:'')}}catch(e){return null}}
+    }[pg],last='';
+    function tick(){try{var r=get();if(!r)return;var j=JSON.stringify({v:r.v,l:r.l,t:Date.now()});var k=r.v+'|'+r.l;if(k===last)return;last=k;localStorage.setItem('qbig_sum_'+pg,j)}catch(e){}}
+    setInterval(tick,4000);setTimeout(tick,1500);
+  })();
 })();

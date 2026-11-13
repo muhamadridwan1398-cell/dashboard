@@ -49,6 +49,7 @@ a.card:focus-visible{outline:3px solid var(--hi);outline-offset:3px}
 .ico svg{width:32px;height:32px}
 .t{padding-right:34px;font-family:var(--disp);font-weight:800;font-size:31px;line-height:1;letter-spacing:.002em;margin:2px 0 0}
 .d{margin:2px 0 0;font-size:14.5px;color:var(--mut);line-height:1.5}
+.tabs{grid-column:2;grid-row:3}.live{grid-column:1/-1;grid-row:4;margin-top:8px;padding:8px 12px;border-radius:10px;background:color-mix(in srgb,var(--c) 11%,transparent);font-size:13px;color:var(--ink);display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}.live[hidden]{display:none}.live strong{font-family:'Big Shoulders Display','Hanken Grotesk',sans-serif;font-size:26px;line-height:1;color:var(--c);font-weight:800}.live em{font-style:normal;color:var(--mut);font-size:12px}
 .tabs{margin:8px 0 0;padding-top:10px;border-top:1px dashed var(--line);font-size:13px;font-weight:600;color:var(--ink);display:flex;flex-wrap:wrap;gap:4px 16px;align-items:center}
 .tabs b{font-weight:600;display:inline-flex;align-items:center;gap:7px}.tabs b::before{content:"";width:6px;height:6px;border-radius:1px;background:var(--c);flex:none}
 .go{position:absolute;right:16px;top:18px;width:30px;height:30px;color:var(--c);opacity:.9}
@@ -82,6 +83,7 @@ a.card:hover .go{transform:translateX(3px)}
       <span class="ico" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="9" height="22" rx="2"/><rect x="19" y="5" width="9" height="22" rx="2"/><path d="M13.5 12h5M13.5 20h5"/></svg></span>
       <span class="t">Akurasi WMS vs NAV</span>
       <span class="d">Selisih stok WMS dan NAV, adjustment, dan progress lokasi Grey.</span>
+      <span class="live" data-sum="akurasi" hidden></span>
       <span class="tabs"><b>Over &amp; Minus</b><b>Grey</b><b>Tools SO/CC</b><b>Cek Silang SO</b></span>
       <svg class="go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
     </a>
@@ -89,6 +91,7 @@ a.card:hover .go{transform:translateX(3px)}
       <span class="ico" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4l11 5.5v13L16 28 5 22.5v-13z"/><path d="M5 9.5L16 15l11-5.5M16 15v13"/></svg></span>
       <span class="t">Outstanding NP</span>
       <span class="d">Nota penjualan yang belum terkirim, delivery service level, dan report harian.</span>
+      <span class="live" data-sum="outstandingnp" hidden></span>
       <span class="tabs"><b>Outstanding</b><b>DSL</b><b>Report harian</b></span>
       <svg class="go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
     </a>
@@ -96,6 +99,7 @@ a.card:hover .go{transform:translateX(3px)}
       <span class="ico" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="17" r="10"/><path d="M16 11v6l4 3M12 3h8"/></svg></span>
       <span class="t">Monitoring AWT</span>
       <span class="d">Average waiting time per nota, per tanggal dan bulan, serta item late.</span>
+      <span class="live" data-sum="awt" hidden></span>
       <span class="tabs"><b>Rekap</b><b>Detail nota</b><b>Item late per kategori</b></span>
       <svg class="go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
     </a>
@@ -142,5 +146,7 @@ a.card:hover .go{transform:translateX(3px)}
 })();
 </script>
 <script src="pwa.js" defer></script>
+<script>(function(){function ago(t){var m=Math.round((Date.now()-t)/60000);if(m<1)return'baru saja';if(m<60)return m+' menit lalu';var h=Math.round(m/60);if(h<24)return h+' jam lalu';return Math.round(h/24)+' hari lalu'}
+document.querySelectorAll('.live[data-sum]').forEach(function(el){try{var j=JSON.parse(localStorage.getItem('qbig_sum_'+el.dataset.sum)||'null');if(!j||!j.v)return;el.innerHTML='';var s=document.createElement('strong');s.textContent=j.v;var l=document.createElement('span');l.textContent=j.l;var e=document.createElement('em');e.textContent='dibuka '+ago(j.t);el.append(s,l,e);el.hidden=false}catch(x){}})})();</script>
 </body>
 </html>
