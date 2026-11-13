@@ -2475,11 +2475,14 @@ function dCsv(t){var rows=[],row=[],f='',q=false,i=0,n=t.length;
 function dNum(v){v=String(v==null?'':v).trim().replace(/%$/,'');if(!v||/^#/.test(v))return null;if(/^\d{1,3}(\.\d{3})+(,\d+)?$/.test(v))v=v.replace(/\./g,'');v=v.replace(',','.');var n=parseFloat(v);return isNaN(n)?null:n}
 function dDate(v){var m=String(v||'').trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);if(!m)return null;var a=+m[1],b=+m[2],y=+m[3];if(y<100)y+=2000;var mo=a,d=b;if(a>12&&b<=12){mo=b;d=a}return Date.UTC(y,mo-1,d)}
 function dHdr(rows,need){for(var i=0;i<Math.min(rows.length,40);i++){var h=rows[i].map(function(x){return String(x||'').trim().toLowerCase()}),ok=need.every(function(n){return h.indexOf(n)>=0});if(ok){var m={};h.forEach(function(x,j){if(x&&!(x in m))m[x]=j});return {r:i,m:m,hs:h}}}return null}
+/* Kirim/Titip dan PDD Status dihitung ulang dari data mentah, tidak bergantung rumus di sheet (baris baru hasil copas sering belum punya rumus) */
+function dKirim(cm,sheetVal){if(/amsen|titip/i.test(cm||''))return false;if(!cm&&/TITIP/i.test(sheetVal||''))return false;return true}
+function dWs(od,pd,sheetVal){if(od==null||pd==null)return sheetVal||'';var n=Math.round((pd-od)/864e5);return n<=0?'SAME DAY':n===1?'NEXT DAY':n===2?'2 DAY':'>2 DAYS'}
 function dParseNp(rows){
   var H=dHdr(rows,['npno','status dsl','promised delivery date']);if(!H)throw new Error('Tab NP NAV: kolom NPNo, STATUS DSL, dan Promised Delivery Date tidak ditemukan.');
   var M=H.m,g=function(r,n){var j=M[n];return j===undefined?'':String(r[j]==null?'':r[j]).trim()},map={},list=[];
   for(var i=H.r+1;i<rows.length;i++){var r=rows[i],np=g(r,'npno');if(!np||!/^MS/i.test(np))continue;
-    var o=map[np];if(!o){o={np:np,cu:g(r,'cust name'),ty:g(r,'type np'),sp:g(r,'sales person name')||g(r,'sales person'),od:dDate(g(r,'order date')),pd:dDate(g(r,'promised delivery date')),cl:dDate(g(r,'close date')),w:g(r,'pdd status'),k:/KIRIM/i.test(g(r,'amsen/kirim'))||!g(r,'amsen/kirim'),on:false,lt:false,it:0,q:0,st:''};map[np]=o;list.push(o)}
+    var o=map[np];if(!o){o={np:np,cu:g(r,'cust name'),ty:g(r,'type np'),sp:g(r,'sales person name')||g(r,'sales person'),od:dDate(g(r,'order date')),pd:dDate(g(r,'promised delivery date')),cl:dDate(g(r,'close date')),w:dWs(dDate(g(r,'order date')),dDate(g(r,'promised delivery date')),g(r,'pdd status')),k:dKirim(g(r,'comment'),g(r,'amsen/kirim')),on:false,lt:false,it:0,q:0,st:''};map[np]=o;list.push(o)}
     var s=g(r,'status dsl').toUpperCase();if(s==='EARLY'||s==='ONTIME')o.on=true;else if(s)o.lt=true;if(!o.st||s==='LATE'||s==='OTS')o.st=s||o.st;
     o.it++;o.q+=dNum(g(r,'qty np'))||0;if(o.pd==null)o.pd=dDate(g(r,'promised delivery date'))}
   /* tabel riwayat bulanan di sisi kanan sheet (Bulan | INTERNAL ... | ALL NP | Ontime Early | Late) */
