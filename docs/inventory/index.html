@@ -174,7 +174,7 @@ table.dd td.n{text-align:right}
         <label class="up" id="u-plano"><b>ITEM PLANO</b><small id="n-plano">Belum ada file</small><input type="file" multiple accept=".xlsx,.xls,.csv" data-kind="plano"></label>
         <label class="up" id="u-stk"><b>Stock Qty and Value (SQV)</b><small id="n-stk">Belum ada file</small><input type="file" multiple accept=".xlsx,.xls,.csv" data-kind="stk"></label>
         <label class="up" id="u-rep"><b>Replenishment Calculation</b><small id="n-rep">Belum ada file</small><input type="file" multiple accept=".xlsx,.xls,.csv" data-kind="rep"></label>
-        <label class="up" id="u-sal"><b>Penjualan per item (Jan - Okt)</b><small id="n-sal">Belum ada file (opsional)</small><input type="file" multiple accept=".xlsx,.xls,.csv" data-kind="sal"></label>
+        <label class="up" id="u-sal"><b>Penjualan per item</b><small id="n-sal">Belum ada file (opsional)</small><input type="file" multiple accept=".xlsx,.xls,.csv" data-kind="sal"></label>
         <label class="up" id="u-cls"><b>Report ABCD Class (.csv)</b><small id="n-cls">Belum ada file (opsional)</small><input type="file" multiple accept=".xlsx,.xls,.csv" data-kind="cls"></label>
       </div>
       <div class="msg" id="msg">Pilih semua file sekaligus. File Penjualan per item (kolom Item Code dan Base Sales Qty) dipakai untuk tab Moving. Jenis file dikenali dari kolomnya. Plano, SQV, dan Replenishment wajib; Report ABCD Class dipakai untuk class.</div>
@@ -249,7 +249,7 @@ table.dd td.n{text-align:right}
   <div class="card hide" id="mcard">
     <h2>Detail item moving <span id="mcount" style="font-weight:400;color:var(--mut)"></span></h2>
     <div class="flt">
-      <label style="font-size:13.5px">Periode (hari) <input id="mpd" type="number" min="1" step="1" style="width:76px;text-align:right"></label>
+      <label style="font-size:13.5px">Periode penjualan dari <input id="mpa" type="date"></label><label style="font-size:13.5px">sampai <input id="mpb" type="date"></label><span id="mpdn" style="font-size:13.5px;color:var(--mut)"></span>
       <label style="font-size:13.5px">Fast = top % nilai jual <input id="mpf" type="number" min="1" max="100" step="1" style="width:66px;text-align:right"></label>
       <label style="font-size:13.5px">Slow = stock cukup lebih dari (hari) <input id="mps" type="number" min="1" step="1" style="width:76px;text-align:right"></label>
     </div>
@@ -551,8 +551,8 @@ $('#cres').onclick=function(){try{localStorage.removeItem(CAPKEY)}catch(e){}rend
 /* ---------- moving: fast dan dead ---------- */
 var MVKEY='qbig_inv_mv_v1',MPKEY='qbig_inv_mvp_v1',DI=null,MF={c:'',s:'',t:'',q:''},MLIM=500,MC=null;
 function di(t){if(!DI){DI={};S.dict.forEach(function(x,i){DI[x]=i})}var i=DI[t];if(i===undefined){i=S.dict.length;S.dict.push(t);DI[t]=i}return i}
-function persistMv(){var nm={};Object.keys(S.nm||{}).forEach(function(k){if((S.sv&&S.sv[k])||(S.sal&&S.sal[k]&&S.sal[k][1]>=2e6))nm[k]=S.nm[k]});try{localStorage.setItem(MVKEY,JSON.stringify({sal:S.sal,nm:nm,sv:S.sv,dict:S.dict,mt:S.meta.sal||''}))}catch(e){return false}return true}
-function restoreMv(){try{var d=JSON.parse(localStorage.getItem(MVKEY)||'null');if(d&&d.sal){S.sal=d.sal;S.nm=d.nm||{};S.sv=d.sv||{};S.dict=d.dict||[];DI=null;S.meta.sal=d.mt||'tersimpan'}}catch(e){}}
+function persistMv(){var nm={};Object.keys(S.nm||{}).forEach(function(k){if((S.sv&&S.sv[k])||(S.sal&&S.sal[k]&&S.sal[k][1]>=2e6))nm[k]=S.nm[k]});try{localStorage.setItem(MVKEY,JSON.stringify({sal:S.sal,nm:nm,sv:S.sv,dict:S.dict,mt:S.meta.sal||'',pf:S.meta.salFrom||'',pt:S.meta.salTo||''}))}catch(e){return false}return true}
+function restoreMv(){try{var d=JSON.parse(localStorage.getItem(MVKEY)||'null');if(d&&d.sal){S.sal=d.sal;S.nm=d.nm||{};S.sv=d.sv||{};S.dict=d.dict||[];DI=null;S.meta.sal=d.mt||'tersimpan';S.meta.salFrom=d.pf||'';S.meta.salTo=d.pt||''}}catch(e){}}
 function mvFromSales(r,name){
   var m={},n=0;S.nm=S.nm||{};
   r.rows.forEach(function(o){var c=String(o['Item Code']||'').trim();if(!c||/total/i.test(c))return;var q=num(o['Base Sales Qty']);if(!(q>0))return;
@@ -560,7 +560,7 @@ function mvFromSales(r,name){
     m[kk]=[q,Math.round(num(o['Sales Exclude Tax'])),di(String(o['Item Category']||'').trim().toUpperCase()),di(String(o['Item Sub Category']||'').trim().toUpperCase()),/^true$/i.test(String(o['Consignment']))?1:0];
     var nm=String(o['Item Name']||'').slice(0,60);if(nm)S.nm[kk]=nm;n++});
   if(!n)throw new Error('Tidak ada penjualan lebih dari 0 di file penjualan.');
-  S.sal=m;S.meta.salN=n;S.meta.sal=name||S.meta.sal;persistMv();
+  S.sal=m;S.meta.salN=n;S.meta.salFrom='';S.meta.salTo='';S.meta.sal=name||S.meta.sal;persistMv();
 }
 function mvFromSqv(r,m){
   var vc=r.cols.filter(function(c){return /^value/i.test(c)})[0],v={},inf={};S.nm=S.nm||{};
@@ -569,9 +569,10 @@ function mvFromSqv(r,m){
   var sv={};Object.keys(v).forEach(function(kk){if(m[kk]>0){var f=inf[kk];sv[kk]=[Math.round(v[kk]),di(f[1]),di(f[2]),f[3]==='CONSIGNMENT'?1:0];if(f[0]&&!S.nm[kk])S.nm[kk]=f[0]}});
   S.sv=sv;persistMv();
 }
-function mvParams(){var p={d:304,f:80,s:180};try{var o=JSON.parse(localStorage.getItem(MPKEY)||'{}');['d','f','s'].forEach(function(k){if(o[k]>0)p[k]=+o[k]})}catch(e){}return p}
+function mvDays(){var a=S.meta.salFrom,b=S.meta.salTo;if(!a||!b)return 0;var d=Math.round((Date.parse(b)-Date.parse(a))/864e5)+1;return d>0?d:0}
+function mvParams(){var p={d:mvDays(),f:80,s:180};try{var o=JSON.parse(localStorage.getItem(MPKEY)||'{}');['f','s'].forEach(function(k){if(o[k]>0)p[k]=+o[k]})}catch(e){}return p}
 function mvCalc(){
-  if(!S.sal||!S.stk)return null;
+  if(!S.sal||!S.stk||!mvDays())return null;
   var P=mvParams(),keys={},items=[],noinfo=0,dn=function(i){return i>=0&&S.dict[i]!==undefined?S.dict[i]:''};
   Object.keys(S.sal).forEach(function(k){keys[k]=1});Object.keys(S.stk).forEach(function(k){if(S.stk[k]>0)keys[k]=1});
   Object.keys(keys).forEach(function(k){
@@ -600,8 +601,10 @@ function mvFiltered(){
 }
 function renderMv(){
   MC=mvCalc();var P=mvParams();
-  $('#mpd').value=P.d;$('#mpf').value=P.f;$('#mps').value=P.s;
+  $('#mpa').value=S.meta.salFrom||'';$('#mpb').value=S.meta.salTo||'';$('#mpf').value=P.f;$('#mps').value=P.s;$('#mpdn').textContent=P.d?'= '+nf(P.d)+' hari':'';
   if(!MC){['#mkpi','#mrec','#mcard'].forEach(function(x){$(x).classList.add('hide')});$('#mmsgc').classList.remove('hide');
+    if(S.sal&&S.stk&&!mvDays()){$('#mcard').classList.remove('hide');$('#mmsgc').classList.remove('hide');$('#mmsg').innerHTML='<b>Isi periode penjualan.</b> Tanggal tarikan data di file tidak tersimpan, jadi isi tanggal awal dan akhir sesuai data yang kamu tarik (mis. 6 bulan terakhir) di kolom Periode penjualan di bawah. Rata-rata jual dan status fast atau dead dihitung dari periode ini.';
+      $('#mb').innerHTML='';$('#mrb').innerHTML='';$('#mn').innerHTML='';$('#mcount').textContent='';return}
     $('#mmsg').innerHTML='<b>'+(!S.stk?'File SQV belum dimuat. ':'')+(!S.sal?'File penjualan belum dimuat. ':'')+'</b>Unggah file SQV dan file Penjualan per item (kolom Item Code, Base Sales Qty, Sales Exclude Tax) lewat kotak Data di atas. Jenis file dikenali dari kolomnya.';return}
   $('#mmsgc').classList.add('hide');['#mkpi','#mrec','#mcard'].forEach(function(x){$(x).classList.remove('hide')});
   var I=MC.items,g={fast:[0,0],norm:[0,0],slow:[0,0],dead:[0,0]},out=0,outv=0,rec={};
@@ -624,12 +627,13 @@ function renderMv(){
   $('#mb').innerHTML=h||'<tr><td colspan="10" style="padding:18px;color:var(--mut)">Tidak ada data.</td></tr>';
   $('#mcount').textContent='· '+nf(rows.length)+' item';
   $('#mn').innerHTML=(rows.length>MLIM?'Layar menampilkan '+nf(MLIM)+' item pertama. Unduh Excel untuk semua '+nf(rows.length)+' item sesuai filter.<br>':'')
-   +'<b>Cara membaca.</b> Penjualan dari file '+esc(S.meta.sal||'penjualan')+' dibagi periode '+nf(P.d)+' hari. Stock dan nilai stock dari SQV. <b>Dead moving</b>: ada stock di SQV tetapi tidak ada penjualan selama periode. <b>Fast moving</b>: item dengan nilai jual terbesar yang bersama-sama mencapai '+P.f+'% dari total nilai jual. <b>Slow moving</b>: bukan fast dan stock cukup lebih dari '+nf(P.s)+' hari dengan laju jual rata-rata. <b>Normal</b>: sisanya. Stock cukup (hari) = stock ÷ rata-rata jual per hari. Stock minus tidak dihitung sebagai stock. Angka di kartu dan rekap hanya menghitung item yang ada stock di SQV. Fast, stock habis = item fast moving yang stock SQV-nya nol atau minus, kandidat untuk diorder. Item yang pernah laku tetapi tidak ada stock tampil di daftar bawah.'
+   +'<b>Cara membaca.</b> Penjualan dari file '+esc(S.meta.sal||'penjualan')+' dibagi periode '+nf(P.d)+' hari ('+esc(S.meta.salFrom)+' sampai '+esc(S.meta.salTo)+'). Stock dan nilai stock dari SQV. <b>Dead moving</b>: ada stock di SQV tetapi tidak ada penjualan selama periode. <b>Fast moving</b>: item dengan nilai jual terbesar yang bersama-sama mencapai '+P.f+'% dari total nilai jual. <b>Slow moving</b>: bukan fast dan stock cukup lebih dari '+nf(P.s)+' hari dengan laju jual rata-rata. <b>Normal</b>: sisanya. Stock cukup (hari) = stock ÷ rata-rata jual per hari. Stock minus tidak dihitung sebagai stock. Angka di kartu dan rekap hanya menghitung item yang ada stock di SQV. Fast, stock habis = item fast moving yang stock SQV-nya nol atau minus, kandidat untuk diorder. Item yang pernah laku tetapi tidak ada stock tampil di daftar bawah.'
    +(MC.noinfo?'<br><b style="color:#b3261e">'+nf(MC.noinfo)+' item ber-stock belum punya nama atau kategori dari SQV. Upload ulang file SQV supaya terbaca.</b>':'')
    +(S.meta.salN?'':'');
 }
 document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('#mkpi button[data-ms]');if(b){MF.s=b.getAttribute('data-ms');renderMv()}});
-['#mpd:d','#mpf:f','#mps:s'].forEach(function(x){var a=x.split(':');$(a[0]).onchange=function(){var o={};try{o=JSON.parse(localStorage.getItem(MPKEY)||'{}')}catch(e){}var v=parseFloat(this.value);if(v>0)o[a[1]]=v;if(a[1]==='f'&&o.f>100)o.f=100;try{localStorage.setItem(MPKEY,JSON.stringify(o))}catch(e){}renderMv()}});
+['#mpf:f','#mps:s'].forEach(function(x){var a=x.split(':');$(a[0]).onchange=function(){var o={};try{o=JSON.parse(localStorage.getItem(MPKEY)||'{}')}catch(e){}var v=parseFloat(this.value);if(v>0)o[a[1]]=v;if(a[1]==='f'&&o.f>100)o.f=100;try{localStorage.setItem(MPKEY,JSON.stringify(o))}catch(e){}renderMv()}});
+var mvPer=function(){S.meta.salFrom=$('#mpa').value;S.meta.salTo=$('#mpb').value;persistMv();persist();renderMv();if(mvDays())shSave()};$('#mpa').onchange=mvPer;$('#mpb').onchange=mvPer;
 $('#mfc').onchange=function(){MF.c=this.value;renderMv()};$('#mfs').onchange=function(){MF.s=this.value;renderMv()};$('#mft').onchange=function(){MF.t=this.value;renderMv()};
 var _mq;$('#mfq').oninput=function(){var v=this.value;clearTimeout(_mq);_mq=setTimeout(function(){MF.q=v;renderMv()},200)};
 $('#mfr').onclick=function(){MF={c:'',s:'',t:'',q:''};$('#mfq').value='';renderMv()};
@@ -825,7 +829,7 @@ async function shLoad(){
     if(!r.ok)throw new Error('Data tidak dapat dimuat ('+r.status+').');
     var sh=await r.json(),d=sh&&sh.data;
     if(!d||!Array.isArray(d.plano)||!d.plano.length||!d.stk||!d.rep)return;
-    S.plano=d.plano;S.stk=d.stk;S.rep=d.rep;S.cls=d.cls||null;S.inv=d.inv||null;S.dsc=d.dsc||null;if(d.sal){S.sal=d.sal;S.nm=d.nm||{};S.sv=d.sv||{};S.dict=d.dict||[];DI=null;persistMv()}S.meta=d.meta||{};S.meta.savedAt=sh.savedAt;S.meta.by=sh.by||'';
+    S.plano=d.plano;S.stk=d.stk;S.rep=d.rep;S.cls=d.cls||null;S.inv=d.inv||null;S.dsc=d.dsc||null;if(d.sal){S.sal=d.sal;S.nm=d.nm||{};S.sv=d.sv||{};S.dict=d.dict||[];DI=null}S.meta=d.meta||{};if(d.sal)persistMv();S.meta.savedAt=sh.savedAt;S.meta.by=sh.by||'';
     labelFiles();build();persist();$('#dataBox').open=false;
     say('Data terakhir disimpan: '+shStamp(sh.savedAt)+(sh.by?' oleh '+String(sh.by).split('@')[0]:'')+'. Semua pengguna melihat data ini.');
   }catch(e){say((e&&e.message)||'Data online belum tersedia.',1)}
