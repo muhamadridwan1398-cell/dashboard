@@ -2495,9 +2495,12 @@ function dParseNp(rows){
 function dRsn(s){s=String(s||'').toUpperCase().replace(/\(RC\)/g,'').replace(/[^A-Z]/g,'');return s==='RESCHEDULE'||s==='RC'?'RESCHEDULE':s}
 var MONID={januari:1,februari:2,maret:3,april:4,mei:5,juni:6,juli:7,agustus:8,september:9,oktober:10,november:11,desember:12,jan:1,feb:2,mar:3,apr:4,jun:6,jul:7,agu:8,agt:8,aug:8,sep:9,okt:10,oct:10,nov:11,des:12,dec:12,may:5};
 function dRsMonth(r,mcols,pdj,yj){
-  var pd=pdj!==undefined?dDate(r[pdj]):null;if(pd!=null){var t=new Date(pd);return [t.getUTCMonth()+1,t.getUTCFullYear()]}
   var m=null;mcols.forEach(function(j){if(m)return;var v=String(r[j]==null?'':r[j]).trim().toLowerCase();if(!v)return;var n=MONID[v]||(/^\d+$/.test(v)&&+v>=1&&+v<=12?+v:null);if(n)m=n});
-  return [m,yj!==undefined?dNum(r[yj]):null]}
+  var pd=pdj!==undefined?dDate(r[pdj]):null,y=yj!==undefined?dNum(r[yj]):null;
+  /* kolom Month (teks/angka) dipakai dulu: kolom TanggalPDD bercampur format m/d dan d/m sehingga bulannya bisa salah baca */
+  if(m)return [m,y||(pd!=null?new Date(pd).getUTCFullYear():null)];
+  if(pd!=null){var t=new Date(pd);return [t.getUTCMonth()+1,t.getUTCFullYear()]}
+  return [null,y]}
 function dParseRs(rows){
   var H=dHdr(rows,['no nota penjualan','reason late customer']);if(!H)throw new Error('Tab REASON LATE: kolom "No Nota Penjualan" dan "Reason Late Customer" tidak ditemukan.');
   var M=H.m,g=function(r,n){var j=M[n];return j===undefined?'':String(r[j]==null?'':r[j]).trim()},out={},mj=-1,yj=M['year'];
