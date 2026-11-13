@@ -2738,4 +2738,8 @@ shLoad(false);fnLoad();
 (function(){var m=document.getElementById('msg'),t=document.getElementById('dtoast'),tm;if(!m||!t||!window.MutationObserver)return;new MutationObserver(function(){var x=m.textContent.trim();clearTimeout(tm);if(!x){t.hidden=true;return}t.textContent=x;t.className='dock-toast'+(m.className==='err'?' err':'');t.hidden=false;if(!/…$/.test(x))tm=setTimeout(function(){t.hidden=true},6000)}).observe(m,{childList:true,characterData:true,subtree:true,attributes:true})})();
 </script>
 <script src="../pwa.js" defer></script>
-</body></html>
+<style id="qb-layer">
+.qb-hz{height:7px;border-radius:0 0 14px 14px;background:repeating-linear-gradient(-45deg,#f2a71b 0 12px,#14284b 12px 24px);margin:-2px 14px 12px}
+body{padding-bottom:max(16px,env(safe-area-inset-bottom))}
+@media (max-width:640px){.tbl-wrap,.tablewrap,.scroll-x{-webkit-overflow-scrolling:touch}table{font-size:12.5px}}
+</style></body></html>
