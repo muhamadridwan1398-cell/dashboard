@@ -45,7 +45,7 @@
 .dsl .dslbt{height:14px;background:#eaeef4}
 @media(max-width:760px){.dsl .dslhero{grid-template-columns:1fr;justify-items:center;padding:16px}.dsl .dslkk{width:100%}}
 @media(prefers-reduced-motion:reduce){.dsl .dslarc{animation:none}}
-</style></head><body>
+</style><link rel="manifest" href="../manifest.webmanifest"><meta name="theme-color" content="#14284b"><link rel="icon" type="image/svg+xml" href="../icons/icon.svg"><link rel="apple-touch-icon" href="../icons/apple-touch-icon.png"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Q-BIG"><meta name="apple-mobile-web-app-status-bar-style" content="default"></head><body>
 <meta charset="utf-8">
 <title>Outstanding NP</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -2737,4 +2737,5 @@ shLoad(false);fnLoad();
 <script>
 (function(){var m=document.getElementById('msg'),t=document.getElementById('dtoast'),tm;if(!m||!t||!window.MutationObserver)return;new MutationObserver(function(){var x=m.textContent.trim();clearTimeout(tm);if(!x){t.hidden=true;return}t.textContent=x;t.className='dock-toast'+(m.className==='err'?' err':'');t.hidden=false;if(!/…$/.test(x))tm=setTimeout(function(){t.hidden=true},6000)}).observe(m,{childList:true,characterData:true,subtree:true,attributes:true})})();
 </script>
+<script src="../pwa.js" defer></script>
 </body></html>
