@@ -14,6 +14,33 @@
 .dsl .dslgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px;margin-top:10px}.dsl .dslgrid label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--ink2)}
 .dsl .dslgrid input{padding:7px 9px;border:1px solid var(--line);border-radius:6px;font-size:13px;min-width:0}
 .dsl .dslf{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 10px}.dsl .dslf input,.dsl .dslf select{padding:7px 9px;border:1px solid var(--line);border-radius:6px;font-size:13px}.dsl .dslf input{flex:1;min-width:200px}
+
+/* DSL tampilan baru */
+.dsl{--ok:#1f3a6e;--late:#c98a1b;--good:#17794f;--bad:#b3362f}
+.dsl .dslhero{display:grid;grid-template-columns:auto 1fr;gap:26px;align-items:center;margin:14px 0 4px;padding:20px 24px;border-radius:16px;background:linear-gradient(135deg,#f4f7fc 0%,#fff 60%);border:1px solid #dfe6f1}
+.dsl .dslring{position:relative;width:168px;height:168px}.dsl .dslring svg{width:100%;height:100%}
+.dsl .dslarc{animation:dslarc .9s cubic-bezier(.2,.7,.2,1) both}@keyframes dslarc{from{stroke-dasharray:0 400}}
+.dsl .dslrc{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.dsl .dslrc b{font-family:var(--head);font-size:27px;font-weight:800;color:var(--ok);letter-spacing:-.02em;font-variant-numeric:tabular-nums}.dsl .dslrc span{font-size:11.5px;color:var(--ink3);margin-top:2px;max-width:100px}
+.dsl .dslkk{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.dsl .dslkk>div{background:#fff;border:1px solid #e3e8f0;border-radius:12px;padding:12px 14px;border-top:3px solid var(--ok);min-width:0}
+.dsl .dslkk>div.late{border-top-color:var(--late)}
+.dsl .dslkk span{display:block;font-size:12px;color:var(--ink3);font-weight:600}.dsl .dslkk b{display:block;font-family:var(--head);font-size:25px;font-weight:800;color:var(--navy);margin:3px 0 2px;font-variant-numeric:tabular-nums;letter-spacing:-.01em}.dsl .dslkk i{font-style:normal;font-size:11.5px;color:var(--ink3)}
+.dsl .dslchip{display:inline-block;font-family:var(--head);font-size:13px;font-weight:700;padding:3px 9px;border-radius:99px;background:#eef1f5;color:var(--ink3);letter-spacing:0}.dsl .dslchip.up{background:#e3f4ea;color:var(--good)}.dsl .dslchip.dn{background:#fbe7e5;color:var(--bad)}
+.dsl .dslkk b .dslchip{font-size:15px;margin-top:2px}
+.dsl .dslmon{gap:8px;margin:14px 0 4px}.dsl .dslmon button{padding:7px 15px;font-weight:600;transition:background .15s,border-color .15s}.dsl .dslmon button:hover{border-color:var(--navy)}
+.dsl .dslsubnav{margin:16px 0 0}
+.dsl h3{display:flex;align-items:center;gap:9px;margin:30px 0 10px!important;padding-top:20px;border-top:1px solid #e3e8f0;font-family:var(--head);font-size:16px;font-weight:800;letter-spacing:-.01em}
+.dsl h3::before{content:"";width:5px;height:18px;border-radius:3px;background:var(--late);flex:none}
+.dsl .dslsubnav+h3,.dsl .dslhero+h3{border-top:0;padding-top:0;margin-top:20px!important}
+.dsl .tablewrap{border:1px solid #e3e8f0;border-radius:12px;background:#fff}
+.dsl .tablewrap th{background:#f3f6fb;color:#3b4a63}.dsl .tablewrap tbody tr:hover td{background:#f8fafd}
+.dsl tr.dslsel td{background:#eef3fb!important;box-shadow:inset 3px 0 0 var(--ok)}.dsl tr.dslsel td:not(:first-child){box-shadow:none}
+.dsl .dslchart{border-radius:12px;border-color:#e3e8f0;padding:10px 10px 8px}
+.dsl .dslch span{background:#fff;border:1px solid #e3e8f0}
+.dsl .dslbt{height:14px;background:#eaeef4}
+@media(max-width:760px){.dsl .dslhero{grid-template-columns:1fr;justify-items:center;padding:16px}.dsl .dslkk{width:100%}}
+@media(prefers-reduced-motion:reduce){.dsl .dslarc{animation:none}}
 </style></head><body>
 <meta charset="utf-8">
 <title>Outstanding NP</title>
@@ -2531,7 +2558,7 @@ function dAna(){var MA=dMonths().filter(function(t){return t.det}),mons=MA.map(f
   return {mons:mons,G:G,all:G.reduce(function(s,g){return s+g.tot},0)}}
 var DRC={INTERNAL:'#2f4b7c',RESCHEDULE:'#1d8a8a',TBDC:'#c98a1b',TBSPL:'#8e4a8a',TBT:'#6b7b8c'};
 function dLine(M){var P=M.filter(function(t){return t.all}).map(function(t){return {l:monLab(t.pm),a:pc(t.on,t.all),b:pc(t.on+(t.rc||0),t.all)}});if(P.length<1)return '';
-  var W=720,H=230,L=44,R=16,T=24,B=34,PX=34,vals=[];P.forEach(function(o){vals.push(o.a,o.b)});var mn=Math.floor(Math.min.apply(null,vals)/5)*5-5,mx=100;if(mn<0)mn=0;
+  var W=960,H=250,L=48,R=20,T=26,B=34,PX=44,vals=[];P.forEach(function(o){vals.push(o.a,o.b)});var mn=Math.floor(Math.min.apply(null,vals)/5)*5-5,mx=100;if(mn<0)mn=0;
   var X=function(i){return P.length===1?(L+W-R)/2:L+PX+i*(W-L-R-2*PX)/(P.length-1)},Y=function(v){return T+(mx-v)/(mx-mn)*(H-T-B)};
   var g='',s=Math.max(5,Math.ceil((mx-mn)/4/5)*5);for(var v=mx;v>=mn;v-=s)g+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(v)+'" y2="'+Y(v)+'" stroke="#d9dee6" stroke-width="1"/><text x="'+(L-6)+'" y="'+(Y(v)+4)+'" text-anchor="end" font-size="11" fill="#6b7686">'+v+'%</text>';
   var pa=P.map(function(o,i){return X(i)+','+Y(o.a)}).join(' '),pb=P.map(function(o,i){return X(i)+','+Y(o.b)}).join(' ');
@@ -2585,11 +2612,20 @@ function dslPanel(){
   h+='<div class="dslmon">'+M.map(function(t){return '<button type="button" data-dsl="mon" data-pm="'+t.pm+'" aria-pressed="'+(t.pm===DS.mon)+'">'+monLab(t.pm)+'</button>'}).join('')+'</div>';
   var hHead=h;h='';
   var kp=function(l,v,s){return '<div><span>'+l+'</span><b>'+v+'</b><i>'+s+'</i></div>'};
-  h+='<div class="dslk">'+kp('Ach % '+monLab(cur.pm),pf(a),'Early + Ontime ÷ semua NP')+kp('Ach + RC',pf(arc),'Reschedule tidak dihitung telat')+kp('Semua NP',fmt(cur.all),fmt(cur.on)+' tepat waktu'+(cur.ex?' (termasuk '+fmt(cur.ex)+' NP Exclude)':''))+kp('NP telat',fmt(cur.late),pf(pc(cur.late,cur.all))+' dari semua NP')+kp('Vs bulan lalu',pa==null||a==null?'–':((a-pa>=0?'▲ ':'▼ ')+Math.abs(a-pa).toFixed(2).replace('.',',')+' poin'),prev?'Ach % '+monLab(prev.pm)+': '+pf(pa):'Belum ada bulan sebelumnya')+'</div>';
+  var C=2*Math.PI*58,on=(a||0)/100*C,lt=Math.max(0,C-on),dv=pa==null||a==null?null:a-pa,
+      chip=dv==null?'<span class="dslchip">–</span>':'<span class="dslchip '+(dv>=0?'up':'dn')+'">'+(dv>=0?'▲ ':'▼ ')+Math.abs(dv).toFixed(2).replace('.',',')+' poin</span>';
+  h+='<div class="dslhero"><div class="dslring"><svg viewBox="0 0 150 150" role="img" aria-label="Ach % '+pf(a)+'"><circle cx="75" cy="75" r="58" fill="none" stroke="#e7ebf1" stroke-width="14"/>'
+    +'<circle class="dslarc" cx="75" cy="75" r="58" fill="none" stroke="#c98a1b" stroke-width="14" stroke-dasharray="'+lt.toFixed(1)+' '+C.toFixed(1)+'" stroke-dashoffset="'+(-on).toFixed(1)+'" transform="rotate(-90 75 75)"/>'
+    +'<circle class="dslarc" cx="75" cy="75" r="58" fill="none" stroke="#1f3a6e" stroke-width="14" stroke-linecap="butt" stroke-dasharray="'+on.toFixed(1)+' '+C.toFixed(1)+'" transform="rotate(-90 75 75)"/></svg>'
+    +'<div class="dslrc"><b>'+pf(a)+'</b><span>Ach % '+monLab(cur.pm)+'</span></div></div>'
+    +'<div class="dslkk"><div><span>Ach + RC</span><b>'+pf(arc)+'</b><i>Reschedule tidak dihitung telat</i></div>'
+    +'<div><span>Semua NP</span><b>'+fmt(cur.all)+'</b><i>'+fmt(cur.on)+' tepat waktu'+(cur.ex?' · '+fmt(cur.ex)+' NP Exclude':'')+'</i></div>'
+    +'<div class="late"><span>NP telat</span><b>'+fmt(cur.late)+'</b><i>'+pf(pc(cur.late,cur.all))+' dari semua NP</i></div>'
+    +'<div><span>Vs bulan lalu</span><b>'+chip+'</b><i>'+(prev?'Ach % '+monLab(prev.pm)+': '+pf(pa):'Belum ada bulan sebelumnya')+'</i></div></div></div>';
   h+='<h3 style="margin:18px 0 6px">Rekap DSL</h3>'+dLine(M)+'<div class="tablewrap"><table><thead><tr><th>Bulan PDD</th><th class="r">Semua NP</th><th class="r">Early/Ontime</th><th class="r">Late</th><th class="r">Ach %</th><th class="r">Ach + RC</th><th class="r">Vs bulan lalu</th></tr></thead><tbody>'
     +M.map(function(t,i){var x=pc(t.on,t.all),y=pc(t.on+(t.rc||0),t.all),p=i?M[i-1]:null,px=p?pc(p.on,p.all):null,dl=p&&x!=null&&px!=null?x-px:null,op=t.wk&&DS.open[t.pm];
       var wr=op?t.wk.map(function(w,wi){var a=pc(w.on,w.all),b=pc(w.on+w.rc,w.all);return '<tr class="dslwk"><td class="num">'+DWK[wi]+'</td><td class="r num">'+fmt(w.all)+'</td><td class="r num">'+fmt(w.on)+'</td><td class="r num">'+fmt(w.all-w.on)+'</td><td class="r num"><b>'+pf(a)+'</b></td><td class="r num">'+pf(b)+'</td><td class="r num">–</td></tr>'}).join(''):'';
-      return '<tr'+(t.pm===DS.mon?' class="dslsel"':'')+'><td class="num">'+(t.wk?'<button type="button" class="dslexp" data-dsl="wk" data-pm="'+t.pm+'" aria-expanded="'+(!!op)+'" title="Lihat per week">'+(op?'▾':'▸')+'</button> ':'')+'<b>'+monLab(t.pm)+'</b></td><td class="r num">'+fmt(t.all)+'</td><td class="r num">'+fmt(t.on)+'</td><td class="r num">'+fmt(t.late)+'</td><td class="r num"><b>'+pf(x)+'</b><div class="dslbar"><i style="width:'+Math.min(100,x||0).toFixed(1)+'%"></i></div></td><td class="r num">'+pf(y)+'</td><td class="r num">'+(dl==null?'–':(dl>=0?'▲ ':'▼ ')+Math.abs(dl).toFixed(2).replace('.',',')+'')+'</td></tr>'+wr}).join('')+'</tbody></table></div>';
+      return '<tr'+(t.pm===DS.mon?' class="dslsel"':'')+'><td class="num">'+(t.wk?'<button type="button" class="dslexp" data-dsl="wk" data-pm="'+t.pm+'" aria-expanded="'+(!!op)+'" title="Lihat per week">'+(op?'▾':'▸')+'</button> ':'')+'<b>'+monLab(t.pm)+'</b></td><td class="r num">'+fmt(t.all)+'</td><td class="r num">'+fmt(t.on)+'</td><td class="r num">'+fmt(t.late)+'</td><td class="r num"><b>'+pf(x)+'</b><div class="dslbar"><i style="width:'+Math.min(100,x||0).toFixed(1)+'%"></i></div></td><td class="r num">'+pf(y)+'</td><td class="r num">'+(dl==null?'–':'<span class="dslchip '+(dl>=0?'up':'dn')+'">'+(dl>=0?'▲ ':'▼ ')+Math.abs(dl).toFixed(2).replace('.',',')+'</span>')+'</td></tr>'+wr}).join('')+'</tbody></table></div>';
   h+='<h3 style="margin:18px 0 6px">Next Day dan 2 Days</h3><p class="sub" style="margin:0 0 6px">Next Day = PDD 1 hari setelah order, 2 Days = 2 hari. Kontribusi = porsi dari semua NP bulan itu. Hanya bulan yang datanya ada di tab NP NAV.</p><div class="tablewrap"><table><thead><tr><th>Bulan PDD</th><th class="r">Next Day</th><th class="r">Kontribusi</th><th class="r">Tepat waktu</th><th class="r">Ach Next Day</th><th class="r">2 Days</th><th class="r">Kontribusi</th><th class="r">Tepat waktu</th><th class="r">Ach 2 Days</th></tr></thead><tbody>'
     +M.map(function(t){var n=function(v){return v==null?'–':fmt(v)};return '<tr><td class="num"><b>'+monLab(t.pm)+'</b></td><td class="r num">'+n(t.nd)+'</td><td class="r num">'+pf(t.nd==null?null:pc(t.nd,t.all))+'</td><td class="r num">'+n(t.ndOn)+'</td><td class="r num"><b>'+pf(t.nd==null?null:pc(t.ndOn,t.nd))+'</b></td><td class="r num">'+n(t.d2)+'</td><td class="r num">'+pf(t.d2==null?null:pc(t.d2,t.all))+'</td><td class="r num">'+n(t.d2On)+'</td><td class="r num"><b>'+pf(t.d2==null?null:pc(t.d2On,t.d2))+'</b></td></tr>'}).join('')+'</tbody></table></div>';
   h+='<h3 style="margin:18px 0 6px">Reason late</h3><div class="tablewrap"><table><thead><tr><th>Bulan PDD</th>'+DRS.map(function(r){return '<th class="r">'+r+'</th>'}).join('')+'<th class="r">Total alasan</th><th class="r">NP telat</th><th class="r">Belum diisi</th></tr></thead><tbody>'
