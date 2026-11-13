@@ -335,7 +335,7 @@ function onFiles(files){
 }
 document.querySelectorAll('input[type=file]').forEach(function(i){i.addEventListener('change',function(){onFiles(i.files);i.value=''})});
 
-function persist(){try{localStorage.setItem(KEY,JSON.stringify({plano:S.plano,stk:S.stk,rep:S.rep,cls:S.cls,inv:S.inv,dsc:S.dsc,meta:S.meta}))}catch(e){}}
+function persist(){try{localStorage.setItem(KEY,JSON.stringify({plano:S.plano,stk:S.stk,rep:S.rep,cls:S.cls,inv:S.inv,dsc:S.dsc,meta:S.meta}))}catch(e){say('Data tidak muat di penyimpanan browser (penuh). Simpan online dengan Login Editor supaya tidak hilang saat halaman ditutup.',1)}}
 function restore(){try{var d=JSON.parse(localStorage.getItem(KEY)||'null');if(d&&d.plano&&d.stk&&d.rep){S.plano=d.plano;S.stk=d.stk;S.rep=d.rep;S.cls=d.cls||null;S.inv=d.inv||null;S.dsc=d.dsc||null;S.meta=d.meta||{};restoreMv();labelFiles();build();say('Memakai data terakhir yang Anda unggah.');$('#dataBox').open=false}}catch(e){}}
 
 /* ---------- hitung ---------- */
@@ -552,8 +552,14 @@ $('#cres').onclick=function(){try{localStorage.removeItem(CAPKEY)}catch(e){}rend
 /* ---------- moving: fast dan dead ---------- */
 var MVKEY='qbig_inv_mv_v1',MPKEY='qbig_inv_mvp_v1',DI=null,MF={c:'',s:'',t:'',n:'',q:''},MLIM=500,MC=null;
 function di(t){if(!DI){DI={};S.dict.forEach(function(x,i){DI[x]=i})}var i=DI[t];if(i===undefined){i=S.dict.length;S.dict.push(t);DI[t]=i}return i}
-function persistMv(){var nm={};Object.keys(S.nm||{}).forEach(function(k){if((S.sv&&S.sv[k])||(S.sal&&S.sal[k]&&S.sal[k][1]>=2e6))nm[k]=S.nm[k]});try{localStorage.setItem(MVKEY,JSON.stringify({sal:S.sal,nm:nm,sv:S.sv,dict:S.dict,mt:S.meta.sal||'',pf:S.meta.salFrom||'',pt:S.meta.salTo||'',nw:S.nw||null}))}catch(e){return false}return true}
-function restoreMv(){try{var d=JSON.parse(localStorage.getItem(MVKEY)||'null');if(d&&d.sal){S.nw=d.nw||null;S.sal=d.sal;S.nm=d.nm||{};S.sv=d.sv||{};S.dict=d.dict||[];DI=null;S.meta.sal=d.mt||'tersimpan';S.meta.salFrom=d.pf||'';S.meta.salTo=d.pt||''}}catch(e){}}
+function idb(fn){return new Promise(function(res,rej){try{var q=indexedDB.open('qbig_inv_db',1);q.onupgradeneeded=function(){q.result.createObjectStore('kv')};q.onerror=function(){rej(q.error)};q.onsuccess=function(){var d=q.result,t=d.transaction('kv',fn.w?'readwrite':'readonly'),st=t.objectStore('kv'),r=fn(st);t.oncomplete=function(){d.close();res(r&&r.result)};t.onerror=function(){rej(t.error)};t.onabort=function(){rej(t.error)}}}catch(e){rej(e)}})}
+function mvBlob(){var nm=S.nm||{};return {sal:S.sal,nm:nm,sv:S.sv,dict:S.dict,mt:S.meta.sal||'',pf:S.meta.salFrom||'',pt:S.meta.salTo||'',nw:S.nw||null}}
+var _pmt;function persistMv(){clearTimeout(_pmt);_pmt=setTimeout(function(){if(!S.sal&&!S.sv)return;var b=mvBlob();var f=function(st){return st.put(b,'mv')};f.w=1;idb(f).then(function(){try{localStorage.removeItem(MVKEY)}catch(e){}}).catch(function(e){say('Data penjualan tidak tersimpan di browser ini ('+((e&&e.message)||'penyimpanan penuh')+'). Data tetap bisa dipakai selama halaman terbuka; simpan online dengan Login Editor supaya tidak hilang.',1)})},150);return true}
+function applyMv(d){if(d&&d.sal){S.nw=d.nw||null;S.sal=d.sal;S.nm=d.nm||{};S.sv=d.sv||{};S.dict=d.dict||[];DI=null;S.meta.sal=d.mt||'tersimpan';S.meta.salFrom=d.pf||'';S.meta.salTo=d.pt||'';return true}return false}
+function restoreMv(){
+  try{var d=JSON.parse(localStorage.getItem(MVKEY)||'null');if(applyMv(d)){persistMv()}}catch(e){}
+  idb(function(st){return st.get('mv')}).then(function(d){if(!S.sal&&applyMv(d)){labelFiles();if(!$('#tab-moving').classList.contains('hide'))renderMv()}}).catch(function(){});
+}
 function mvFromSales(r,name){
   var m={},n=0;S.nm=S.nm||{};
   r.rows.forEach(function(o){var c=String(o['Item Code']||'').trim();if(!c||/total/i.test(c))return;var q=num(o['Base Sales Qty']);if(!(q>0))return;
