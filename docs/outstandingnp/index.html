@@ -5,7 +5,7 @@
 .dsl .dslmon{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.dsl .dslmon button{border:1px solid var(--line);background:#fff;border-radius:99px;padding:5px 12px;font-size:13px;cursor:pointer;color:var(--ink)}
 .dsl .dslmon button[aria-pressed=true]{background:var(--navy);color:#fff;border-color:var(--navy);font-weight:700}
 .dsl .dslbar{height:4px;background:#e8edf3;border-radius:2px;margin-top:3px;min-width:70px}.dsl .dslbar i{display:block;height:100%;background:var(--navy2);border-radius:2px}
-.dsl tr.dslsel td{background:#f1f5fb}.dsl h3{font-size:14px;font-weight:800;color:var(--navy)}
+.dsl tr.dslsel td{background:#f1f5fb}.dsl h3{font-size:14px;font-weight:800;color:var(--navy)}.dsl .dslx{font-size:11px;background:#fdecec;color:#a33;border-radius:4px;padding:1px 6px;margin-left:4px;white-space:nowrap}
 .dsl .dslerr{background:#fdf2f2;border:1px solid #efc4c4;color:#8a2d2d;border-radius:8px;padding:10px 12px;font-size:13px;margin:8px 0}
 .dsl .dslset{margin:8px 0;font-size:13px}.dsl .dslset summary{cursor:pointer;font-weight:600;color:var(--navy)}
 .dsl .dslgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px;margin-top:10px}.dsl .dslgrid label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--ink2)}
@@ -2462,7 +2462,7 @@ function shSave(){
 
 /* ================= Tab DSL (Delivery Service Level) ================= */
 var DSL_ID='1Uj8TdJVNBfEPGnRnaHX1CLpkVntKpiiIIT59BmnykvA',DSL_GNP='467539596',DSL_GRS='435810186',DSL_KEY='qbig_dsl_cfg_v1';
-var D={st:'idle',err:'',src:'',at:'',np:[],rs:{},hist:{},yr:new Date().getFullYear()};
+var D={st:'idle',err:'',src:'',at:'',np:[],rs:{},hist:{},hasEx:false,yr:new Date().getFullYear()};
 var DS={mon:null,rs:'',q:'',shown:100,cfg:{u1:'',u2:''}};
 try{var _c=JSON.parse(localStorage.getItem(DSL_KEY)||'{}');DS.cfg.u1=_c.u1||'';DS.cfg.u2=_c.u2||''}catch(e){}
 var DMONS={JANUARI:0,FEBRUARI:1,MARET:2,APRIL:3,MEI:4,JUNI:5,JULI:6,AGUSTUS:7,SEPTEMBER:8,OKTOBER:9,NOVEMBER:10,DESEMBER:11};
@@ -2493,9 +2493,11 @@ function dRsn(s){s=String(s||'').toUpperCase().replace(/\(RC\)/g,'').replace(/[^
 function dParseRs(rows){
   var H=dHdr(rows,['no nota penjualan','reason late customer']);if(!H)throw new Error('Tab REASON LATE: kolom "No Nota Penjualan" dan "Reason Late Customer" tidak ditemukan.');
   var M=H.m,g=function(r,n){var j=M[n];return j===undefined?'':String(r[j]==null?'':r[j]).trim()},out={},mj=-1,yj=M['year'];
-  Object.keys(M).forEach(function(k){if(k==='month'&&mj<0)mj=M[k]});
+  var xj=-1;Object.keys(M).forEach(function(k){if(k==='month'&&mj<0)mj=M[k];if(xj<0&&/^(exclude|excluded|tidak dihitung|tidak dihitung\?|abaikan|diabaikan|skip)$/.test(k))xj=M[k]});
+  D.hasEx=xj>=0;
   for(var i=H.r+1;i<rows.length;i++){var r=rows[i],np=g(r,'no nota penjualan');if(!np||!/^MS/i.test(np))continue;
-    out[np]={r:dRsn(g(r,'reason late customer')),d:g(r,'keterangan detail late customer'),m:mj>=0?dNum(r[mj]):null,y:yj!==undefined?dNum(r[yj]):null,c:g(r,'nama customer')}}
+    var xv=xj>=0&&/^(y|ya|yes|x|1|true|v|merah|✓|✔)$/i.test(String(r[xj]||'').trim());
+    out[np]={r:dRsn(g(r,'reason late customer')),d:g(r,'keterangan detail late customer'),m:mj>=0?dNum(r[mj]):null,y:yj!==undefined?dNum(r[yj]):null,c:g(r,'nama customer'),x:xv||!!(out[np]&&out[np].x)}}
   return out}
 function dGviz(gid){return 'https://docs.google.com/spreadsheets/d/'+DSL_ID+'/gviz/tq?tqx=out:csv&gid='+gid}
 function dFetch(url){return fetch(url,{cache:'no-store'}).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text()}).then(function(t){if(/^\s*<(!doctype|html)/i.test(t))throw new Error('Sheet belum bisa diakses publik (diminta login).');return dCsv(t)})}
@@ -2508,21 +2510,21 @@ function dApply(np,rs,src){
   var mx=0;D.np.forEach(function(x){if(x.pd!=null){var y=new Date(x.pd).getUTCFullYear();if(y>mx)mx=y}});if(mx)D.yr=mx;
   DS.mon=null;DS.shown=100;render()}
 function dMonths(){
-  var T={};D.np.forEach(function(x){if(x.pd==null||!x.k)return;var d=new Date(x.pd),pm=d.getUTCFullYear()*12+d.getUTCMonth(),t=T[pm]||(T[pm]={pm:pm,all:0,on:0,nd:0,ndOn:0,d2:0,d2On:0,live:true,rs:[0,0,0,0,0]});
-    t.all++;if(x.on)t.on++;var w=String(x.w).toUpperCase();if(w==='NEXT DAY'){t.nd++;if(x.on)t.ndOn++}else if(w==='2 DAY'){t.d2++;if(x.on)t.d2On++}});
-  Object.keys(D.hist).forEach(function(m){var pm=D.yr*12+(+m),h=D.hist[m];if(!T[pm]&&h.all){T[pm]={pm:pm,all:h.all,on:h.on||0,nd:null,ndOn:null,d2:null,d2On:null,live:false,rs:[0,0,0,0,0]}}});
+  var T={};D.np.forEach(function(x){if(x.pd==null||!x.k)return;var d=new Date(x.pd),pm=d.getUTCFullYear()*12+d.getUTCMonth(),t=T[pm]||(T[pm]={pm:pm,all:0,on:0,nd:0,ndOn:0,d2:0,d2On:0,live:true,ex:0,rs:[0,0,0,0,0]});
+    t.all++;if(x.on)t.on++;else if(D.rs[x.np]&&D.rs[x.np].x)t.ex++;var w=String(x.w).toUpperCase();if(w==='NEXT DAY'){t.nd++;if(x.on)t.ndOn++}else if(w==='2 DAY'){t.d2++;if(x.on)t.d2On++}});
+  Object.keys(D.hist).forEach(function(m){var pm=D.yr*12+(+m),h=D.hist[m];if(!T[pm]&&h.all){T[pm]={pm:pm,all:h.all,on:h.on||0,nd:null,ndOn:null,d2:null,d2On:null,live:false,ex:null,rs:[0,0,0,0,0]}}});
   /* alasan dari tab REASON LATE */
   Object.keys(D.rs).forEach(function(np){var z=D.rs[np],i=DRS.indexOf(z.r);if(i<0)return;var y=z.y||D.yr,pm=y*12+((z.m||0)-1);if(T[pm])T[pm].rs[i]++});
   Object.keys(T).forEach(function(k){var t=T[k],h=D.hist[t.pm%12];if(!t.rs.some(function(x){return x})&&h&&t.pm===D.yr*12+(t.pm%12))t.rs=h.rs.slice();t.late=t.all-t.on});
   var ks=Object.keys(T).map(Number).sort(function(a,b){return a-b});return ks.map(function(k){return T[k]})}
 var pc=function(a,b){return b?(a/b*100):null},pf=function(v){return v==null?'–':v.toFixed(2).replace('.',',')+'%'};
 function dLate(pm){return D.np.filter(function(x){if(!x.k||x.on||x.pd==null)return false;var d=new Date(x.pd);return d.getUTCFullYear()*12+d.getUTCMonth()===pm})}
-function dDetailRows(pm){var q=DS.q.trim().toLowerCase();return dLate(pm).map(function(x){var z=D.rs[x.np]||{};return {x:x,r:z.r||'',d:z.d||''}}).filter(function(o){if(DS.rs==='__none'){if(o.r)return false}else if(DS.rs&&o.r!==DS.rs)return false;
+function dDetailRows(pm){var q=DS.q.trim().toLowerCase();return dLate(pm).map(function(x){var z=D.rs[x.np]||{};return {x:x,r:z.r||'',d:z.d||'',ex:!!z.x}}).filter(function(o){if(DS.rs==='__none'){if(o.r)return false}else if(DS.rs==='__ex'){if(!o.ex)return false}else if(DS.rs&&o.r!==DS.rs)return false;
   return !q||(o.x.np+' '+o.x.cu+' '+o.x.sp+' '+o.x.ty+' '+o.d).toLowerCase().indexOf(q)>=0}).sort(function(a,b){return (a.x.pd||0)-(b.x.pd||0)})}
 function dds(v){if(v==null)return '–';var d=new Date(v);return d.getUTCDate()+' '+MON[d.getUTCMonth()]+' '+String(d.getUTCFullYear()).slice(2)}
 function dDetailHtml(pm){var L=dDetailRows(pm),all=dLate(pm).length;
   var h='<p class="sub" style="margin:0 0 8px">'+fmt(L.length)+' dari '+fmt(all)+' NP telat'+(DS.rs||DS.q?' (sesuai filter)':'')+'. Telat = NP tanpa item EARLY/ONTIME.</p><div class="tablewrap" style="max-height:520px;overflow:auto"><table><thead><tr><th>No NP</th><th>Customer</th><th>Tipe NP</th><th>Sales</th><th>PDD</th><th>Close</th><th>Status</th><th>Reason</th><th>Keterangan</th></tr></thead><tbody>';
-  h+=L.length?L.slice(0,DS.shown).map(function(o){var x=o.x;return '<tr><td class="num id">'+esc(x.np)+'</td><td>'+esc(x.cu)+'</td><td>'+esc(x.ty)+'</td><td>'+esc(x.sp)+'</td><td class="num">'+dds(x.pd)+'</td><td class="num">'+dds(x.cl)+'</td><td>'+esc(x.st)+'</td><td>'+(o.r?'<b>'+esc(o.r)+'</b>':'<em style="color:var(--ink3)">belum diisi</em>')+'</td><td>'+esc(o.d)+'</td></tr>'}).join(''):'<tr><td colspan="9" class="empty">Tidak ada NP telat untuk filter ini.</td></tr>';
+  h+=L.length?L.slice(0,DS.shown).map(function(o){var x=o.x;return '<tr><td class="num id">'+esc(x.np)+'</td><td>'+esc(x.cu)+'</td><td>'+esc(x.ty)+'</td><td>'+esc(x.sp)+'</td><td class="num">'+dds(x.pd)+'</td><td class="num">'+dds(x.cl)+'</td><td>'+esc(x.st)+'</td><td>'+(o.r?'<b>'+esc(o.r)+'</b>':'<em style="color:var(--ink3)">belum diisi</em>')+(o.ex?' <span class="dslx">tidak dihitung</span>':'')+'</td><td>'+esc(o.d)+'</td></tr>'}).join(''):'<tr><td colspan="9" class="empty">Tidak ada NP telat untuk filter ini.</td></tr>';
   h+='</tbody></table></div>';if(L.length>DS.shown)h+='<div style="margin-top:10px"><button type="button" class="btn ghost" data-dsl="more">Tampilkan lebih banyak ('+fmt(L.length-DS.shown)+' lagi)</button></div>';return h}
 function dslPanel(){
   if(D.st==='idle')dLoad();
@@ -2543,22 +2545,22 @@ function dslPanel(){
   var cur=M.filter(function(t){return t.pm===DS.mon})[0],ci=M.indexOf(cur),prev=ci>0?M[ci-1]:null,a=pc(cur.on,cur.all),rc=cur.rs[1],arc=pc(cur.on+rc,cur.all),pa=prev?pc(prev.on,prev.all):null;
   h+='<div class="dslmon">'+M.map(function(t){return '<button type="button" data-dsl="mon" data-pm="'+t.pm+'" aria-pressed="'+(t.pm===DS.mon)+'">'+monLab(t.pm)+'</button>'}).join('')+'</div>';
   var kp=function(l,v,s){return '<div><span>'+l+'</span><b>'+v+'</b><i>'+s+'</i></div>'};
-  h+='<div class="dslk">'+kp('Ach % '+monLab(cur.pm),pf(a),'Early + Ontime ÷ semua NP')+kp('Ach + RC',pf(arc),'Reschedule tidak dihitung telat')+kp('Semua NP',fmt(cur.all),fmt(cur.on)+' tepat waktu')+kp('NP telat',fmt(cur.late),pf(pc(cur.late,cur.all))+' dari semua NP')+kp('Vs bulan lalu',pa==null||a==null?'–':((a-pa>=0?'▲ ':'▼ ')+Math.abs(a-pa).toFixed(2).replace('.',',')+' poin'),prev?'Ach % '+monLab(prev.pm)+': '+pf(pa):'Belum ada bulan sebelumnya')+'</div>';
-  h+='<h3 style="margin:18px 0 6px">Rekap per bulan</h3><div class="tablewrap"><table><thead><tr><th>Bulan PDD</th><th class="r">Semua NP</th><th class="r">Early/Ontime</th><th class="r">Late</th><th class="r">Ach %</th><th class="r">Ach + RC</th><th class="r">Vs bulan lalu</th></tr></thead><tbody>'
+  h+='<div class="dslk">'+kp('Ach % '+monLab(cur.pm),pf(a),'Early + Ontime ÷ semua NP')+kp('Ach + RC',pf(arc),'Reschedule tidak dihitung telat')+kp('Semua NP',fmt(cur.all),fmt(cur.on)+' tepat waktu')+kp('NP telat',fmt(cur.late),pf(pc(cur.late,cur.all))+' dari semua NP')+kp('Ach % merah = tepat waktu',cur.ex==null||!D.hasEx?'–':pf(pc(cur.on+cur.ex,cur.all)),D.hasEx?fmt(cur.ex||0)+' NP ditandai tidak dihitung':'Tambah kolom Exclude di REASON LATE')+kp('Vs bulan lalu',pa==null||a==null?'–':((a-pa>=0?'▲ ':'▼ ')+Math.abs(a-pa).toFixed(2).replace('.',',')+' poin'),prev?'Ach % '+monLab(prev.pm)+': '+pf(pa):'Belum ada bulan sebelumnya')+'</div>';
+  h+='<h3 style="margin:18px 0 6px">Rekap per bulan</h3><div class="tablewrap"><table><thead><tr><th>Bulan PDD</th><th class="r">Semua NP</th><th class="r">Early/Ontime</th><th class="r">Late</th><th class="r">Ach %</th><th class="r">Ach + RC</th><th class="r">NP merah</th><th class="r">Ach % merah = tepat waktu</th><th class="r">Vs bulan lalu</th></tr></thead><tbody>'
     +M.map(function(t,i){var x=pc(t.on,t.all),y=pc(t.on+t.rs[1],t.all),p=i?M[i-1]:null,px=p?pc(p.on,p.all):null,dl=p&&x!=null&&px!=null?x-px:null;
-      return '<tr'+(t.pm===DS.mon?' class="dslsel"':'')+'><td class="num"><b>'+monLab(t.pm)+'</b></td><td class="r num">'+fmt(t.all)+'</td><td class="r num">'+fmt(t.on)+'</td><td class="r num">'+fmt(t.late)+'</td><td class="r num"><b>'+pf(x)+'</b><div class="dslbar"><i style="width:'+Math.min(100,x||0).toFixed(1)+'%"></i></div></td><td class="r num">'+pf(y)+'</td><td class="r num">'+(dl==null?'–':(dl>=0?'▲ ':'▼ ')+Math.abs(dl).toFixed(2).replace('.',',')+'')+'</td></tr>'}).join('')+'</tbody></table></div>';
+      return '<tr'+(t.pm===DS.mon?' class="dslsel"':'')+'><td class="num"><b>'+monLab(t.pm)+'</b></td><td class="r num">'+fmt(t.all)+'</td><td class="r num">'+fmt(t.on)+'</td><td class="r num">'+fmt(t.late)+'</td><td class="r num"><b>'+pf(x)+'</b><div class="dslbar"><i style="width:'+Math.min(100,x||0).toFixed(1)+'%"></i></div></td><td class="r num">'+pf(y)+'</td><td class="r num">'+(t.ex==null||!D.hasEx?'–':fmt(t.ex))+'</td><td class="r num"><b>'+(t.ex==null||!D.hasEx?'–':pf(pc(t.on+t.ex,t.all)))+'</b></td><td class="r num">'+(dl==null?'–':(dl>=0?'▲ ':'▼ ')+Math.abs(dl).toFixed(2).replace('.',',')+'')+'</td></tr>'}).join('')+'</tbody></table></div>';
   h+='<h3 style="margin:18px 0 6px">Alasan telat per bulan</h3><div class="tablewrap"><table><thead><tr><th>Bulan PDD</th>'+DRS.map(function(r){return '<th class="r">'+r+'</th>'}).join('')+'<th class="r">Total alasan</th><th class="r">NP telat</th><th class="r">Belum diisi</th></tr></thead><tbody>'
     +M.map(function(t){var tot=t.rs.reduce(function(s,v){return s+v},0);return '<tr><td class="num"><b>'+monLab(t.pm)+'</b></td>'+t.rs.map(function(v){return '<td class="r num">'+(v?fmt(v):'–')+'</td>'}).join('')+'<td class="r num"><b>'+fmt(tot)+'</b></td><td class="r num">'+fmt(t.late)+'</td><td class="r num">'+(t.late>=tot?fmt(t.late-tot):'–')+'</td></tr>'}).join('')+'</tbody></table></div>';
   h+='<h3 style="margin:18px 0 6px">Next Day dan 2 Days</h3><p class="sub" style="margin:0 0 6px">Next Day = PDD 1 hari setelah order, 2 Days = 2 hari. Kontribusi = porsi dari semua NP bulan itu. Hanya bulan yang datanya ada di tab NP NAV.</p><div class="tablewrap"><table><thead><tr><th>Bulan PDD</th><th class="r">Next Day</th><th class="r">Kontribusi</th><th class="r">Tepat waktu</th><th class="r">Ach Next Day</th><th class="r">2 Days</th><th class="r">Kontribusi</th><th class="r">Tepat waktu</th><th class="r">Ach 2 Days</th></tr></thead><tbody>'
     +M.map(function(t){var n=function(v){return v==null?'–':fmt(v)};return '<tr><td class="num"><b>'+monLab(t.pm)+'</b></td><td class="r num">'+n(t.nd)+'</td><td class="r num">'+pf(t.nd==null?null:pc(t.nd,t.all))+'</td><td class="r num">'+n(t.ndOn)+'</td><td class="r num"><b>'+pf(t.nd==null?null:pc(t.ndOn,t.nd))+'</b></td><td class="r num">'+n(t.d2)+'</td><td class="r num">'+pf(t.d2==null?null:pc(t.d2,t.all))+'</td><td class="r num">'+n(t.d2On)+'</td><td class="r num"><b>'+pf(t.d2==null?null:pc(t.d2On,t.d2))+'</b></td></tr>'}).join('')+'</tbody></table></div>';
-  var rsOpts=['<option value="">Semua reason</option>'].concat(DRS.map(function(r){return '<option value="'+r+'"'+(DS.rs===r?' selected':'')+'>'+r+'</option>'})).concat(['<option value="__none"'+(DS.rs==='__none'?' selected':'')+'>Belum diisi</option>']).join('');
-  h+='<h3 style="margin:18px 0 6px">Detail NP telat · '+monLab(cur.pm)+'</h3><div class="dslf"><input type="search" id="dslq" placeholder="Cari NP, customer, sales…" value="'+esc(DS.q)+'"><select id="dslrs">'+rsOpts+'</select></div><div id="dsldet">'+(cur.live?dDetailHtml(cur.pm):'<p class="sub">Detail NP hanya tersedia untuk bulan yang datanya ada di tab NP NAV.</p>')+'</div></section>';
+  var rsOpts=['<option value="">Semua reason</option>'].concat(DRS.map(function(r){return '<option value="'+r+'"'+(DS.rs===r?' selected':'')+'>'+r+'</option>'})).concat(['<option value="__none"'+(DS.rs==='__none'?' selected':'')+'>Belum diisi</option>','<option value="__ex"'+(DS.rs==='__ex'?' selected':'')+'>Tidak dihitung (merah)</option>']).join('');
+  h+='<h3 style="margin:18px 0 6px">Detail NP telat · '+monLab(cur.pm)+'</h3>'+(D.hasEx?'':'<p class="sub" style="margin:0 0 6px">Kolom penanda <b>Exclude</b> belum ada di tab REASON LATE. Tambahkan kolom itu dan isi Y pada NP yang tidak dihitung.</p>')+'<div class="dslf"><input type="search" id="dslq" placeholder="Cari NP, customer, sales…" value="'+esc(DS.q)+'"><select id="dslrs">'+rsOpts+'</select></div><div id="dsldet">'+(cur.live?dDetailHtml(cur.pm):'<p class="sub">Detail NP hanya tersedia untuk bulan yang datanya ada di tab NP NAV.</p>')+'</div></section>';
   return h}
 function dXl(){var M=dMonths();if(!M.length)return;var cur=M.filter(function(t){return t.pm===DS.mon})[0];
-  var wb=XLSX.utils.book_new(),r1=[['Bulan PDD','Semua NP','Early/Ontime','Late','Ach %','Ach + RC'].concat(DRS)];
-  M.forEach(function(t){r1.push([monLab(t.pm),t.all,t.on,t.late,t.all?Math.round(t.on/t.all*10000)/100:'',t.all?Math.round((t.on+t.rs[1])/t.all*10000)/100:''].concat(t.rs))});
+  var wb=XLSX.utils.book_new(),r1=[['Bulan PDD','Semua NP','Early/Ontime','Late','Ach %','Ach + RC','NP merah','Ach % merah = tepat waktu'].concat(DRS)];
+  M.forEach(function(t){r1.push([monLab(t.pm),t.all,t.on,t.late,t.all?Math.round(t.on/t.all*10000)/100:'',t.all?Math.round((t.on+t.rs[1])/t.all*10000)/100:'',D.hasEx&&t.ex!=null?t.ex:'',D.hasEx&&t.ex!=null&&t.all?Math.round((t.on+t.ex)/t.all*10000)/100:''].concat(t.rs))});
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(r1),'Rekap DSL');
-  var r2=[['No NP','Customer','Tipe NP','Sales','PDD','Close','Status','Reason','Keterangan']];dDetailRows(cur.pm).forEach(function(o){var x=o.x;r2.push([x.np,x.cu,x.ty,x.sp,dds(x.pd),dds(x.cl),x.st,o.r,o.d])});
+  var r2=[['No NP','Customer','Tipe NP','Sales','PDD','Close','Status','Reason','Tidak dihitung','Keterangan']];dDetailRows(cur.pm).forEach(function(o){var x=o.x;r2.push([x.np,x.cu,x.ty,x.sp,dds(x.pd),dds(x.cl),x.st,o.r,o.ex?'Ya':'',o.d])});
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(r2),'NP telat '+monLab(cur.pm).slice(0,20));XLSX.writeFile(wb,'DSL_'+monLab(cur.pm).replace(' ','_')+'.xlsx')}
 function dFile(f){return new Promise(function(ok,no){var rd=new FileReader();if(/\.csv$/i.test(f.name)){rd.onload=function(){ok(dCsv(String(rd.result)))};rd.onerror=no;rd.readAsText(f)}
   else{rd.onload=function(){try{var wb=XLSX.read(rd.result,{type:'array',cellDates:false}),ws=wb.Sheets[wb.SheetNames[0]];ok(XLSX.utils.sheet_to_json(ws,{header:1,raw:false,defval:'',dateNF:'m/d/yyyy'}))}catch(e){no(e)}};rd.onerror=no;rd.readAsArrayBuffer(f)}})}
