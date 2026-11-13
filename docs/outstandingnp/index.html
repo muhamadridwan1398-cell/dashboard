@@ -5,7 +5,7 @@
 .dsl .dslmon{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.dsl .dslmon button{border:1px solid var(--line);background:#fff;border-radius:99px;padding:5px 12px;font-size:13px;cursor:pointer;color:var(--ink)}
 .dsl .dslmon button[aria-pressed=true]{background:var(--navy);color:#fff;border-color:var(--navy);font-weight:700}
 .dsl .dslbar{height:4px;background:#e8edf3;border-radius:2px;margin-top:3px;min-width:70px}.dsl .dslbar i{display:block;height:100%;background:var(--navy2);border-radius:2px}
-.dsl tr.dslsel td{background:#f1f5fb}.dsl .dslck{display:flex;gap:8px;align-items:center;font-size:13px;cursor:pointer}.dsl .dslexp{border:0;background:none;cursor:pointer;font-size:13px;color:var(--navy);padding:0 4px}.dsl tr.dslwk td{background:#f7f9fc;font-size:12.5px}.dsl tr.dslwk td:first-child{padding-left:34px}.dsl tr.dslsub td{background:#e6e9ee;font-weight:700}.dsl h3{font-size:14px;font-weight:800;color:var(--navy)}.dsl .dslx{font-size:11px;background:#fdecec;color:#a33;border-radius:4px;padding:1px 6px;margin-left:4px;white-space:nowrap}
+.dsl tr.dslsel td{background:#f1f5fb}.dsl .dslck{display:flex;gap:8px;align-items:center;font-size:13px;cursor:pointer}.dsl .dslexp{border:0;background:none;cursor:pointer;font-size:13px;color:var(--navy);padding:0 4px}.dsl tr.dslwk td{background:#f7f9fc;font-size:12.5px}.dsl tr.dslwk td:first-child{padding-left:34px}.dsl .dslch{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 8px}.dsl .dslch span{font-size:12.5px;background:#eef2f8;border-radius:999px;padding:3px 10px}.dsl tr.dslsub td{background:#e6e9ee;font-weight:700}.dsl h3{font-size:14px;font-weight:800;color:var(--navy)}.dsl .dslx{font-size:11px;background:#fdecec;color:#a33;border-radius:4px;padding:1px 6px;margin-left:4px;white-space:nowrap}
 .dsl .dslerr{background:#fdf2f2;border:1px solid #efc4c4;color:#8a2d2d;border-radius:8px;padding:10px 12px;font-size:13px;margin:8px 0}
 .dsl .dslset{margin:8px 0;font-size:13px}.dsl .dslset summary{cursor:pointer;font-weight:600;color:var(--navy)}
 .dsl .dslgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px;margin-top:10px}.dsl .dslgrid label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--ink2)}
@@ -2463,7 +2463,7 @@ function shSave(){
 /* ================= Tab DSL (Delivery Service Level) ================= */
 var DSL_ID='1Uj8TdJVNBfEPGnRnaHX1CLpkVntKpiiIIT59BmnykvA',DSL_GNP='467539596',DSL_GRS='435810186',DSL_KEY='qbig_dsl_cfg_v1';
 var D={st:'idle',err:'',src:'',at:'',np:[],rs:{},hist:{},hasEx:false,yr:new Date().getFullYear()};
-var DS={openR:{},mon:null,rs:'',q:'',shown:100,open:{},useOrig:false,cfg:{u1:'',u2:''}};
+var DS={anm:null,anAll:false,openR:{},mon:null,rs:'',q:'',shown:100,open:{},useOrig:false,cfg:{u1:'',u2:''}};
 try{var _c=JSON.parse(localStorage.getItem(DSL_KEY)||'{}');DS.cfg.u1=_c.u1||'';DS.cfg.u2=_c.u2||''}catch(e){}
 var DMONS={JANUARI:0,FEBRUARI:1,MARET:2,APRIL:3,MEI:4,JUNI:5,JULI:6,AGUSTUS:7,SEPTEMBER:8,OKTOBER:9,NOVEMBER:10,DESEMBER:11};
 var DRS=['INTERNAL','RESCHEDULE','TBDC','TBSPL','TBT'];
@@ -2581,10 +2581,15 @@ function dslPanel(){
       sub=op?dk.map(function(k){var a=t.det[k];return {k:k,a:a,s:a.reduce(function(s,v){return s+v},0)}}).sort(function(p,q){return q.s-p.s}).map(function(o){return '<tr class="dslwk"><td>'+esc(o.k)+'</td>'+o.a.map(function(v){return '<td class="r num">'+(v?fmt(v):'–')+'</td>'}).join('')+'<td class="r num"><b>'+fmt(o.s)+'</b></td><td></td><td></td></tr>'}).join(''):'';
       return '<tr><td class="num">'+(dk.length?'<button type="button" class="dslexp" data-dsl="rd" data-pm="'+t.pm+'" aria-expanded="'+(!!op)+'" title="Lihat detail late">'+(op?'▾':'▸')+'</button> ':'')+'<b>'+monLab(t.pm)+'</b></td>'+t.rs.map(function(v){return '<td class="r num">'+(v?fmt(v):'–')+'</td>'}).join('')+'<td class="r num"><b>'+fmt(tot)+'</b></td><td class="r num">'+(t.late==null?'–':fmt(t.late))+'</td><td class="r num">'+(t.late==null?'–':t.late>=tot?fmt(t.late-tot):'–')+'</td></tr>'+sub}).join('')+'</tbody></table></div>';
   var AN=dAna();
-  if(AN.G.length){h+='<h3 style="margin:18px 0 6px">Analisa reason late</h3><p class="sub" style="margin:0 0 6px">Dikelompokkan per reason, reason dan keterangan dengan jumlah terbanyak ada di atas. Persen = porsi dari semua alasan pada tabel ini.</p><div class="tablewrap"><table><thead><tr><th>Reason Late</th><th>Keterangan Detail Late</th>'+AN.mons.map(function(m){return '<th class="r">'+monLab(m)+'</th>'}).join('')+'<th class="r">Total</th><th class="r">%</th></tr></thead><tbody>'
-    +AN.G.map(function(g){return g.L.map(function(o,i){var pz=o.s/AN.all*100;return '<tr><td>'+(i===0?'<b>'+g.r+'</b>':'')+'</td><td>'+esc(o.k)+'</td>'+o.m.map(function(v){return '<td class="r num">'+(v?fmt(v):'–')+'</td>'}).join('')+'<td class="r num"><b>'+fmt(o.s)+'</b></td><td class="r num">'+pf(pz)+'<div class="dslbar"><i style="width:'+Math.min(100,pz*2).toFixed(1)+'%"></i></div></td></tr>'}).join('')
-      +'<tr class="dslsub"><td colspan="2">TOTAL '+g.r+'</td>'+g.m.map(function(v){return '<td class="r num">'+fmt(v)+'</td>'}).join('')+'<td class="r num">'+fmt(g.tot)+'</td><td class="r num">'+pf(g.tot/AN.all*100)+'</td></tr>'}).join('')
-    +'<tr class="dslsub"><td colspan="2">TOTAL SEMUA</td>'+AN.mons.map(function(_,mi){return '<td class="r num">'+fmt(AN.G.reduce(function(s,g){return s+g.m[mi]},0))+'</td>'}).join('')+'<td class="r num">'+fmt(AN.all)+'</td><td class="r num">100,00%</td></tr></tbody></table></div>'}
+  if(AN.G.length){var mi=DS.anm==null?-1:AN.mons.indexOf(DS.anm),pick=function(o){return mi<0?o.s:o.m[mi]},F=[];
+    AN.G.forEach(function(g){g.L.forEach(function(o){var v=pick(o);if(v)F.push({r:g.r,k:o.k,v:v})})});F.sort(function(a,b){return b.v-a.v});
+    var tt=F.reduce(function(s,o){return s+o.v},0),RS=DRS.map(function(r){return {r:r,v:F.filter(function(o){return o.r===r}).reduce(function(s,o){return s+o.v},0)}}).filter(function(o){return o.v}).sort(function(a,b){return b.v-a.v}),lim=DS.anAll?F.length:10;
+    h+='<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:18px 0 6px"><h3 style="margin:0">Analisa reason late</h3><select id="dslan" aria-label="Bulan analisa"><option value="">Semua bulan</option>'+AN.mons.map(function(m){return '<option value="'+m+'"'+(DS.anm===m?' selected':'')+'>'+monLab(m)+'</option>'}).join('')+'</select></div>'
+      +'<div class="dslch">'+RS.map(function(o){return '<span><b>'+o.r+'</b> '+fmt(o.v)+' · '+pf(o.v/tt*100)+'</span>'}).join('')+'</div>'
+      +'<div class="tablewrap"><table><thead><tr><th>Penyebab terbanyak</th><th>Reason</th><th class="r">Jumlah</th><th class="r">%</th></tr></thead><tbody>'
+      +F.slice(0,lim).map(function(o){var pz=o.v/tt*100;return '<tr><td>'+esc(o.k)+'</td><td>'+o.r+'</td><td class="r num"><b>'+fmt(o.v)+'</b></td><td class="r num">'+pf(pz)+'<div class="dslbar"><i style="width:'+Math.min(100,pz*2).toFixed(1)+'%"></i></div></td></tr>'}).join('')
+      +'<tr class="dslsub"><td colspan="2">TOTAL</td><td class="r num">'+fmt(tt)+'</td><td class="r num">100,00%</td></tr></tbody></table></div>'
+      +(F.length>10?'<div style="margin-top:8px"><button type="button" class="btn ghost" data-dsl="anall">'+(DS.anAll?'Ringkas (10 teratas)':'Tampilkan semua ('+F.length+')')+'</button></div>':'')}
   h+='<h3 style="margin:18px 0 6px">Next Day dan 2 Days</h3><p class="sub" style="margin:0 0 6px">Next Day = PDD 1 hari setelah order, 2 Days = 2 hari. Kontribusi = porsi dari semua NP bulan itu. Hanya bulan yang datanya ada di tab NP NAV.</p><div class="tablewrap"><table><thead><tr><th>Bulan PDD</th><th class="r">Next Day</th><th class="r">Kontribusi</th><th class="r">Tepat waktu</th><th class="r">Ach Next Day</th><th class="r">2 Days</th><th class="r">Kontribusi</th><th class="r">Tepat waktu</th><th class="r">Ach 2 Days</th></tr></thead><tbody>'
     +M.map(function(t){var n=function(v){return v==null?'–':fmt(v)};return '<tr><td class="num"><b>'+monLab(t.pm)+'</b></td><td class="r num">'+n(t.nd)+'</td><td class="r num">'+pf(t.nd==null?null:pc(t.nd,t.all))+'</td><td class="r num">'+n(t.ndOn)+'</td><td class="r num"><b>'+pf(t.nd==null?null:pc(t.ndOn,t.nd))+'</b></td><td class="r num">'+n(t.d2)+'</td><td class="r num">'+pf(t.d2==null?null:pc(t.d2,t.all))+'</td><td class="r num">'+n(t.d2On)+'</td><td class="r num"><b>'+pf(t.d2==null?null:pc(t.d2On,t.d2))+'</b></td></tr>'}).join('')+'</tbody></table></div>';
   var PD=dPdd(),dd=function(v){return dds(v*864e5)};
@@ -2612,11 +2617,13 @@ var _df={};
 document.addEventListener('change',function(e){var t=e.target;if(!t||!t.id)return;
   if(t.id==='dslf1'||t.id==='dslf2'){var f=t.files&&t.files[0];if(!f)return;D.st='loading';D.err='';render();dFile(f).then(function(rows){_df[t.id]=rows;if(_df.dslf1&&_df.dslf2){var a=dParseNp(_df.dslf1),b=dParseRs(_df.dslf2);_df={};dApply(a,b,'File upload')}else{D.st='err';D.err='File '+(t.id==='dslf1'?'NP NAV':'REASON LATE')+' dibaca. Pilih juga file '+(t.id==='dslf1'?'REASON LATE':'NP NAV')+'.';render()}}).catch(function(er){_df={};D.st='err';D.err=(er&&er.message)||'File tidak bisa dibaca.';render()});return}
   if(t.id==='dslorig'){DS.useOrig=t.checked;DS._o=null;DS.mon=null;DS.shown=100;render();return}
+  if(t.id==='dslan'){DS.anm=t.value===''?null:+t.value;render();return}
   if(t.id==='dslrs'){DS.rs=t.value;DS.shown=100;dDet()}});
 document.addEventListener('input',function(e){var t=e.target;if(t&&t.id==='dslq'){DS.q=t.value;DS.shown=100;dDet()}});
 function dDet(){var el=document.getElementById('dsldet');if(el&&DS.mon!=null)el.innerHTML=dDetailHtml(DS.mon)}
 document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-dsl]');if(!b)return;var k=b.dataset.dsl;
-  if(k==='rd'){var q2=+b.dataset.pm;DS.openR[q2]=!DS.openR[q2];render()}
+  if(k==='anall'){DS.anAll=!DS.anAll;render()}
+  else if(k==='rd'){var q2=+b.dataset.pm;DS.openR[q2]=!DS.openR[q2];render()}
   else if(k==='wk'){var q=+b.dataset.pm;DS.open[q]=!DS.open[q];render()}
   else if(k==='mon'){DS.mon=+b.dataset.pm;DS.shown=100;DS.rs='';DS.q='';render()}
   else if(k==='more'){DS.shown+=200;dDet()}
