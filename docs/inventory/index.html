@@ -575,10 +575,11 @@ function mvCalc(){
   if(!S.sal||!S.stk||!mvDays())return null;
   var P=mvParams(),keys={},items=[],noinfo=0,dn=function(i){return i>=0&&S.dict[i]!==undefined?S.dict[i]:''};
   Object.keys(S.sal).forEach(function(k){keys[k]=1});Object.keys(S.stk).forEach(function(k){if(S.stk[k]>0)keys[k]=1});
+  var pn={};(S.plano||[]).forEach(function(x){if(x.k&&x.d&&!pn[x.k])pn[x.k]=x.d});
   Object.keys(keys).forEach(function(k){
     var st=Object.prototype.hasOwnProperty.call(S.stk,k)?S.stk[k]:0,sl=S.sal[k],sv=S.sv&&S.sv[k];
     var ci=sv?sv[1]:sl?sl[2]:-1,cat=dn(ci)||'(tanpa info kategori)';if(st>0&&!sv)noinfo++;
-    items.push({k:k,d:S.nm[k]||'',c:cat,st:st,sv:sv?sv[0]:0,q:sl?sl[0]:0,v:sl?sl[1]:0,cons:(sv?sv[3]:0)||(sl?sl[4]:0)||0,cv:null,m:0,t:'',o:false})});
+    items.push({k:k,d:S.nm[k]||pn[k]||'',c:cat,st:st,sv:sv?sv[0]:0,q:sl?sl[0]:0,v:sl?sl[1]:0,cons:(sv?sv[3]:0)||(sl?sl[4]:0)||0,cv:null,m:0,t:'',o:false})});
   var tv=0,sellers=items.filter(function(i){return i.q>0});sellers.forEach(function(i){tv+=i.v});
   sellers.sort(function(a,b){return b.v-a.v});var cum=0,lim=tv*P.f/100;
   sellers.forEach(function(i){var before=cum;cum+=i.v;i.fast=before<lim});
@@ -606,7 +607,7 @@ function renderMv(){
     if(S.sal&&S.stk&&!mvDays()){$('#mcard').classList.remove('hide');$('#mmsgc').classList.remove('hide');$('#mmsg').innerHTML='<b>Isi periode penjualan.</b> Tanggal tarikan data di file tidak tersimpan, jadi isi tanggal awal dan akhir sesuai data yang kamu tarik (mis. 6 bulan terakhir) di kolom Periode penjualan di bawah. Rata-rata jual dan status fast atau dead dihitung dari periode ini.';
       $('#mb').innerHTML='';$('#mrb').innerHTML='';$('#mn').innerHTML='';$('#mcount').textContent='';return}
     $('#mmsg').innerHTML='<b>'+(!S.stk?'File SQV belum dimuat. ':'')+(!S.sal?'File penjualan belum dimuat. ':'')+'</b>Unggah file SQV dan file Penjualan per item (kolom Item Code, Base Sales Qty, Sales Exclude Tax) lewat kotak Data di atas. Jenis file dikenali dari kolomnya.';return}
-  $('#mmsgc').classList.add('hide');['#mkpi','#mrec','#mcard'].forEach(function(x){$(x).classList.remove('hide')});
+  if(MC.noinfo){$('#mmsgc').classList.remove('hide');$('#mmsg').innerHTML='<b style="color:#b3261e">'+nf(MC.noinfo)+' item ber-stock belum punya nama, kategori, dan nilai stock.</b> Data SQV yang tersimpan dibuat sebelum tab Moving ada. <b>Upload ulang file SQV</b> lewat kotak Data di atas (cukup SQV saja), lalu angka dead moving lengkap dengan detailnya.'}else $('#mmsgc').classList.add('hide');['#mkpi','#mrec','#mcard'].forEach(function(x){$(x).classList.remove('hide')});
   var I=MC.items,g={fast:[0,0],norm:[0,0],slow:[0,0],dead:[0,0]},out=0,outv=0,rec={};
   I.forEach(function(i){var sk=i.st>0;if(sk||i.q>0){}
     var r=rec[i.c]||(rec[i.c]={fast:0,norm:0,slow:0,dead:0,n:0,v:0,dv:0});
