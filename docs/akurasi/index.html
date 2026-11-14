@@ -817,7 +817,7 @@ function zlocs(x,zf){return zf&&zf.length?x.locs.filter(function(l){return zf.in
 function chip(l,v){return '<span class="ccchip"><b>'+l+'</b> '+esc(v||'-')+'</span>'}
 function calc(x){x.locs.sort(function(a,b){return String(a[0]).localeCompare(String(b[0]),'en',{numeric:true})});var z={W:0,T:0,D:0,O:0};x.locs.forEach(function(l){z[zg(l[0])]+=l[1]});x.zW=Math.round(z.W*1000)/1000;x.zT=Math.round(z.T*1000)/1000;x.zD=Math.round(z.D*1000)/1000;x.zO=Math.round(z.O*1000)/1000;var p=x.nq?x.nv/x.nq:0;x.ots=x.ots||0;x.bb=x.bb||0;x.cnc=x.cnc||0;x.sal=x.sal||0;x.sq=Math.round((x.nq+x.ots+x.bb+x.cnc-x.sal)*1000)/1000;var d=Math.round((x.wq-x.sq)*1000)/1000;x.pr=p;x.d=d;x.val=d*p;x.st=!x.has?'NOSYS':(d>0?'OVER':(d<0?'MINUS':'SAMA'));x.ad=Math.abs(x.val);return x}
 function order(vals){var pr=['A','B'];return vals.sort(function(a,b){var i=pr.indexOf(a),j=pr.indexOf(b);if(i<0&&j<0)return String(a).localeCompare(String(b),'id',{numeric:true});if(i<0)return 1;if(j<0)return -1;return i-j})}
-function agg(rows){var o={n:rows.length,df:0,ov:0,mi:0,dq:0,vo:0,vm:0};rows.forEach(function(x){if(x.d!==0){o.df++;o.dq+=x.d;if(x.d>0){o.ov++;o.vo+=x.val}else{o.mi++;o.vm+=x.val}}});return o}
+function agg(rows){var o={n:rows.length,df:0,ov:0,mi:0,dq:0,vo:0,vm:0,nl:0};rows.forEach(function(x){if(!(x.locs&&x.locs.length))o.nl++;if(x.d!==0){o.df++;o.dq+=x.d;if(x.d>0){o.ov++;o.vo+=x.val}else{o.mi++;o.vm+=x.val}}});return o}
 function render(){
   if(!CC)return;var IA=CC.items.map(calc),me=CC.meta||{},hf=mpVals('ccRh'),I=hf.length?IA.filter(function(x){return hf.indexOf(x.day)>=0}):IA;
   $('ccBody').hidden=false;
@@ -841,8 +841,8 @@ function render(){
     return '<tr class="'+(tot?'tot':'cl')+'"'+(tot?'':' data-c="'+esc(label)+'" title="Lihat detail item"')+'><td class="cat">'+esc(label)+'</td><td>'+hari+'</td><td class="n">'+nf0.format(a.n)+'</td>'+
      '<td class="n sel"><b>'+(a.df||'<span class="zero">0</span>')+'</b><span class="pb sm"><i style="width:'+pc.toFixed(1)+'%"></i></span><small>'+pc.toFixed(0)+'%</small></td>'+
      '<td class="n om"><span class="pos">'+(a.ov||'<span class="zero">0</span>')+'</span> <span class="zero">/</span> <span class="neg">'+(a.mi||'<span class="zero">0</span>')+'</span></td><td class="n">'+fq(a.dq)+'</td>'+
-     '<td class="n">'+fv(a.vo)+'</td><td class="n">'+fv(a.vm)+'</td><td class="n net">'+fv(a.vo+a.vm)+'</td></tr>'}
-  $('ccRecap').innerHTML='<thead><tr><th>Category</th><th>Hari</th><th class="n">Item CC</th><th class="n">Item selisih</th><th class="n" title="Jumlah item over / minus">Over / minus</th><th class="n">Variance qty</th><th class="n">Nilai over</th><th class="n">Nilai minus</th><th class="n">Nilai net</th></tr></thead><tbody>'+
+     '<td class="n">'+fv(a.vo)+'</td><td class="n">'+fv(a.vm)+'</td><td class="n net">'+fv(a.vo+a.vm)+'</td><td class="n" title="Item CC yang tidak punya lokasi di WMS">'+(a.nl?'<span class="neg">'+a.nl+'</span>':'<span class="zero">0</span>')+'</td></tr>'}
+  $('ccRecap').innerHTML='<thead><tr><th>Category</th><th>Hari</th><th class="n">Item CC</th><th class="n">Item selisih</th><th class="n" title="Jumlah item over / minus">Over / minus</th><th class="n">Variance qty</th><th class="n">Nilai over</th><th class="n">Nilai minus</th><th class="n">Nilai net</th><th class="n" title="Item CC yang tidak punya lokasi di WMS">Tanpa lokasi</th></tr></thead><tbody>'+
     cats.map(function(c){return row(c,I.filter(function(x){return x.cat===c}))}).join('')+row('Total',I,1)+'</tbody>';
   $('ccDay').innerHTML=days.map(function(d){var rs=I.filter(function(x){return x.day===d}),a=agg(rs),pc=a.n?a.df/a.n*100:0,nt=a.vo+a.vm;
     return '<div class="dc"><div class="dh"><b>Hari ke-'+esc(d)+'</b><span>'+a.n+' item CC</span></div><div class="dnet '+(nt>0?'up':nt<0?'dn':'')+'">'+rp(nt)+'</div>'+dv(a.vo,a.vm,mxd)+
@@ -1020,9 +1020,10 @@ function ccSumText(){
   L.push('*SUMMARY TOOLS SO/CC*');L.push(S.head);if(S.hari.length)L.push('Hari ke-'+S.hari.join(', '));
   if(S.use.length)L.push('_Data: '+S.use.join(' · ')+'_');
   L.push('');L.push('Item CC: *'+nf0.format(T.n)+'*');L.push('Item selisih: *'+nf0.format(T.df)+'* ('+pc(T)+'%)');
-  L.push('Over: '+T.ov+' item · '+rp(T.vo));L.push('Minus: '+T.mi+' item · '+rp(T.vm));L.push('Nilai net: *'+rp(T.vo+T.vm)+'*');L.push('Variance qty: '+sg(T.dq));
+  L.push('Over: '+T.ov+' item · '+rp(T.vo));L.push('Minus: '+T.mi+' item · '+rp(T.vm));L.push('Nilai net: *'+rp(T.vo+T.vm)+'*');L.push('Variance qty: '+sg(T.dq));L.push('Tanpa lokasi WMS: *'+T.nl+'* item');
   L.push('');L.push('*Per category*');
-  S.cats.forEach(function(x){var a=x.a;L.push('• '+x.c+': '+a.n+' item, selisih '+a.df+' ('+pc(a)+'%), over '+a.ov+' / minus '+a.mi+', net '+rp(a.vo+a.vm))});
+  S.cats.forEach(function(x){var a=x.a;L.push('• '+x.c+': '+a.n+' item, selisih '+a.df+' ('+pc(a)+'%), over '+a.ov+' / minus '+a.mi+', net '+rp(a.vo+a.vm)+(a.nl?', tanpa lokasi '+a.nl:''))});
+  if(T.nl){L.push('');L.push('*Item tidak masuk lokasi ('+T.nl+')*');S.cats.filter(function(x){return x.a.nl}).forEach(function(x){L.push('• '+x.c+': '+x.a.nl+' item')})}
   if(S.days.length>1){L.push('');L.push('*Per hari*');S.days.forEach(function(x){var a=x.a;L.push('• Hari ke-'+x.d+': '+a.n+' item, selisih '+a.df+' ('+pc(a)+'%), net '+rp(a.vo+a.vm))})}
   return L.join('\n')
 }
@@ -1044,16 +1045,16 @@ function ccImage(){
   kp.forEach(function(k,i){var x=pad+i*(bw+12);g.fillStyle='#f1f5fb';g.beginPath();g.roundRect?g.roundRect(x,y,bw,110,12):g.rect(x,y,bw,110);g.fill();
     g.fillStyle=MUT;g.font='600 13px '+F;g.fillText(k[0],x+16,y+28);g.fillStyle=k[2];g.font='700 '+(i===0?'26':'30')+'px '+F;g.fillText(k[1],x+16,y+68);g.fillStyle=MUT;g.font='500 12px '+F;g.fillText(k[3],x+16,y+94)});
   y+=110+24;
-  var cx=[pad,pad+330,pad+450,pad+590,pad+720,pad+850],ch=['Category','Item CC','Item selisih','Over / minus','Variance qty','Nilai net'],al=['l','r','r','r','r','r'],ex=[0,pad+410,pad+560,pad+690,pad+810,W-pad];
+  var cx=[pad,pad+250,pad+350,pad+470,pad+590,pad+720,pad+850],ch=['Category','Item CC','Item selisih','Over / minus','Variance qty','Nilai net','Tanpa lokasi'],al=['l','r','r','r','r','r','r'],ex=[0,pad+330,pad+440,pad+550,pad+670,pad+830,W-pad-14];
   g.fillStyle='#e6edf7';g.fillRect(pad,y,W-pad*2,rowH);g.font='700 13px '+F;g.fillStyle=INK;
   var put=function(t,i,yy){g.textAlign=al[i]==='r'?'right':'left';g.fillText(t,al[i]==='r'?ex[i]:cx[i]+10,yy);g.textAlign='left'};
   ch.forEach(function(t,i){put(t,i,y+26)});
   var rows=cats.map(function(x){return [x.c,x.a]}).concat([['Total',T]]);
   rows.forEach(function(rw,i){var yy=y+rowH*(i+1),a=rw[1],tot=rw[0]==='Total',nt=a.vo+a.vm;
     if(tot){g.fillStyle='#dde7f1';g.fillRect(pad,yy,W-pad*2,rowH)}else if(i%2){g.fillStyle='#f6f9fc';g.fillRect(pad,yy,W-pad*2,rowH)}
-    g.font=(tot?'700':'500')+' 14px '+F;var nm=rw[0];while(g.measureText(nm).width>300&&nm.length>3)nm=nm.slice(0,-2);if(nm!==rw[0])nm+='…';
+    g.font=(tot?'700':'500')+' 14px '+F;var nm=rw[0];while(g.measureText(nm).width>230&&nm.length>3)nm=nm.slice(0,-2);if(nm!==rw[0])nm+='…';
     g.fillStyle=INK;put(nm,0,yy+26);put(nf0.format(a.n),1,yy+26);put(a.df+' ('+(a.n?Math.round(a.df/a.n*100):0)+'%)',2,yy+26);put(a.ov+' / '+a.mi,3,yy+26);
-    g.fillStyle=a.dq>0?UP:a.dq<0?DN:MUT;put(a.dq?((a.dq>0?'+':'')+nf.format(a.dq)):'-',4,yy+26);g.fillStyle=nt>0?UP:nt<0?DN:MUT;g.font='700 14px '+F;put(nt?rp(nt):'-',5,yy+26)});
+    g.fillStyle=a.dq>0?UP:a.dq<0?DN:MUT;put(a.dq?((a.dq>0?'+':'')+nf.format(a.dq)):'-',4,yy+26);g.fillStyle=nt>0?UP:nt<0?DN:MUT;g.font='700 14px '+F;put(nt?rp(nt):'-',5,yy+26);g.font='700 14px '+F;g.fillStyle=a.nl?DN:MUT;put(a.nl?String(a.nl):'-',6,yy+26)});
   var fy=y+rowH*(rows.length+1)+26;g.fillStyle=MUT;g.font='500 12px '+F;
   if(S.use.length){g.fillText('Data: '+S.use.join(' · '),pad,fy);fy+=20}
   g.fillText('Variance = Qty WMS − Qty Sistem · nilai = variance × harga per unit · dibuat '+new Intl.DateTimeFormat('id-ID',{dateStyle:'medium',timeStyle:'short'}).format(new Date()),pad,fy);
