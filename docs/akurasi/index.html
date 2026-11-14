@@ -1009,11 +1009,13 @@ $('ccRh').addEventListener('change',function(e){if(e.target.dataset.all){mpClear
 $('ccFr').addEventListener('click',function(){['ccFc','ccFh','ccFz','ccFs'].forEach(mpClear);$('ccFq').value='';detail()});
 
 /* ===== Ringkasan untuk grup: gambar + teks WhatsApp ===== */
+function ccGrey(I){var m={};I.forEach(function(x){(x.locs||[]).forEach(function(l){if(zg(l[0])!=='O')return;var o=m[l[0]]||(m[l[0]]={loc:l[0],n:0,q:0,c:{}});o.n++;o.q+=num(l[1]);o.c[x.cat]=(o.c[x.cat]||0)+1})});
+  return Object.keys(m).map(function(k){var o=m[k];o.cl=Object.keys(o.c).sort(function(a,b){return o.c[b]-o.c[a]||a.localeCompare(b)}).map(function(c){return c+' ('+o.c[c]+')'}).join(', ');return o}).sort(function(a,b){return b.q-a.q||String(a.loc).localeCompare(String(b.loc),'en',{numeric:true})})}
 function ccSum(){
   if(!CC)return null;var IA=CC.items.map(calc),me=CC.meta||{},hf=mpVals('ccRh'),I=hf.length?IA.filter(function(x){return hf.indexOf(x.day)>=0}):IA;
   var days=order(I.map(function(x){return x.day}).filter(function(v,i,a){return v!==''&&a.indexOf(v)===i})),cats=I.map(function(x){return x.cat}).filter(function(v,i,a){return a.indexOf(v)===i}).sort();
   var src=me.src||{},sd=function(k,l,v){return me[k]?l+' '+(v||me[k]):''},use=[me.navDate?'NAV '+me.navDate:'',me.wmsDate?'WMS '+me.wmsDate:'',me.hasOts?'OTS NP':'',me.hasBb?'OTS BB':'',me.hasCnc?'OTS DR':'',me.hasSal?'Penjualan'+(src.sal&&src.sal.date?' '+src.sal.date:''):''].filter(Boolean);
-  return {me:me,I:I,T:agg(I),cats:cats.map(function(c){var rs=I.filter(function(x){return x.cat===c});return {c:c,a:agg(rs)}}),days:days.map(function(d){return {d:d,a:agg(I.filter(function(x){return x.day===d}))}}),hari:hf,head:[me.STORE,me.PERIODE,me.TANGGAL].filter(Boolean).join(' · ')||'Item Cycle Count',use:use}
+  return {me:me,I:I,T:agg(I),cats:cats.map(function(c){var rs=I.filter(function(x){return x.cat===c});return {c:c,a:agg(rs)}}),days:days.map(function(d){return {d:d,a:agg(I.filter(function(x){return x.day===d}))}}),grey:ccGrey(I),hari:hf,head:[me.STORE,me.PERIODE,me.TANGGAL].filter(Boolean).join(' · ')||'Item Cycle Count',use:use}
 }
 function ccSumText(){
   var S=ccSum();if(!S)return '';var T=S.T,pc=function(a){return a.n?Math.round(a.df/a.n*100):0},sg=function(v){return (v>0?'+':'')+nf.format(v)},L=[];
@@ -1025,6 +1027,7 @@ function ccSumText(){
   S.cats.forEach(function(x){var a=x.a;L.push('• '+x.c+': '+a.n+' item, selisih '+a.df+' ('+pc(a)+'%), over '+a.ov+' / minus '+a.mi+', net '+rp(a.vo+a.vm)+(a.nl?', tidak masuk lokasi '+a.nl:'')+(a.ng?', lokasi grey '+a.ng:''))});
   if(T.nl){L.push('');L.push('*Item tidak masuk lokasi ('+T.nl+')*');S.cats.filter(function(x){return x.a.nl}).forEach(function(x){L.push('• '+x.c+': '+x.a.nl+' item')})}
   if(T.ng){L.push('');L.push('*Item masuk lokasi grey ('+T.ng+')*');S.cats.filter(function(x){return x.a.ng}).forEach(function(x){L.push('• '+x.c+': '+x.a.ng+' item')})}
+  if(S.grey.length){L.push('');L.push('*Lokasi grey ('+S.grey.length+' lokasi)*');S.grey.slice(0,30).forEach(function(o){L.push('• '+o.loc+': '+o.n+' item, qty '+nf.format(o.q)+' — '+o.cl)});if(S.grey.length>30)L.push('…dan '+(S.grey.length-30)+' lokasi lain')}
   if(S.days.length>1){L.push('');L.push('*Per hari*');S.days.forEach(function(x){var a=x.a;L.push('• Hari ke-'+x.d+': '+a.n+' item, selisih '+a.df+' ('+pc(a)+'%), net '+rp(a.vo+a.vm))})}
   return L.join('\n')
 }
@@ -1035,7 +1038,7 @@ function ccCopyText(){
 }
 function jt(v){return (v<0?'-':'')+'Rp '+(Math.abs(v)/1e6).toFixed(1).replace('.',',')+' jt'}
 function ccImage(){
-  var S=ccSum();if(!S)return;var T=S.T,K=2,W=1100,pad=36,rowH=40,cats=S.cats,H=pad+86+16+110+24+rowH*(cats.length+2)+(S.use.length?44:20)+pad;
+  var S=ccSum();if(!S)return;var T=S.T,K=2,W=1100,pad=36,rowH=40,cats=S.cats,gr=S.grey.slice(0,40),gH=gr.length?(54+36*(gr.length+1)+(S.grey.length>40?30:0)):0,H=pad+86+16+110+24+rowH*(cats.length+2)+gH+(S.use.length?44:20)+pad;
   var cv=document.createElement('canvas');cv.width=W*K;cv.height=H*K;var g=cv.getContext('2d');g.scale(K,K);
   var F='system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif',INK='#14284b',MUT='#5b6b82',UP='#0a7d4e',DN='#c23b3b';
   g.fillStyle='#fff';g.fillRect(0,0,W,H);g.fillStyle=INK;g.fillRect(0,0,W,86);
@@ -1056,7 +1059,13 @@ function ccImage(){
     g.font=(tot?'700':'500')+' 14px '+F;var nm=rw[0];while(g.measureText(nm).width>190&&nm.length>3)nm=nm.slice(0,-2);if(nm!==rw[0])nm+='…';
     g.fillStyle=INK;put(nm,0,yy+26);put(nf0.format(a.n),1,yy+26);put(a.df+' ('+(a.n?Math.round(a.df/a.n*100):0)+'%)',2,yy+26);put(a.ov+' / '+a.mi,3,yy+26);
     g.fillStyle=a.dq>0?UP:a.dq<0?DN:MUT;put(a.dq?((a.dq>0?'+':'')+nf.format(a.dq)):'-',4,yy+26);g.fillStyle=nt>0?UP:nt<0?DN:MUT;g.font='700 14px '+F;put(nt?rp(nt):'-',5,yy+26);g.font='700 14px '+F;g.fillStyle=a.nl?DN:MUT;put(a.nl?String(a.nl):'-',6,yy+26);g.fillStyle=a.ng?INK:MUT;put(a.ng?String(a.ng):'-',7,yy+26)});
-  var fy=y+rowH*(rows.length+1)+26;g.fillStyle=MUT;g.font='500 12px '+F;
+  var fy=y+rowH*(rows.length+1)+26;
+  if(gr.length){var gy=y+rowH*(rows.length+1)+36;g.fillStyle=INK;g.font='700 16px '+F;g.textAlign='left';g.fillText('Item masuk lokasi grey · '+S.grey.length+' lokasi, '+T.ng+' item',pad,gy+4);gy+=18;
+    var gx=[pad+10,pad+190,pad+300],gw=['Lokasi','Item','Total qty','Category'];g.fillStyle='#e6edf7';g.fillRect(pad,gy,W-pad*2,36);g.fillStyle=INK;g.font='700 12px '+F;
+    g.textAlign='left';g.fillText('Lokasi',pad+10,gy+23);g.textAlign='right';g.fillText('Item',pad+250,gy+23);g.fillText('Total qty',pad+360,gy+23);g.textAlign='left';g.fillText('Category',pad+390,gy+23);
+    gr.forEach(function(o,i){var yy=gy+36*(i+1);if(i%2){g.fillStyle='#f6f9fc';g.fillRect(pad,yy,W-pad*2,36)}g.fillStyle=INK;g.font='600 13px '+F;g.textAlign='left';g.fillText(o.loc,pad+10,yy+23);g.font='500 13px '+F;g.textAlign='right';g.fillText(String(o.n),pad+250,yy+23);g.fillText(nf.format(o.q),pad+360,yy+23);g.textAlign='left';g.fillStyle=MUT;g.font='500 12px '+F;var t=o.cl;while(g.measureText(t).width>W-pad*2-400&&t.length>4)t=t.slice(0,-2);if(t!==o.cl)t+='…';g.fillText(t,pad+390,yy+23)});
+    fy=gy+36*(gr.length+1)+22;if(S.grey.length>40){g.fillStyle=MUT;g.font='500 12px '+F;g.fillText('…dan '+(S.grey.length-40)+' lokasi lain (lihat tab Detail Item)',pad,fy-6);fy+=14}}
+  g.textAlign='left';g.fillStyle=MUT;g.font='500 12px '+F;
   if(S.use.length){g.fillText('Data: '+S.use.join(' · '),pad,fy);fy+=20}
   g.fillText('Variance = Qty WMS − Qty Sistem · nilai = variance × harga per unit · dibuat '+new Intl.DateTimeFormat('id-ID',{dateStyle:'medium',timeStyle:'short'}).format(new Date()),pad,fy);
   capPreview([{canvas:cv,name:'Summary_Tools_SOCC.png'}],'Summary Tools SO/CC')
