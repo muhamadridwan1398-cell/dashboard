@@ -206,7 +206,7 @@ html body:not(.capture-mode) #greySummaryGrid tfoot td:first-child{letter-spacin
 <div id="ccBody" hidden>
 <div class="cc-chips" id="ccChips"></div><div class="cc-kpi" id="ccKpi"></div>
 <nav class="ccsub"><button id="ccT1" class="active" type="button">Rekap per Category</button><button id="ccT2" type="button">Detail Item</button></nav>
-<div id="ccV1"><div class="cc-actions"><div class="field ccrh"><label>Hari ke-</label><details class="category-picker ccmp" id="ccRh" data-all="Semua hari"><summary>Semua hari</summary><div class="ccmpbody"></div></details></div><button id="ccXls1" class="secondary" type="button">⬇ Export Excel</button></div>
+<div id="ccV1"><div class="cc-actions"><div class="field ccrh"><label>Hari ke-</label><details class="category-picker ccmp" id="ccRh" data-all="Semua hari"><summary>Semua hari</summary><div class="ccmpbody"></div></details></div><div class="ccbtns"><button id="ccImg" class="secondary" type="button">🖼 Gambar ringkasan</button><button id="ccTxt" class="secondary" type="button">📋 Salin teks</button><button id="ccXls1" class="secondary" type="button">⬇ Export Excel</button></div></div>
 <div class="ccwrap"><table class="cct" id="ccRecap"></table></div>
 <h3 class="cch">Per hari pelaksanaan</h3><div class="cc-days" id="ccDay"></div>
 <details class="cc-ket"><summary>Keterangan</summary><div class="small" id="ccNote"></div></details></div>
@@ -454,6 +454,7 @@ function capPreview(items,title){
     var im=document.createElement('img');im.src=u;im.alt='Hasil capture';w.appendChild(im);bd.appendChild(w);res()},'image/png')})})).then(function(){
     if(!multi)ft.appendChild(mk('📋 Salin Gambar Ke Clipboard','cpc',function(){capCopy(blobs[0],say)}));
     ft.appendChild(mk(multi?'💾 Unduh Semua ('+items.length+' gambar)':'💾 Unduh Gambar (PNG)','cpd',function(){items.forEach(function(it,i){setTimeout(function(){capDownload(blobs[i],it.name)},i*350)});say('💾 Gambar diunduh.')}));
+    try{var f0=new File([blobs[0]],items[0].name||'capture.png',{type:'image/png'});if(!multi&&navigator.canShare&&navigator.canShare({files:[f0]}))ft.appendChild(mk('📤 Bagikan','cpc',function(){navigator.share({files:[f0],title:title||'Ringkasan'}).catch(function(){})}))}catch(e){}
     ft.appendChild(mk('✕ Tutup','cpx',capClose));
   });
   o.addEventListener('click',function(e){if(e.target===o)capClose()});document.addEventListener('keydown',capKey);
@@ -568,7 +569,7 @@ document.getElementById('toggleOverDetails').addEventListener('click',()=>{const
 #ccPanel .ccsub button{border:0;background:transparent;color:#51648c;border-radius:10px;padding:8px 14px;font-weight:600}
 #ccPanel .ccsub button.active{background:#fff;color:#1e47b8;box-shadow:0 6px 14px -8px rgba(24,48,110,.5)}
 #ccPanel .cch{font-size:14px;color:var(--navy);margin:18px 0 8px}
-#ccPanel .cc-actions{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:10px}#ccPanel .ccrh{max-width:220px;min-width:180px;flex:none}
+#ccPanel .ccbtns{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}#ccPanel .cc-actions{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:10px}#ccPanel .ccrh{max-width:220px;min-width:180px;flex:none}
 #ccPanel .cc-f{align-items:flex-end;gap:10px;flex-wrap:wrap}#ccPanel .cc-f .field{min-width:150px;max-width:230px}
 #ccPanel .st{padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;display:inline-block}
 #ccPanel .st.OVER{background:#e1f1e8;color:#1d6b43}#ccPanel .st.MINUS{background:#f6e3e3;color:#a94c4c}#ccPanel .st.SAMA{background:#eef1f4;color:#6d7b88}#ccPanel .st.NOSYS{background:#fbf0d9;color:#8a5f10}
@@ -1006,7 +1007,59 @@ $('ccT1').addEventListener('click',function(){tab(1)});$('ccT2').addEventListene
 $('ccRh').addEventListener('change',function(e){if(e.target.dataset.all){mpClear('ccRh')}else{mpSync('ccRh')}render()});
 ['ccFc','ccFh','ccFz','ccFs'].forEach(function(i){$(i).addEventListener('change',function(e){var t=e.target;if(t.dataset.all){mpClear(i)}else{mpSync(i)}detail()})});document.addEventListener('click',function(e){[].forEach.call(document.querySelectorAll('#ccPanel .ccmp[open]'),function(d){if(!d.contains(e.target))d.open=false})});$('ccFq').addEventListener('input',detail);
 $('ccFr').addEventListener('click',function(){['ccFc','ccFh','ccFz','ccFs'].forEach(mpClear);$('ccFq').value='';detail()});
-$('ccXls1').addEventListener('click',function(){xls('all')});$('ccXls2').addEventListener('click',function(){xls('det')});
+
+/* ===== Ringkasan untuk grup: gambar + teks WhatsApp ===== */
+function ccSum(){
+  if(!CC)return null;var IA=CC.items.map(calc),me=CC.meta||{},hf=mpVals('ccRh'),I=hf.length?IA.filter(function(x){return hf.indexOf(x.day)>=0}):IA;
+  var days=order(I.map(function(x){return x.day}).filter(function(v,i,a){return v!==''&&a.indexOf(v)===i})),cats=I.map(function(x){return x.cat}).filter(function(v,i,a){return a.indexOf(v)===i}).sort();
+  var src=me.src||{},sd=function(k,l,v){return me[k]?l+' '+(v||me[k]):''},use=[me.navDate?'NAV '+me.navDate:'',me.wmsDate?'WMS '+me.wmsDate:'',me.hasOts?'OTS NP':'',me.hasBb?'OTS BB':'',me.hasCnc?'OTS DR':'',me.hasSal?'Penjualan'+(src.sal&&src.sal.date?' '+src.sal.date:''):''].filter(Boolean);
+  return {me:me,I:I,T:agg(I),cats:cats.map(function(c){var rs=I.filter(function(x){return x.cat===c});return {c:c,a:agg(rs)}}),days:days.map(function(d){return {d:d,a:agg(I.filter(function(x){return x.day===d}))}}),hari:hf,head:[me.STORE,me.PERIODE,me.TANGGAL].filter(Boolean).join(' · ')||'Item Cycle Count',use:use}
+}
+function ccSumText(){
+  var S=ccSum();if(!S)return '';var T=S.T,pc=function(a){return a.n?Math.round(a.df/a.n*100):0},sg=function(v){return (v>0?'+':'')+nf.format(v)},L=[];
+  L.push('*SUMMARY TOOLS SO/CC*');L.push(S.head);if(S.hari.length)L.push('Hari ke-'+S.hari.join(', '));
+  if(S.use.length)L.push('_Data: '+S.use.join(' · ')+'_');
+  L.push('');L.push('Item CC: *'+nf0.format(T.n)+'*');L.push('Item selisih: *'+nf0.format(T.df)+'* ('+pc(T)+'%)');
+  L.push('Over: '+T.ov+' item · '+rp(T.vo));L.push('Minus: '+T.mi+' item · '+rp(T.vm));L.push('Nilai net: *'+rp(T.vo+T.vm)+'*');L.push('Variance qty: '+sg(T.dq));
+  L.push('');L.push('*Per category*');
+  S.cats.forEach(function(x){var a=x.a;L.push('• '+x.c+': '+a.n+' item, selisih '+a.df+' ('+pc(a)+'%), over '+a.ov+' / minus '+a.mi+', net '+rp(a.vo+a.vm))});
+  if(S.days.length>1){L.push('');L.push('*Per hari*');S.days.forEach(function(x){var a=x.a;L.push('• Hari ke-'+x.d+': '+a.n+' item, selisih '+a.df+' ('+pc(a)+'%), net '+rp(a.vo+a.vm))})}
+  return L.join('\n')
+}
+function ccCopyText(){
+  var t=ccSumText();if(!t)return;var b=$('ccTxt'),old=b.textContent,done=function(ok){b.textContent=ok?'✓ Tersalin, tempel di grup':'Gagal menyalin';setTimeout(function(){b.textContent=old},2200)};
+  var fb=function(){try{var a=document.createElement('textarea');a.value=t;a.style.cssText='position:fixed;opacity:0';document.body.appendChild(a);a.select();var ok=document.execCommand('copy');a.remove();done(ok)}catch(e){done(false)}};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(function(){done(true)},fb);else fb()
+}
+function jt(v){return (v<0?'-':'')+'Rp '+(Math.abs(v)/1e6).toFixed(1).replace('.',',')+' jt'}
+function ccImage(){
+  var S=ccSum();if(!S)return;var T=S.T,K=2,W=1100,pad=36,rowH=40,cats=S.cats,H=pad+86+16+110+24+rowH*(cats.length+2)+(S.use.length?44:20)+pad;
+  var cv=document.createElement('canvas');cv.width=W*K;cv.height=H*K;var g=cv.getContext('2d');g.scale(K,K);
+  var F='system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif',INK='#14284b',MUT='#5b6b82',UP='#0a7d4e',DN='#c23b3b';
+  g.fillStyle='#fff';g.fillRect(0,0,W,H);g.fillStyle=INK;g.fillRect(0,0,W,86);
+  g.fillStyle='#fff';g.font='700 26px '+F;g.textBaseline='alphabetic';g.fillText('Summary Tools SO/CC',pad,42);
+  g.font='500 14px '+F;g.fillStyle='#c9d6ea';g.fillText(S.head+(S.hari.length?' · Hari ke-'+S.hari.join(', '):''),pad,68);
+  var y=86+16,bw=(W-pad*2-36)/4,net=T.vo+T.vm,pc=T.n?Math.round(T.df/T.n*100):0;
+  var kp=[['Nilai net',rp(net),net>0?UP:net<0?DN:INK,'Over '+jt(T.vo)+' · Minus '+jt(T.vm)],['Item CC',nf0.format(T.n),INK,'item dijadwalkan'],['Item selisih',nf0.format(T.df),INK,pc+'% dari item CC'],['Variance qty',(T.dq>0?'+':'')+nf.format(T.dq),T.dq>0?UP:T.dq<0?DN:INK,T.ov+' over · '+T.mi+' minus']];
+  kp.forEach(function(k,i){var x=pad+i*(bw+12);g.fillStyle='#f1f5fb';g.beginPath();g.roundRect?g.roundRect(x,y,bw,110,12):g.rect(x,y,bw,110);g.fill();
+    g.fillStyle=MUT;g.font='600 13px '+F;g.fillText(k[0],x+16,y+28);g.fillStyle=k[2];g.font='700 '+(i===0?'26':'30')+'px '+F;g.fillText(k[1],x+16,y+68);g.fillStyle=MUT;g.font='500 12px '+F;g.fillText(k[3],x+16,y+94)});
+  y+=110+24;
+  var cx=[pad,pad+330,pad+450,pad+590,pad+720,pad+850],ch=['Category','Item CC','Item selisih','Over / minus','Variance qty','Nilai net'],al=['l','r','r','r','r','r'],ex=[0,pad+410,pad+560,pad+690,pad+810,W-pad];
+  g.fillStyle='#e6edf7';g.fillRect(pad,y,W-pad*2,rowH);g.font='700 13px '+F;g.fillStyle=INK;
+  var put=function(t,i,yy){g.textAlign=al[i]==='r'?'right':'left';g.fillText(t,al[i]==='r'?ex[i]:cx[i]+10,yy);g.textAlign='left'};
+  ch.forEach(function(t,i){put(t,i,y+26)});
+  var rows=cats.map(function(x){return [x.c,x.a]}).concat([['Total',T]]);
+  rows.forEach(function(rw,i){var yy=y+rowH*(i+1),a=rw[1],tot=rw[0]==='Total',nt=a.vo+a.vm;
+    if(tot){g.fillStyle='#dde7f1';g.fillRect(pad,yy,W-pad*2,rowH)}else if(i%2){g.fillStyle='#f6f9fc';g.fillRect(pad,yy,W-pad*2,rowH)}
+    g.font=(tot?'700':'500')+' 14px '+F;var nm=rw[0];while(g.measureText(nm).width>300&&nm.length>3)nm=nm.slice(0,-2);if(nm!==rw[0])nm+='…';
+    g.fillStyle=INK;put(nm,0,yy+26);put(nf0.format(a.n),1,yy+26);put(a.df+' ('+(a.n?Math.round(a.df/a.n*100):0)+'%)',2,yy+26);put(a.ov+' / '+a.mi,3,yy+26);
+    g.fillStyle=a.dq>0?UP:a.dq<0?DN:MUT;put(a.dq?((a.dq>0?'+':'')+nf.format(a.dq)):'-',4,yy+26);g.fillStyle=nt>0?UP:nt<0?DN:MUT;g.font='700 14px '+F;put(nt?rp(nt):'-',5,yy+26)});
+  var fy=y+rowH*(rows.length+1)+26;g.fillStyle=MUT;g.font='500 12px '+F;
+  if(S.use.length){g.fillText('Data: '+S.use.join(' · '),pad,fy);fy+=20}
+  g.fillText('Variance = Qty WMS − Qty Sistem · nilai = variance × harga per unit · dibuat '+new Intl.DateTimeFormat('id-ID',{dateStyle:'medium',timeStyle:'short'}).format(new Date()),pad,fy);
+  capPreview([{canvas:cv,name:'Summary_Tools_SOCC.png'}],'Summary Tools SO/CC')
+}
+$('ccImg').addEventListener('click',ccImage);$('ccTxt').addEventListener('click',ccCopyText);$('ccXls1').addEventListener('click',function(){xls('all')});$('ccXls2').addEventListener('click',function(){xls('det')});
 $('ccRecap').addEventListener('click',function(e){var tr=e.target.closest('tr[data-c]');if(!tr)return;['ccFz','ccFs'].forEach(mpClear);mpSet('ccFh',mpVals('ccRh'));mpSet('ccFc',[tr.dataset.c]);$('ccFq').value='';tab(2);detail()});
 $('ccDet').addEventListener('click',function(e){var t=e.target.closest('th[data-s]');if(!t)return;var k=t.dataset.s;SORT=SORT.k===k?{k:k,d:-SORT.d}:{k:k,d:(k==='cat'||k==='code'||k==='day'||k==='cl'||k==='st')?1:-1};detail()});
 if(load()){try{$('ccUp').hidden=true}catch(e){}}
