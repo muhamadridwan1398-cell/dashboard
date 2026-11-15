@@ -2514,9 +2514,12 @@ function dKirim(cm,sheetVal){if(/amsen|titip/i.test(cm||''))return false;if(!cm&
 function dWs(od,pd,sheetVal){if(od==null||pd==null)return sheetVal||'';var n=Math.round((pd-od)/864e5);return n<=0?'SAME DAY':n===1?'NEXT DAY':n===2?'2 DAY':'>2 DAYS'}
 function dParseNp(rows){
   var H=dHdr(rows,['npno','status dsl','promised delivery date']);if(!H)throw new Error('Tab NP NAV: kolom NPNo, STATUS DSL, dan Promised Delivery Date tidak ditemukan.');
-  var M=H.m,g=function(r,n){var j=M[n];return j===undefined?'':String(r[j]==null?'':r[j]).trim()},map={},list=[];
+  var M=H.m,g=function(r,n){var j=M[n];return j===undefined?'':String(r[j]==null?'':r[j]).trim()},map={},list=[],rep=0;
   for(var i=H.r+1;i<rows.length;i++){var r=rows[i],np=g(r,'npno');if(!np||!/^MS/i.test(np))continue;
-    var o=map[np];if(!o){o={np:np,cu:g(r,'cust name'),ty:g(r,'type np'),sp:g(r,'sales person name')||g(r,'sales person'),od:dDate(g(r,'order date')),pd:dDate(g(r,'promised delivery date')),cl:dDate(g(r,'close date')),w:dWs(dDate(g(r,'order date')),dDate(g(r,'promised delivery date')),g(r,'pdd status')),k:dKirim(g(r,'comment'),g(r,'amsen/kirim')),on:false,lt:false,it:0,q:0,st:''};map[np]=o;list.push(o)}
+    var pdt=dDate(g(r,'posting date')),pv=pdt==null?-1:pdt,o=map[np];
+    if(o&&pv>o.lp){/* NP diposting lagi: pakai posting terakhir saja (PDD, status, item) */o.lp=pv;o.od=dDate(g(r,'order date'));o.pd=dDate(g(r,'promised delivery date'));o.cl=dDate(g(r,'close date'));o.w=dWs(o.od,o.pd,g(r,'pdd status'));o.k=dKirim(g(r,'comment'),g(r,'amsen/kirim'));o.on=false;o.lt=false;o.it=0;o.q=0;o.st='';o.sc=null;o.dd='';if(!o.rp){o.rp=1;rep++}}
+    else if(o&&pv<o.lp){continue}
+    if(!o){o={lp:pv,np:np,cu:g(r,'cust name'),ty:g(r,'type np'),sp:g(r,'sales person name')||g(r,'sales person'),od:dDate(g(r,'order date')),pd:dDate(g(r,'promised delivery date')),cl:dDate(g(r,'close date')),w:dWs(dDate(g(r,'order date')),dDate(g(r,'promised delivery date')),g(r,'pdd status')),k:dKirim(g(r,'comment'),g(r,'amsen/kirim')),on:false,lt:false,it:0,q:0,st:''};map[np]=o;list.push(o)}
     var s=g(r,'status dsl').toUpperCase();if(s)(o.sc||(o.sc={}))[s]=(o.sc[s]||0)+1;if(s==='EARLY'||s==='ONTIME')o.on=true;else if(s)o.lt=true;if(!o.st||s==='LATE'||s==='OTS')o.st=s||o.st;
     var ddv=g(r,'delivery detail');if(ddv&&!o.dd)o.dd=ddv;o.it++;o.q+=dNum(g(r,'qty np'))||0;if(o.pd==null)o.pd=dDate(g(r,'promised delivery date'))}
   /* tabel riwayat bulanan di sisi kanan sheet (Bulan | INTERNAL ... | ALL NP | Ontime Early | Late) */
@@ -2525,7 +2528,7 @@ function dParseNp(rows){
     for(var b=a+1;b<rows.length;b++){var m=DMONS[String(rows[b][c]||'').trim().toUpperCase()];if(m===undefined)break;
       hist[m]={all:dNum(rows[b][c+7]),on:dNum(rows[b][c+8]),rs:[1,2,3,4,5].map(function(k){return dNum(rows[b][c+k])||0})}}
     c=rr.length}}}
-  return {list:list,hist:hist}}
+  return {list:list,hist:hist,rep:rep}}
 function dRsn(s){s=String(s||'').toUpperCase().replace(/\(RC\)/g,'').replace(/[^A-Z]/g,'');return s==='RESCHEDULE'||s==='RC'?'RESCHEDULE':s}
 var MONID={januari:1,februari:2,maret:3,april:4,mei:5,juni:6,juli:7,agustus:8,september:9,oktober:10,november:11,desember:12,jan:1,feb:2,mar:3,apr:4,jun:6,jul:7,agu:8,agt:8,aug:8,sep:9,okt:10,oct:10,nov:11,des:12,dec:12,may:5};
 function dRsMonth(r,mcols,pdj,yj){
@@ -2553,7 +2556,7 @@ function dLoad(){
   var u1=DS.cfg.u1||dGviz(DSL_GNP),u2=DS.cfg.u2||dGviz(DSL_GRS);
   return Promise.all([dFetch(u1),dFetch(u2)]).then(function(R){dApply(dParseNp(R[0]),dParseRs(R[1]),'Google Sheets')}).catch(function(e){D.st='err';D.err=(e&&e.message)||String(e);render()})}
 function dApply(np,rs,src){
-  D.np=np.list;D.hist=np.hist;D.rs=rs;D.src=src;D.at=new Date().toISOString();D.st='ok';
+  D.np=np.list;D.rep=np.rep||0;D.hist=np.hist;D.rs=rs;D.src=src;D.at=new Date().toISOString();D.st='ok';
   var mx=0;D.np.forEach(function(x){if(x.pd!=null){var y=new Date(x.pd).getUTCFullYear();if(y>mx)mx=y}});if(mx)D.yr=mx;
   DS.mon=null;DS.shown=100;render()}
 var DWK=['Week 1 (tgl 1–7)','Week 2 (tgl 8–14)','Week 3 (tgl 15–21)','Week 4 (tgl 22–akhir)'];
@@ -2638,7 +2641,7 @@ function dslPanel(){
   if(D.st==='idle')dLoad();
   var h='<section class="panel full dsl" id="dslpanel"><div class="mph"><div><h2 style="font-size:16px;font-weight:800;margin:0">Delivery Service Level (DSL)</h2><p class="sub" style="margin:2px 0 0">Per nota unik, per bulan Promise Delivery Date, khusus NP Kirim (titip/Amsen tidak dihitung). Ach % = (Early + Ontime) ÷ semua NP.</p></div>'
     +'<div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn ghost" data-dsl="reload">Muat ulang</button>'+(D.st==='ok'?'<button type="button" class="btn ghost" data-dsl="xl">Unduh Excel</button>':'')+'</div></div>';
-  var srcTxt=D.st==='ok'?'Sumber: <b>'+esc(D.src)+'</b> · dimuat '+esc(fmtStamp(D.at))+' · '+fmt(D.np.length)+' NP':D.st==='loading'?'Memuat data dari Google Sheets…':'';
+  var srcTxt=D.st==='ok'?'Sumber: <b>'+esc(D.src)+'</b> · dimuat '+esc(fmtStamp(D.at))+' · '+fmt(D.np.length)+' NP'+(D.rep?' · <span title="NP yang diposting lebih dari sekali dibaca dari posting terakhir saja (PDD dan status)">'+fmt(D.rep)+' NP diposting ulang, dipakai posting terakhir</span>':''):D.st==='loading'?'Memuat data dari Google Sheets…':'';
   h+='<p class="sub" style="margin:8px 0">'+srcTxt+'</p>';
   if(D.st==='err')h+='<div class="dslerr"><b>Data belum bisa dimuat.</b> '+esc(D.err)+'<br>Pastikan spreadsheet bisa dilihat siapa saja yang punya link, atau pakai link "Publikasikan ke web" / upload file di bawah.</div>';
   h+='<details class="dslset"'+(D.st==='err'?' open':'')+'><summary>Atur sumber data</summary><div class="dslgrid">'
