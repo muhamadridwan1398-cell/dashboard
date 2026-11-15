@@ -2556,8 +2556,8 @@ function dApply(np,rs,src){
   D.np=np.list;D.hist=np.hist;D.rs=rs;D.src=src;D.at=new Date().toISOString();D.st='ok';
   var mx=0;D.np.forEach(function(x){if(x.pd!=null){var y=new Date(x.pd).getUTCFullYear();if(y>mx)mx=y}});if(mx)D.yr=mx;
   DS.mon=null;DS.shown=100;render()}
-var DWK=['Week 1 (tgl 1–10)','Week 2 (tgl 11–17)','Week 3 (tgl 18–24)','Week 4 (tgl 25–akhir)'];
-function dWeek(ms){var n=new Date(ms).getUTCDate();return n<=10?0:n<=17?1:n<=24?2:3}
+var DWK=['Week 1 (tgl 1–7)','Week 2 (tgl 8–14)','Week 3 (tgl 15–21)','Week 4 (tgl 22–akhir)'];
+function dWeek(ms){var n=new Date(ms).getUTCDate();return n<=7?0:n<=14?1:n<=21?2:3}
 function dAna(){var MA=dMonths().filter(function(t){return t.det}),mons=MA.map(function(t){return t.pm}),G=DRS.map(function(r,ri){var rows={};MA.forEach(function(t,mi){Object.keys(t.det).forEach(function(k){var v=t.det[k][ri];if(!v)return;var o=rows[k]||(rows[k]={k:k,m:mons.map(function(){return 0}),s:0});o.m[mi]+=v;o.s+=v})});
     var L=Object.keys(rows).map(function(k){return rows[k]}).sort(function(a,b){return b.s-a.s}),tot=L.reduce(function(s,o){return s+o.s},0);return {r:r,L:L,tot:tot,m:mons.map(function(_,mi){return L.reduce(function(s,o){return s+o.m[mi]},0)})}}).filter(function(g){return g.tot>0}).sort(function(a,b){return b.tot-a.tot});
   return {mons:mons,G:G,all:G.reduce(function(s,g){return s+g.tot},0)}}
