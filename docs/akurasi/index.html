@@ -975,6 +975,19 @@ function xdetail(L,me,fdesc,zf){
       r.push(T(l[0],base({h:'center',sz:10})));r.push(l[1]===''?E(base({})):q(l[1]));r.push(E({bd:1,bc:'FF8A97A8',fill:'FFFFFFFF'}));rows.push(r);
       if(first){var ln=Math.max(1,Math.ceil(String(x.name).length/46));if(ln>1)ht[rows.length-1]=16*ln}})});
   return {name:'Detail Item',grid:0,first:1,w:W,h:ht,rows:rows,m:m,fz:1,af:'A1:'+last+rows.length,print:{o:'landscape',titles:'$1:$1',fl:'Tools SO/CC · Detail Item'}}}
+function xgrey(L){
+  var T=function(v,o){return {v:v,s:sty(o)}},E=function(o){return T('',o)};
+  var W=[5,16,24,8,12,44,7,7,12,10,12,10,12,12,16],nc=W.length,last=xcol(nc),rows=[];
+  var HS={b:1,c:'FFFFFFFF',fill:NAVY,bd:1,h:'center',bc:'FF183153',w:1};
+  var ST={OVER:{fill:'FFC6EFCE',c:'FF006100'},MINUS:{fill:'FFFFC7CE',c:'FF9C0006'},SAMA:{fill:'FFEDF0F3',c:'FF6D7B88'},NOSYS:{fill:'FFFFEB9C',c:'FF9C5700'}};
+  rows.push(['No','Lokasi grey','Category','No Urut','Item Code','Item Name','UOM','Hari ke-','Qty di lokasi','Qty NAV','Qty Sistem','Qty WMS','Variance qty','Status','Cek Fisik'].map(function(t,j){return T(t,j===14?{b:1,c:'FFFFFFFF',fill:'FFB57A22',bd:1,h:'center',bc:'FF183153',w:1}:HS)}));
+  var out=[];L.forEach(function(x){(x.locs||[]).forEach(function(l){if(zg(l[0])==='O')out.push({x:x,loc:String(l[0]),q:num(l[1])})})});
+  out.sort(function(a,b){return a.loc.localeCompare(b.loc,'en',{numeric:true})||(a.x.ix-b.x.ix)});
+  var prev=null,band=0;
+  out.forEach(function(o,i){var x=o.x;if(o.loc!==prev){band^=1;prev=o.loc}var bg=band?null:'FFEEF4FA',base=function(v){if(bg)v.fill=bg;v.bd=1;return v},q=function(v){return T(v,base({h:'right',nf:v%1?ND:NI}))};
+    rows.push([T(i+1,base({h:'center',c:'FF5B6577'})),T(o.loc,base({b:1,h:'center'})),T(x.cat,base({sz:10})),T(x.nu||'',base({h:'center'})),T(x.k,base({h:'center'})),T(x.name,base({w:1})),T(x.uom,base({h:'center'})),T(x.day,base({h:'center'})),T(o.q,base({h:'right',b:1,nf:o.q%1?ND:NI})),q(x.nq),q(x.sq),q(x.wq),T(x.d,base(vo(x.d))),T(XSTL[x.st],{b:1,sz:10,h:'center',bd:1,fill:ST[x.st].fill,c:ST[x.st].c}),E({bd:1,bc:'FF8A97A8',fill:'FFFFFFFF'})])});
+  if(!out.length)rows.push([T('Tidak ada item di lokasi grey',{i:1,c:'FF6D7B88'})].concat(Array.apply(null,Array(nc-1)).map(function(){return E({})})));
+  return {name:'Lokasi Grey',grid:0,first:1,w:W,h:{0:34},rows:rows,m:[],fz:1,af:'A1:'+last+rows.length,print:{o:'landscape',titles:'$1:$1',fl:'Tools SO/CC · Lokasi Grey'}}}
 function today(){var d=new Date(Date.now()+7*3600e3);return d.toISOString().slice(0,10)}
 function xls(which){
   try{var IA=CC.items.map(calc),hf=mpVals('ccRh'),I=(which==='det'||!hf.length)?IA:IA.filter(function(x){return hf.indexOf(x.day)>=0}),note=(which!=='det'&&hf.length)?'Hari ke-'+hf.join(', '):'',me=CC.meta||{},sheets=[],srt=function(a,b){return a.ix-b.ix};CC.items.forEach(function(x,i){x.ix=i});
@@ -983,8 +996,8 @@ function xls(which){
     if(which==='det'){
       var fd=[['ccFc','Semua category'],['ccFh','Semua hari'],['ccFz','Semua zone'],['ccFs','Semua status']].map(function(f){var v=mpVals(f[0]);return v.length?v.map(function(z){var o=(MPO[f[0]]||[]).filter(function(y){return y[0]===z})[0];return o?o[1]:z}).join(', '):f[1]}).join(' · ');
       var q=$('ccFq').value.trim();if(q)fd+=' · cari "'+q+'"';
-      sheets.push(xdetail(filt().sort(srt),me,fd,mpVals('ccFz')))}
-    else{sheets.push(xrecap(I,me,days,note));sheets.push(xdetail(I.slice().sort(srt),me,note||'Semua item CC'))}
+      var Ld=filt().sort(srt);sheets.push(xdetail(Ld,me,fd,mpVals('ccFz')));sheets.push(xgrey(Ld))}
+    else{sheets.push(xrecap(I,me,days,note));var Ls=I.slice().sort(srt);sheets.push(xdetail(Ls,me,note||'Semua item CC'));sheets.push(xgrey(Ls))}
     xsave(xbuild(sheets),'Tools_SO_CC'+(which==='det'?'_Detail':'')+'_'+today()+'.xlsx')
   }catch(e){say(e.message||String(e),1)}}
 
