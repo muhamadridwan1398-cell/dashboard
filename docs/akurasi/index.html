@@ -772,7 +772,7 @@ async function generate(){
       meta.wmsDate=rdate(lc.a);meta.src.loc={name:F.loc.name,at:now,date:meta.wmsDate,n:items.filter(function(x){return x.locs.length}).length}}
     if(F.ots){say('Membaca OTS NP...');var wo=await readBook(F.ots),ot=aoa(wo,null,['Item No','Outstanding Qty Base']);
       if(!ot)throw new Error('File 4: kolom "Item No" dan "Outstanding Qty Base" tidak ditemukan (pakai Report Outstanding Nota Penjualan WMS dan NAV).');
-      var oi=ot.h.m['item no'],oq=ot.h.m['outstanding qty base'];items.forEach(function(x){x.ots=0});
+      var oi=ot.h.m['item no'],oq=('outstanding qty base wms' in ot.h.m)?ot.h.m['outstanding qty base wms']:ot.h.m['outstanding qty base'];meta.otsWms=('outstanding qty base wms' in ot.h.m);items.forEach(function(x){x.ots=0});
       ot.a.slice(ot.h.r+1).forEach(function(r){var x=want[key(r[oi])];if(x)x.ots+=num(r[oq])});
       meta.otsDate=rdate(ot.a);meta.hasOts=true;items.forEach(function(x){x.ots=Math.round(x.ots*1000)/1000});
       meta.src.ots={name:F.ots.name,at:now,date:meta.otsDate,n:items.filter(function(x){return x.ots}).length}}
