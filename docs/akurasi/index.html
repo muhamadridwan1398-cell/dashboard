@@ -977,7 +977,7 @@ function xdetail(L,me,fdesc,zf){
   return {name:'Detail Item',grid:0,first:1,w:W,h:ht,rows:rows,m:m,fz:1,af:'A1:'+last+rows.length,print:{o:'landscape',titles:'$1:$1',fl:'Tools SO/CC · Detail Item'}}}
 function today(){var d=new Date(Date.now()+7*3600e3);return d.toISOString().slice(0,10)}
 function xls(which){
-  try{var IA=CC.items.map(calc),hf=mpVals('ccRh'),I=(which==='det'||!hf.length)?IA:IA.filter(function(x){return hf.indexOf(x.day)>=0}),note=(which!=='det'&&hf.length)?'Hari ke-'+hf.join(', '):'',me=CC.meta||{},sheets=[],srt=function(a,b){return a.cat<b.cat?-1:a.cat>b.cat?1:(a.k<b.k?-1:1)};
+  try{var IA=CC.items.map(calc),hf=mpVals('ccRh'),I=(which==='det'||!hf.length)?IA:IA.filter(function(x){return hf.indexOf(x.day)>=0}),note=(which!=='det'&&hf.length)?'Hari ke-'+hf.join(', '):'',me=CC.meta||{},sheets=[],srt=function(a,b){return a.ix-b.ix};CC.items.forEach(function(x,i){x.ix=i});
     var days=order(I.map(function(x){return x.day}).filter(function(v,i,a){return v&&a.indexOf(v)===i}));
     xInit();
     if(which==='det'){
