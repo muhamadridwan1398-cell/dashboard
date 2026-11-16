@@ -625,12 +625,16 @@
             <label for="waDate" style="font-size:12px;font-weight:700;color:var(--text-muted);">Tanggal laporan (Daily)</label>
             <select id="waDate" onchange="renderWaReport()" style="width:100%;margin:4px 0 12px;padding:8px;border:1px solid var(--border);border-radius:8px;font-size:14px;"></select>
             <textarea id="waText" rows="13" style="width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:14px;line-height:1.5;resize:vertical;"></textarea>
-            <label for="waNo" style="display:block;font-size:12px;font-weight:700;color:var(--text-muted);margin-top:12px;">Nomor WhatsApp tujuan</label>
-            <input id="waNo" type="tel" inputmode="tel" onchange="saveWaNo()" style="width:100%;margin-top:4px;padding:8px;border:1px solid var(--border);border-radius:8px;font-size:14px;">
+            <div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-top:12px;">Kirim ke WhatsApp</div>
+            <div id="waContacts" style="display:flex;flex-direction:column;gap:6px;margin-top:6px;"></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;">
+                <input id="waAddName" placeholder="Nama" style="width:100%;box-sizing:border-box;padding:8px;border:1px solid var(--border);border-radius:8px;font-size:13px;">
+                <input id="waAddNo" type="tel" inputmode="tel" placeholder="No WA" style="width:100%;box-sizing:border-box;padding:8px;border:1px solid var(--border);border-radius:8px;font-size:13px;">
+                <button type="button" class="btn-action" onclick="addWaContact()" style="grid-column:1 / -1;background:#4a5568;color:#fff;padding:9px 12px;">+ Tambah kontak</button>
+            </div>
             <div id="waNote" style="font-size:11px;color:var(--text-muted);margin-top:6px;"></div>
         </div>
         <div class="modal-footer">
-            <button class="btn-action btn-export" onclick="sendWaReport()">📲 Kirim ke WhatsApp</button>
             <button class="btn-action btn-copy" onclick="copyWaReport()">📋 Salin</button>
             <button class="btn-action btn-download" id="btnWaShare" onclick="shareWaReport()">📤 Bagikan</button>
             <button class="btn-action btn-close" onclick="closeWaReport()">Tutup</button>
@@ -1919,7 +1923,7 @@
         let sel = document.getElementById('waDate');
         sel.innerHTML = dates.map(d => '<option value="' + d + '">' + d + '</option>').join('');
         document.getElementById('btnWaShare').style.display = navigator.share ? '' : 'none';
-        document.getElementById('waNo').value = getWaNo();
+        renderWaContacts();
         document.getElementById('waModal').style.display = 'flex';
         renderWaReport();
     }
@@ -1928,26 +1932,53 @@
         document.getElementById('waText').value = buildWaReport(dt);
         document.getElementById('waNote').textContent = 'Daily = tanggal ' + dt + ' · MTD = tanggal 1 sampai ' + dt + ' · Total DR = jumlah MS unik · Late = lebih dari ' + AWT_LIMIT + ' menit' + (quickView === 'WHCC' ? ' · tampilan WH Area / Cash & Carry Gudang' : '');
     }
-    var WA_DEFAULT = '6285213099376';
+    var WA_DEFAULT = [
+        { n: 'Ridwan', p: '6285213099276' },
+        { n: 'Dandi', p: '62895358685378' },
+        { n: 'Rizki', p: '6289603582966' },
+        { n: 'Mirza', p: '6287749351374' }
+    ];
     function waDigits(v) {
         let d = String(v || '').replace(/\D/g, '');
         if (d.indexOf('0') === 0) d = '62' + d.substring(1);
+        else if (d.indexOf('8') === 0) d = '62' + d;
         return d;
     }
-    function getWaNo() {
-        let v = '';
-        try { v = localStorage.getItem('awt_wa_no') || ''; } catch (e) {}
-        return waDigits(v) || WA_DEFAULT;
+    function getWaContacts() {
+        try { let v = JSON.parse(localStorage.getItem('awt_wa_contacts') || 'null'); if (Array.isArray(v) && v.length) return v; } catch (e) {}
+        return WA_DEFAULT.slice();
     }
-    function saveWaNo() {
-        let d = waDigits(document.getElementById('waNo').value);
-        try { if (d && d !== WA_DEFAULT) localStorage.setItem('awt_wa_no', d); else localStorage.removeItem('awt_wa_no'); } catch (e) {}
-        document.getElementById('waNo').value = getWaNo();
+    function setWaContacts(a) {
+        try { localStorage.setItem('awt_wa_contacts', JSON.stringify(a)); } catch (e) {}
+        renderWaContacts();
     }
-    function sendWaReport() {
-        saveWaNo();
-        let url = 'https://wa.me/' + getWaNo() + '?text=' + encodeURIComponent(document.getElementById('waText').value);
-        window.open(url, '_blank');
+    function renderWaContacts() {
+        let box = document.getElementById('waContacts');
+        box.innerHTML = '';
+        getWaContacts().forEach(function (c, i) {
+            let row = document.createElement('div');
+            row.style.cssText = 'display:flex;gap:6px;align-items:stretch;';
+            let b = document.createElement('button');
+            b.type = 'button'; b.className = 'btn-action btn-export';
+            b.style.cssText = 'flex:1;text-align:left;';
+            b.textContent = '📲 ' + c.n + ' · +' + c.p;
+            b.onclick = function () { sendWaTo(i); };
+            let x = document.createElement('button');
+            x.type = 'button'; x.className = 'btn-action btn-close'; x.textContent = '×'; x.title = 'Hapus kontak';
+            x.style.cssText = 'padding:0 12px;';
+            x.onclick = function () { if (confirm('Hapus ' + c.n + ' dari daftar?')) { let a = getWaContacts(); a.splice(i, 1); setWaContacts(a); } };
+            row.appendChild(b); row.appendChild(x); box.appendChild(row);
+        });
+    }
+    function addWaContact() {
+        let n = document.getElementById('waAddName').value.trim(), d = waDigits(document.getElementById('waAddNo').value);
+        if (!n || d.length < 10) { alert('Isi nama dan nomor WA yang benar.'); return; }
+        let a = getWaContacts(); a.push({ n: n, p: d }); setWaContacts(a);
+        document.getElementById('waAddName').value = ''; document.getElementById('waAddNo').value = '';
+    }
+    function sendWaTo(i) {
+        let c = getWaContacts()[i]; if (!c) return;
+        window.open('https://wa.me/' + c.p + '?text=' + encodeURIComponent(document.getElementById('waText').value), '_blank');
     }
     function closeWaReport() { document.getElementById('waModal').style.display = 'none'; }
     function copyWaReport() {
