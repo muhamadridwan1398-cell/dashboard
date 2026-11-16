@@ -625,9 +625,12 @@
             <label for="waDate" style="font-size:12px;font-weight:700;color:var(--text-muted);">Tanggal laporan (Daily)</label>
             <select id="waDate" onchange="renderWaReport()" style="width:100%;margin:4px 0 12px;padding:8px;border:1px solid var(--border);border-radius:8px;font-size:14px;"></select>
             <textarea id="waText" rows="13" style="width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:14px;line-height:1.5;resize:vertical;"></textarea>
+            <label for="waNo" style="display:block;font-size:12px;font-weight:700;color:var(--text-muted);margin-top:12px;">Nomor WhatsApp tujuan</label>
+            <input id="waNo" type="tel" inputmode="tel" onchange="saveWaNo()" style="width:100%;margin-top:4px;padding:8px;border:1px solid var(--border);border-radius:8px;font-size:14px;">
             <div id="waNote" style="font-size:11px;color:var(--text-muted);margin-top:6px;"></div>
         </div>
         <div class="modal-footer">
+            <button class="btn-action btn-export" onclick="sendWaReport()">📲 Kirim ke WhatsApp</button>
             <button class="btn-action btn-copy" onclick="copyWaReport()">📋 Salin</button>
             <button class="btn-action btn-download" id="btnWaShare" onclick="shareWaReport()">📤 Bagikan</button>
             <button class="btn-action btn-close" onclick="closeWaReport()">Tutup</button>
@@ -1916,6 +1919,7 @@
         let sel = document.getElementById('waDate');
         sel.innerHTML = dates.map(d => '<option value="' + d + '">' + d + '</option>').join('');
         document.getElementById('btnWaShare').style.display = navigator.share ? '' : 'none';
+        document.getElementById('waNo').value = getWaNo();
         document.getElementById('waModal').style.display = 'flex';
         renderWaReport();
     }
@@ -1923,6 +1927,27 @@
         let dt = document.getElementById('waDate').value;
         document.getElementById('waText').value = buildWaReport(dt);
         document.getElementById('waNote').textContent = 'Daily = tanggal ' + dt + ' · MTD = tanggal 1 sampai ' + dt + ' · Total DR = jumlah MS unik · Late = lebih dari ' + AWT_LIMIT + ' menit' + (quickView === 'WHCC' ? ' · tampilan WH Area / Cash & Carry Gudang' : '');
+    }
+    var WA_DEFAULT = '6285213099376';
+    function waDigits(v) {
+        let d = String(v || '').replace(/\D/g, '');
+        if (d.indexOf('0') === 0) d = '62' + d.substring(1);
+        return d;
+    }
+    function getWaNo() {
+        let v = '';
+        try { v = localStorage.getItem('awt_wa_no') || ''; } catch (e) {}
+        return waDigits(v) || WA_DEFAULT;
+    }
+    function saveWaNo() {
+        let d = waDigits(document.getElementById('waNo').value);
+        try { if (d && d !== WA_DEFAULT) localStorage.setItem('awt_wa_no', d); else localStorage.removeItem('awt_wa_no'); } catch (e) {}
+        document.getElementById('waNo').value = getWaNo();
+    }
+    function sendWaReport() {
+        saveWaNo();
+        let url = 'https://wa.me/' + getWaNo() + '?text=' + encodeURIComponent(document.getElementById('waText').value);
+        window.open(url, '_blank');
     }
     function closeWaReport() { document.getElementById('waModal').style.display = 'none'; }
     function copyWaReport() {
