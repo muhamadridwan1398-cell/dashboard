@@ -206,7 +206,7 @@ html body:not(.capture-mode) #greySummaryGrid tfoot td:first-child{letter-spacin
 <div id="ccBody" hidden>
 <div class="cc-chips" id="ccChips"></div><div class="cc-kpi" id="ccKpi"></div>
 <nav class="ccsub"><button id="ccT1" class="active" type="button">Rekap per Category</button><button id="ccT2" type="button">Detail Item</button></nav>
-<div id="ccV1"><div class="cc-actions"><div class="field ccrh"><label>Hari ke-</label><details class="category-picker ccmp" id="ccRh" data-all="Semua hari"><summary>Semua hari</summary><div class="ccmpbody"></div></details></div><div class="ccbtns"><button id="ccImg" class="secondary" type="button">🖼 Gambar ringkasan</button><button id="ccTxt" class="secondary" type="button">📋 Salin teks</button><button id="ccXls1" class="secondary" type="button">⬇ Export Excel</button></div></div>
+<div id="ccV1"><div class="cc-actions"><div class="field ccrh"><label>Hari ke-</label><details class="category-picker ccmp" id="ccRh" data-all="Semua hari"><summary>Semua hari</summary><div class="ccmpbody"></div></details></div><div class="ccbtns"><button id="ccImg" class="secondary" type="button">🖼 Gambar ringkasan</button><button id="ccTxt" class="secondary" type="button">📋 Salin teks</button><button id="ccXls1" class="secondary" type="button">⬇ Export Excel</button><button id="ccXls3" class="secondary" type="button" title="Daftar tarikan item CC dikelompokkan per lokasi">⬇ Excel per Lokasi</button></div></div>
 <div class="ccwrap"><table class="cct" id="ccRecap"></table></div>
 <h3 class="cch">Per hari pelaksanaan</h3><div class="cc-days" id="ccDay"></div>
 <details class="cc-ket"><summary>Keterangan</summary><div class="small" id="ccNote"></div></details></div>
@@ -989,6 +989,25 @@ function xgrey(L){
     rows.push([T(i+1,base({h:'center',c:'FF5B6577'})),T(o.loc,base({b:1,h:'center'})),T(x.cat,base({sz:10})),T(x.nu||'',base({h:'center'})),T(x.k,base({h:'center'})),T(x.name,base({w:1})),T(x.uom,base({h:'center'})),T(x.day,base({h:'center'})),T(o.q,base({h:'right',b:1,nf:o.q%1?ND:NI})),q(x.nq),q(x.sq),q(x.wq),T(x.d,base(vo(x.d))),T(XSTL[x.st],{b:1,sz:10,h:'center',bd:1,fill:ST[x.st].fill,c:ST[x.st].c}),E({bd:1,bc:'FF8A97A8',fill:'FFFFFFFF'})])});
   if(!out.length)rows.push([T('Tidak ada item di lokasi grey',{i:1,c:'FF6D7B88'})].concat(Array.apply(null,Array(nc-1)).map(function(){return E({})})));
   return {name:'Lokasi Grey',grid:0,first:1,w:W,h:{0:34},rows:rows,m:[],fz:1,af:'A1:'+last+rows.length,print:{o:'landscape',titles:'$1:$1',fl:'Tools SO/CC · Lokasi Grey'}}}
+function xloc(L,note){
+  var T=function(v,o){return {v:v,s:sty(o)}},E=function(o){return T('',o)};
+  var W=[5,16,8,24,8,12,44,7,7,12,16,18],nc=W.length,last=xcol(nc),rows=[];
+  var HS={b:1,c:'FFFFFFFF',fill:NAVY,bd:1,h:'center',bc:'FF183153',w:1},ZN={W:'W',T:'C',D:'D',O:'Grey'};
+  rows.push(['No','Lokasi','Zone','Category','No Urut','Item Code','Item Name','UOM','Hari ke-','Qty di lokasi','Hasil hitung','Keterangan'].map(function(t,j){return T(t,j>=10?{b:1,c:'FFFFFFFF',fill:'FFB57A22',bd:1,h:'center',bc:'FF183153',w:1}:HS)}));
+  var out=[],nol=[];L.forEach(function(x){var ls=x.locs||[];if(!ls.length)nol.push(x);ls.forEach(function(l){out.push({x:x,loc:String(l[0]),q:num(l[1])})})});
+  out.sort(function(a,b){return a.loc.localeCompare(b.loc,'en',{numeric:true})||(a.x.ix-b.x.ix)});
+  nol.sort(function(a,b){return a.ix-b.ix}).forEach(function(x){out.push({x:x,loc:'(tidak ada di lokasi)',q:''})});
+  var prev=null,band=0,sm=[],cur=null;
+  out.forEach(function(o,i){var x=o.x;if(o.loc!==prev){band^=1;prev=o.loc;cur={loc:o.loc,n:0,q:0,c:{},z:o.q===''?'-':ZN[zg(o.loc)]};sm.push(cur)}cur.n++;cur.q+=(o.q===''?0:o.q);cur.c[x.cat]=(cur.c[x.cat]||0)+1;
+    var bg=band?null:'FFEEF4FA',base=function(v){if(bg)v.fill=bg;v.bd=1;return v};
+    rows.push([T(i+1,base({h:'center',c:'FF5B6577'})),T(o.loc,base({b:1,h:'center'})),T(cur.z,base({h:'center',sz:10})),T(x.cat,base({sz:10})),T(x.nu||'',base({h:'center'})),T(x.k,base({h:'center'})),T(x.name,base({w:1})),T(x.uom,base({h:'center'})),T(x.day,base({h:'center'})),o.q===''?E(base({})):T(o.q,base({h:'right',b:1,nf:o.q%1?ND:NI})),E({bd:1,bc:'FF8A97A8',fill:'FFFFFFFF'}),E({bd:1,bc:'FF8A97A8',fill:'FFFFFFFF'})])});
+  var s1={name:'Tarikan per Lokasi',grid:0,first:1,w:W,h:{0:34},rows:rows,m:[],fz:1,af:'A1:'+last+rows.length,print:{o:'landscape',titles:'$1:$1',fl:'Tools SO/CC · Tarikan per Lokasi'+(note?' · '+note:'')}};
+  var W2=[5,20,8,12,14,46],r2=[['No','Lokasi','Zone','Jumlah item','Total qty','Category'].map(function(t){return T(t,HS)})];
+  sm.forEach(function(o,i){var bg=i%2?'FFEEF4FA':null,base=function(v){if(bg)v.fill=bg;v.bd=1;return v};
+    var cl=Object.keys(o.c).sort().map(function(c){return c+' ('+o.c[c]+')'}).join(', ');
+    r2.push([T(i+1,base({h:'center',c:'FF5B6577'})),T(o.loc,base({b:1,h:'center'})),T(o.z,base({h:'center'})),T(o.n,base({h:'right',nf:NI})),T(o.q,base({h:'right',nf:o.q%1?ND:NI})),T(cl,base({w:1,sz:10}))])});
+  var s2={name:'Ringkas Lokasi',grid:0,first:1,w:W2,h:{0:30},rows:r2,m:[],fz:1,af:'A1:F'+r2.length,print:{o:'landscape',titles:'$1:$1',fl:'Tools SO/CC · Ringkas Lokasi'}};
+  return [s1,s2]}
 function today(){var d=new Date(Date.now()+7*3600e3);return d.toISOString().slice(0,10)}
 function xls(which){
   try{var IA=CC.items.map(calc),hf=mpVals('ccRh'),I=(which==='det'||!hf.length)?IA:IA.filter(function(x){return hf.indexOf(x.day)>=0}),note=(which!=='det'&&hf.length)?'Hari ke-'+hf.join(', '):'',me=CC.meta||{},sheets=[],srt=function(a,b){return a.ix-b.ix};CC.items.forEach(function(x,i){x.ix=i});
@@ -1002,6 +1021,11 @@ function xls(which){
     xsave(xbuild(sheets),'Tools_SO_CC'+(which==='det'?'_Detail':'')+'_'+today()+'.xlsx')
   }catch(e){say(e.message||String(e),1)}}
 
+function xlsLoc(){
+  try{if(!CC){say('Belum ada data CC.',1);return}var IA=CC.items.map(calc),hf=mpVals('ccRh'),I=hf.length?IA.filter(function(x){return hf.indexOf(x.day)>=0}):IA,note=hf.length?'Hari ke-'+hf.join(', '):'';
+    CC.items.forEach(function(x,i){x.ix=i});var nuc2={};CC.items.forEach(function(it){nuc2[it.cat]=(nuc2[it.cat]||0)+1;if(!(it.nu>0))it.nu=nuc2[it.cat]});
+    xInit();xsave(xbuild(xloc(I,note)),'Tarikan_per_Lokasi_'+today()+'.xlsx')
+  }catch(e){say(e.message||String(e),1)}}
 function tab(n){$('ccV1').hidden=n!==1;$('ccV2').hidden=n!==2;$('ccT1').classList.toggle('active',n===1);$('ccT2').classList.toggle('active',n===2)}
 function show(on){['accuracyPanel','adjustmentPanel','minusPanel','detailsPanel','greyProgPanel'].forEach(function(i){var e=$(i);if(e&&on)e.hidden=true});
   $('ccPanel').hidden=!on;['tabMain','tabDetails','tabGrey'].forEach(function(i){if(on)$(i).classList.remove('active')});$('tabCC').classList.toggle('active',on);
@@ -1085,7 +1109,7 @@ function ccImage(){
   g.fillText('Variance = Qty WMS − Qty Sistem · nilai = variance × harga per unit · dibuat '+new Intl.DateTimeFormat('id-ID',{dateStyle:'medium',timeStyle:'short'}).format(new Date()),pad,fy);
   capPreview([{canvas:cv,name:'Summary_Tools_SOCC.png'}],'Summary Tools SO/CC')
 }
-$('ccImg').addEventListener('click',ccImage);$('ccTxt').addEventListener('click',ccCopyText);$('ccXls1').addEventListener('click',function(){xls('all')});$('ccXls2').addEventListener('click',function(){xls('det')});
+$('ccImg').addEventListener('click',ccImage);$('ccTxt').addEventListener('click',ccCopyText);$('ccXls1').addEventListener('click',function(){xls('all')});$('ccXls2').addEventListener('click',function(){xls('det')});$('ccXls3').addEventListener('click',xlsLoc);
 $('ccRecap').addEventListener('click',function(e){var tr=e.target.closest('tr[data-c]');if(!tr)return;['ccFz','ccFs'].forEach(mpClear);mpSet('ccFh',mpVals('ccRh'));mpSet('ccFc',[tr.dataset.c]);$('ccFq').value='';tab(2);detail()});
 $('ccDet').addEventListener('click',function(e){var t=e.target.closest('th[data-s]');if(!t)return;var k=t.dataset.s;SORT=SORT.k===k?{k:k,d:-SORT.d}:{k:k,d:(k==='cat'||k==='code'||k==='day'||k==='cl'||k==='st')?1:-1};detail()});
 if(load()){try{$('ccUp').hidden=true}catch(e){}}
