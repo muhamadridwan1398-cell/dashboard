@@ -685,6 +685,11 @@
                     <div class="kpi-value" id="kpi-pct-noawt-val">0.0%</div>
                     <div class="kpi-subtext">Tingkat ketepatan waktu MS</div>
                 </div>
+                <div class="kpi-card">
+                    <div class="kpi-title">Rata-rata Waktu</div>
+                    <div class="kpi-value" id="kpi-avg-val">-</div>
+                    <div class="kpi-subtext" id="kpi-avg-sub">Rata-rata waktu tunggu per MS</div>
+                </div>
             </div>
 
             <div class="dash-grid">
@@ -697,13 +702,14 @@
                     <div class="rekap-scroll-container" id="rekapScrollContainer">
                         <table>
                             <colgroup>
-                                <col style="width: 16%;">
                                 <col style="width: 14%;">
-                                <col style="width: 14%;">
-                                <col style="width: 14%;">
-                                <col style="width: 13%;">
+                                <col style="width: 12%;">
+                                <col style="width: 12%;">
+                                <col style="width: 12%;">
+                                <col style="width: 11%;">
                                 <col style="width: 15%;">
-                                <col style="width: 14%;">
+                                <col style="width: 12%;">
+                                <col style="width: 12%;">
                             </colgroup>
                             <thead>
                                 <tr>
@@ -712,13 +718,14 @@
                                     <th>WH Area >30 Min</th>
                                     <th>Total AWT >30 Min</th>
                                     <th>Total MS</th>
+                                    <th>Rata-rata Waktu</th>
                                     <th>% AWT Late</th>
                                     <th>% AWT On Time</th>
                                 </tr>
                             </thead>
                             <tbody id="rekapTableBody">
                                 <tr>
-                                    <td colspan="7" class="empty-placeholder">Tarik/Drag file Excel ke kotak di atas untuk memuat data.</td>
+                                    <td colspan="8" class="empty-placeholder">Tarik/Drag file Excel ke kotak di atas untuk memuat data.</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -726,13 +733,14 @@
 
                     <table style="background-color: #edf2f7; font-weight: bold; border-radius: 6px; overflow: hidden;">
                         <colgroup>
-                            <col style="width: 16%;">
                             <col style="width: 14%;">
-                            <col style="width: 14%;">
-                            <col style="width: 14%;">
-                            <col style="width: 13%;">
+                            <col style="width: 12%;">
+                            <col style="width: 12%;">
+                            <col style="width: 12%;">
+                            <col style="width: 11%;">
                             <col style="width: 15%;">
-                            <col style="width: 14%;">
+                            <col style="width: 12%;">
+                            <col style="width: 12%;">
                         </colgroup>
                         <tbody id="rekapTableFoot" style="display: none;">
                             <tr>
@@ -741,6 +749,7 @@
                                 <td id="foot-wh-awt">0</td>
                                 <td id="foot-tot-awt" style="color: var(--danger);">0</td>
                                 <td id="foot-tot-trans">0</td>
+                                <td id="foot-avg">-</td>
                                 <td id="foot-pct-kontribusi" style="color: var(--danger);">0.0%</td>
                                 <td id="foot-pct-achv" style="color: var(--success);">0.0%</td>
                             </tr>
@@ -811,13 +820,14 @@
                             <th>WH Area >30 Min</th>
                             <th>Total AWT >30 Min</th>
                             <th>Total MS</th>
+                            <th>Rata-rata Waktu</th>
                             <th>% AWT Late</th>
                             <th>% AWT On Time</th>
                         </tr>
                     </thead>
                     <tbody id="rekapBulanBody">
                         <tr>
-                            <td colspan="7" class="empty-placeholder">Tarik/Drag file Excel ke kotak di atas untuk memuat data.</td>
+                            <td colspan="8" class="empty-placeholder">Tarik/Drag file Excel ke kotak di atas untuk memuat data.</td>
                         </tr>
                     </tbody>
                     <tbody id="rekapBulanFoot" style="display: none;"></tbody>
@@ -1075,6 +1085,12 @@
         }
         return null;
     }
+
+    function fmtAvg(min) {
+        let t = Math.round(Math.max(0, Number(min) || 0) * 60), m = Math.floor(t / 60), sc = t % 60;
+        return m + ' m ' + (sc < 10 ? '0' : '') + sc + ' s';
+    }
+    function avgOf(sum, n) { return n > 0 ? fmtAvg(sum / n) : '-'; }
 
     function formatHMS(totalMinutes) {
         let absMin = Math.abs(totalMinutes);
@@ -1340,9 +1356,10 @@
         let dateGroups = {};
         globalUniqueDNs.forEach(d => {
             if (!dateGroups[d.date]) {
-                dateGroups[d.date] = { total: 0, sellAwt: 0, whAwt: 0, totalAwt: 0 };
+                dateGroups[d.date] = { total: 0, sellAwt: 0, whAwt: 0, totalAwt: 0, sumDiff: 0 };
             }
             dateGroups[d.date].total++;
+            dateGroups[d.date].sumDiff += Number(d.maxDiff) || 0;
             if (d.late) {
                 dateGroups[d.date].totalAwt++;
                 if (d.area.toUpperCase().includes("SELLING")) dateGroups[d.date].sellAwt++;
@@ -1384,6 +1401,7 @@
                         ${g.total}
                     </span>
                 </td>
+                <td style="font-weight: bold; color: #1f4e78;" title="Rata-rata waktu tunggu per MS (item terlama tiap MS)">${avgOf(g.sumDiff, g.total)}</td>
                 <td style="color: var(--danger); font-weight: bold;">${kontribusiPct}</td>
                 <td style="color: var(--success); font-weight: bold;">${achvPct}</td>
             `;
@@ -1450,9 +1468,10 @@
         let groups = {};
         globalUniqueDNs.forEach(d => {
             let key = /^\d{4}-\d{2}/.test(d.date) ? d.date.substring(0, 7) : 'Unknown';
-            if (!groups[key]) groups[key] = { total: 0, sellAwt: 0, whAwt: 0, totalAwt: 0 };
+            if (!groups[key]) groups[key] = { total: 0, sellAwt: 0, whAwt: 0, totalAwt: 0, sumDiff: 0 };
             let g = groups[key];
             g.total++;
+            g.sumDiff += Number(d.maxDiff) || 0;
             if (d.late) {
                 g.totalAwt++;
                 let area = d.area.toUpperCase();
@@ -1467,11 +1486,11 @@
         tbody.innerHTML = '';
 
         let keys = Object.keys(groups).sort();
-        let sum = { total: 0, sellAwt: 0, whAwt: 0, totalAwt: 0 };
+        let sum = { total: 0, sellAwt: 0, whAwt: 0, totalAwt: 0, sumDiff: 0 };
 
         keys.forEach(k => {
             let g = groups[k];
-            sum.total += g.total; sum.sellAwt += g.sellAwt; sum.whAwt += g.whAwt; sum.totalAwt += g.totalAwt;
+            sum.total += g.total; sum.sellAwt += g.sellAwt; sum.whAwt += g.whAwt; sum.totalAwt += g.totalAwt; sum.sumDiff += g.sumDiff;
             let label = k;
             if (k !== 'Unknown') {
                 let [y, m] = k.split('-');
@@ -1484,6 +1503,7 @@
                 <td><span class="badge badge-danger">${g.whAwt}</span></td>
                 <td><span class="badge badge-danger">${g.totalAwt}</span></td>
                 <td style="color: #1f4e78; font-weight: bold;">${g.total}</td>
+                <td style="color: #1f4e78; font-weight: bold;">${avgOf(g.sumDiff, g.total)}</td>
                 <td style="color: var(--danger); font-weight: bold;">${pct(g.totalAwt, g.total)}</td>
                 <td style="color: var(--success); font-weight: bold;">${pct(g.total - g.totalAwt, g.total)}</td>
             `;
@@ -1497,6 +1517,7 @@
                 <td>${sum.whAwt}</td>
                 <td style="color: var(--danger);">${sum.totalAwt}</td>
                 <td>${sum.total}</td>
+                <td>${avgOf(sum.sumDiff, sum.total)}</td>
                 <td style="color: var(--danger);">${pct(sum.totalAwt, sum.total)}</td>
                 <td style="color: var(--success);">${pct(sum.total - sum.totalAwt, sum.total)}</td>
             </tr>
@@ -1547,6 +1568,11 @@
         document.getElementById('kpi-pct-val').innerText = pctOverall;
         document.getElementById('kpi-pct-noawt-val').innerText = totalCount > 0 ? ((noAwtCount / totalCount) * 100).toFixed(1) + "%" : "0.0%";
 
+        let sumAll = globalUniqueDNs.reduce((a, d) => a + (Number(d.maxDiff) || 0), 0);
+        let maxAll = globalUniqueDNs.reduce((a, d) => Math.max(a, Number(d.maxDiff) || 0), 0);
+        document.getElementById('kpi-avg-val').innerText = avgOf(sumAll, totalCount);
+        document.getElementById('kpi-avg-sub').innerText = totalCount > 0 ? 'Rata-rata per MS · terlama ' + fmtAvg(maxAll) : 'Rata-rata waktu tunggu per MS';
+
         renderRekapTable(false);
         renderRekapBulan();
         renderCategoryLate();
@@ -1587,6 +1613,7 @@
                 <td id="foot-wh-awt">${totWhAwt}</td>
                 <td id="foot-tot-awt" style="color: var(--danger);">${totAllAwt}</td>
                 <td id="foot-tot-trans">${totTrans}</td>
+                <td id="foot-avg">${avgOf(sumAll, totTrans)}</td>
                 <td id="foot-pct-kontribusi" style="color: var(--danger);">${footKontribusi}</td>
                 <td id="foot-pct-achv" style="color: var(--success);">${footAchv}</td>
             </tr>
