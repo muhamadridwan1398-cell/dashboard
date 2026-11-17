@@ -207,7 +207,7 @@ html body:not(.capture-mode) #greySummaryGrid tfoot td:first-child{letter-spacin
 <div id="ccBody" hidden>
 <div class="cc-chips" id="ccChips"></div><div class="cc-kpi" id="ccKpi"></div>
 <nav class="ccsub"><button id="ccT1" class="active" type="button">Rekap per Category</button><button id="ccT2" type="button">Detail Item</button></nav>
-<div id="ccV1"><div class="cc-actions"><div class="field ccrh"><label>Hari ke-</label><details class="category-picker ccmp" id="ccRh" data-all="Semua hari"><summary>Semua hari</summary><div class="ccmpbody"></div></details></div><div class="ccbtns"><label class="ccgo" style="display:flex;align-items:center;gap:6px;font-size:13px;color:#46566b;cursor:pointer;margin-right:4px" title="Qty di lokasi X333, X222, TRANSD, STAGEIN tidak dihitung sebagai Qty WMS. Variance, nilai selisih dan status ikut berubah. Item yang hanya ada di lokasi itu masuk Item tidak masuk lokasi."><input type="checkbox" id="ccNlx"> X333, X222, TRANSD, STAGEIN = tidak masuk lokasi</label><label class="ccgo" style="display:flex;align-items:center;gap:6px;font-size:13px;color:#46566b;cursor:pointer;margin-right:4px"><input type="checkbox" id="ccGreyOpt" checked> Tabel lokasi grey di gambar &amp; teks</label><button id="ccImg" class="secondary" type="button">🖼 Gambar ringkasan</button><button id="ccTxt" class="secondary" type="button">📋 Salin teks</button><button id="ccXls1" class="secondary" type="button">⬇ Export Excel</button><button id="ccXls3" class="secondary" type="button" title="Daftar tarikan item CC dikelompokkan per lokasi">⬇ Excel per Lokasi</button></div></div>
+<div id="ccV1"><div class="cc-actions"><div class="field ccrh"><label>Hari ke-</label><details class="category-picker ccmp" id="ccRh" data-all="Semua hari"><summary>Semua hari</summary><div class="ccmpbody"></div></details></div><div class="ccbtns"><label class="ccgo" style="display:flex;align-items:center;gap:6px;font-size:13px;color:#46566b;cursor:pointer;margin-right:4px" title="Qty di lokasi X333, X222, TRANSD, STAGEIN tidak dihitung sebagai Qty WMS. Variance, nilai selisih dan status ikut berubah. Item yang hanya ada di lokasi itu masuk Item tidak masuk lokasi."><input type="checkbox" id="ccNlx"> X333, X222, TRANSD, STAGEIN = tidak masuk lokasi</label><label class="ccgo" style="display:flex;align-items:center;gap:6px;font-size:13px;color:#46566b;cursor:pointer;margin-right:4px"><input type="checkbox" id="ccGreyOpt" checked> Tabel lokasi grey di gambar &amp; teks</label><button id="ccImg" class="secondary" type="button">🖼 Gambar ringkasan</button><button id="ccTxt" class="secondary" type="button">📋 Salin teks</button><button id="ccXls1" class="secondary" type="button">⬇ Export Excel</button><button id="ccXls4" class="secondary" type="button" title="Format template Upload Storage Location Tagging (Storage Location Id + Item No): hanya lokasi yang berisi lebih dari 1 item CC, dari data SWBL">⬇ Excel Tagging Lokasi</button><button id="ccXls3" class="secondary" type="button" title="Daftar tarikan item CC dikelompokkan per lokasi">⬇ Excel per Lokasi</button></div></div>
 <div class="ccwrap"><table class="cct" id="ccRecap"></table></div>
 <h3 class="cch">Per hari pelaksanaan</h3><div class="cc-days" id="ccDay"></div>
 <details class="cc-ket"><summary>Keterangan</summary><div class="small" id="ccNote"></div></details></div>
@@ -1006,6 +1006,17 @@ function xgrey(L){
     rows.push([T(i+1,base({h:'center',c:'FF5B6577'})),T(o.loc,base({b:1,h:'center'})),T(x.cat,base({sz:10})),T(x.nu||'',base({h:'center'})),T(x.k,base({h:'center'})),T(x.name,base({w:1})),T(x.uom,base({h:'center'})),T(x.day,base({h:'center'})),T(o.q,base({h:'right',b:1,nf:o.q%1?ND:NI})),q(x.nq),q(x.sq),q(x.wq),T(x.d,base(vo(x.d))),T(XSTL[x.st],{b:1,sz:10,h:'center',bd:1,fill:ST[x.st].fill,c:ST[x.st].c}),E({bd:1,bc:'FF8A97A8',fill:'FFFFFFFF'})])});
   if(!out.length)rows.push([T('Tidak ada item di lokasi grey',{i:1,c:'FF6D7B88'})].concat(Array.apply(null,Array(nc-1)).map(function(){return E({})})));
   return {name:'Lokasi Grey',grid:0,first:1,w:W,h:{0:34},rows:rows,m:[],fz:1,af:'A1:'+last+rows.length,print:{o:'landscape',titles:'$1:$1',fl:'Tools SO/CC · Lokasi Grey'}}}
+function xtag(L){
+  var T=function(v,o){return {v:v,s:sty(o||{})}};
+  var rows=[[T('Storage Location Id',{b:1}),T('Item No',{b:1})]],out=[];
+  L.forEach(function(x){var seen={};(x.locs||[]).forEach(function(l){var lc=String(l[0]).trim();if(!lc||lc==='-'||seen[lc])return;seen[lc]=1;out.push({loc:lc,item:String(x.k),ix:x.ix})})});
+  var cn={};out.forEach(function(o){cn[o.loc]=(cn[o.loc]||0)+1});out=out.filter(function(o){return cn[o.loc]>1});
+  out.sort(function(a,b){return a.loc.localeCompare(b.loc,'en',{numeric:true})||(a.ix-b.ix)});
+  out.forEach(function(o){rows.push([T(o.loc),T(o.item)])});
+  var s1={name:'WorkSheet',grid:1,first:1,w:[22,16],h:{},rows:rows,m:[],fz:1};
+  var nt=['Template ini flexible (Kolom header jangan di hapus)','1. Bisa upload kolom storage location id saja','2. Bisa upload kolom storage location id dan item no','3 Bisa upload kolom item saja tanpa storage location id'];
+  var s2={name:'Notes',grid:1,first:0,w:[60],h:{},rows:nt.map(function(t){return [T(t)]}),m:[],fz:0};
+  return {sheets:[s1,s2],n:out.length,items:Object.keys(out.reduce(function(m,o){m[o.item]=1;return m},{})).length,locs:Object.keys(out.reduce(function(m,o){m[o.loc]=1;return m},{})).length}}
 function xloc(L,note){
   var T=function(v,o){return {v:v,s:sty(o)}},E=function(o){return T('',o)};
   var W=[5,14,7,22,8,12,42,7,7,10,10,10,16,9,10,13,18],nc=W.length,last=xcol(nc),rows=[];
@@ -1040,6 +1051,11 @@ function xls(which){
     xsave(xbuild(sheets),'Tools_SO_CC'+(which==='det'?'_Detail':'')+'_'+today()+'.xlsx')
   }catch(e){say(e.message||String(e),1)}}
 
+function xlsTag(){
+  try{if(!CC){say('Belum ada data CC.',1);return}var IA=CC.items.map(calc),hf=mpVals('ccRh'),I=hf.length?IA.filter(function(x){return hf.indexOf(x.day)>=0}):IA;
+    CC.items.forEach(function(x,i){x.ix=i});xInit();var R=xtag(I);if(!R.n){say('Tidak ada lokasi yang berisi lebih dari 1 item CC.',1);return}
+    xsave(xbuild(R.sheets),'Upload_Storage_Location_Tagging_'+today()+'.xlsx');say('Excel tagging lokasi dibuat: '+nf0.format(R.n)+' baris ('+nf0.format(R.locs)+' lokasi yang berisi lebih dari 1 item CC, '+nf0.format(R.items)+' item).')
+  }catch(e){say(e.message||String(e),1)}}
 function xlsLoc(){
   try{if(!CC){say('Belum ada data CC.',1);return}var IA=CC.items.map(calc),hf=mpVals('ccRh'),I=hf.length?IA.filter(function(x){return hf.indexOf(x.day)>=0}):IA,note=hf.length?'Hari ke-'+hf.join(', '):'';
     CC.items.forEach(function(x,i){x.ix=i});var nuc2={};CC.items.forEach(function(it){nuc2[it.cat]=(nuc2[it.cat]||0)+1;if(!(it.nu>0))it.nu=nuc2[it.cat]});
@@ -1132,7 +1148,7 @@ function ccImage(){
 }
 $('ccNlx').checked=NLX=(function(){try{return localStorage.getItem('qbig_cc_nlx')==='1'}catch(e){return false}})();$('ccNlx').addEventListener('change',function(){NLX=this.checked;try{localStorage.setItem('qbig_cc_nlx',NLX?'1':'0')}catch(e){}if(CC){render();if(!$('ccV2').hidden)detail()}});
 $('ccGreyOpt').checked=(function(){try{return localStorage.getItem('qbig_cc_greyopt')!=='0'}catch(e){return true}})();$('ccGreyOpt').addEventListener('change',function(){try{localStorage.setItem('qbig_cc_greyopt',this.checked?'1':'0')}catch(e){}});
-$('ccImg').addEventListener('click',ccImage);$('ccTxt').addEventListener('click',ccCopyText);$('ccXls1').addEventListener('click',function(){xls('all')});$('ccXls2').addEventListener('click',function(){xls('det')});$('ccXls3').addEventListener('click',xlsLoc);
+$('ccImg').addEventListener('click',ccImage);$('ccTxt').addEventListener('click',ccCopyText);$('ccXls1').addEventListener('click',function(){xls('all')});$('ccXls2').addEventListener('click',function(){xls('det')});$('ccXls3').addEventListener('click',xlsLoc);$('ccXls4').addEventListener('click',xlsTag);
 $('ccRecap').addEventListener('click',function(e){var el=e.target.closest('[data-df]'),tr=e.target.closest('tr');if(!tr||(!el&&!tr.dataset.c))return;var cat=tr.dataset.c||'',k=el?el.dataset.df:'all';['ccFz','ccFs'].forEach(mpClear);mpSet('ccFh',mpVals('ccRh'));if(cat)mpSet('ccFc',[cat]);else mpClear('ccFc');$('ccFq').value='';DR=(k==='all')?null:k;DRL=(cat||'Semua category')+' · '+DRX[k];tab(2);detail()});
 $('ccDet').addEventListener('click',function(e){var t=e.target.closest('th[data-s]');if(!t)return;var k=t.dataset.s;SORT=SORT.k===k?{k:k,d:-SORT.d}:{k:k,d:(k==='cat'||k==='code'||k==='day'||k==='cl'||k==='st')?1:-1};detail()});
 if(load()){try{$('ccUp').hidden=true}catch(e){}}
