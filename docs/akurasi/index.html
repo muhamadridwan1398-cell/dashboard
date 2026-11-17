@@ -868,9 +868,11 @@ function filt(){var c=mpVals('ccFc'),h=mpVals('ccFh'),zn=mpVals('ccFz'),s=mpVals
 var DR=null,DRL='',DRX={all:'semua item CC',df:'item selisih',ov:'item over',mi:'item minus',nl:'item tidak masuk lokasi',grey:'item di lokasi grey'};
 function drOk(x){if(!DR)return true;var hl=x.locs&&x.locs.length;if(DR==='df')return x.d!==0;if(DR==='ov')return x.d>0;if(DR==='mi')return x.d<0;if(DR==='nl')return !hl;if(DR==='grey')return !!(hl&&x.locs.some(function(l){return zg(l[0])==='O'}));return true}
 var STL={OVER:'Over',MINUS:'Minus',SAMA:'Sesuai',NOSYS:'Tdk di NAV'},XSTL={OVER:'Over',MINUS:'Minus',SAMA:'Sesuai',NOSYS:'Tdk di NAV'};
-var _soRaw='',_soMap={};function soMap(){var raw='';try{raw=localStorage.getItem('qbig_so_v1')||''}catch(e){}if(raw===_soRaw)return _soMap;_soRaw=raw;_soMap={};try{var d=JSON.parse(raw||'null');if(d&&d.focus)d.focus.forEach(function(f){_soMap[f.k]=f})}catch(e){}return _soMap}
+var _soRaw='',_soMap={},_soPulled=0;
+function soPull(){if(Date.now()-_soPulled<20000||!window.__shr)return;_soPulled=Date.now();window.__shr.get('socheck').then(function(j){var d=j&&j.data;if(!d||!(d.sov||(d.focus&&d.focus.length)))return;var raw='';try{raw=localStorage.getItem('qbig_so_v1')||''}catch(e){}var cur=null;try{cur=JSON.parse(raw||'null')}catch(e){}if(cur&&cur.meta&&d.meta&&cur.meta.at&&d.meta.at&&cur.meta.at>=d.meta.at&&cur.sov)return;try{localStorage.setItem('qbig_so_v1',JSON.stringify(d))}catch(e){}_soRaw='';if(CC&&!$('ccV2').hidden)detail()}).catch(function(){})}
+function soMap(){var raw='';try{raw=localStorage.getItem('qbig_so_v1')||''}catch(e){}if(raw===_soRaw)return _soMap;_soRaw=raw;_soMap={};try{var d=JSON.parse(raw||'null');if(d){if(d.focus)d.focus.forEach(function(f){_soMap[f.k]=f});if(d.sov)Object.keys(d.sov).forEach(function(k){var v=d.sov[k];_soMap[k]={k:k,fq:v[0],fv:v[1],why:v[2]}})}}catch(e){}return _soMap}
 function detail(){
-  if(!CC)return;var SOM=soMap(),hasSo=Object.keys(SOM).length>0;CC.items.forEach(function(x){x.so=SOM[x.k]?SOM[x.k].fq:0});var L=filt().slice().sort(function(a,b){var k=SORT.k,va=a[k],vb=b[k];if(typeof va==='string')return SORT.d*String(va).localeCompare(String(vb),'id',{numeric:true});return SORT.d*((va||0)-(vb||0))});
+  if(!CC)return;var SOM=soMap(),hasSo=Object.keys(SOM).length>0;if(!hasSo)soPull();CC.items.forEach(function(x){x.so=SOM[x.k]?SOM[x.k].fq:0});var L=filt().slice().sort(function(a,b){var k=SORT.k,va=a[k],vb=b[k];if(typeof va==='string')return SORT.d*String(va).localeCompare(String(vb),'id',{numeric:true});return SORT.d*((va||0)-(vb||0))});
   var dr=$('ccDrill');dr.hidden=!DR;if(DR)dr.innerHTML='🔎 Dari rekap: <b>'+esc(DRL)+'</b> &nbsp;<button type="button" id="ccDrillX" class="secondary" style="padding:3px 10px">✕ Tampilkan semua</button>';
   var a=agg(L);$('ccCount').textContent=L.length+' item · '+a.df+' selisih ('+a.ov+' over, '+a.mi+' minus) · nilai over '+rp(a.vo)+' · nilai minus '+rp(a.vm)+' · net '+rp(a.vo+a.vm);
   var th=function(k,t,n){return '<th data-s="'+k+'" class="'+(n?'n':'')+'" style="cursor:pointer">'+t+(SORT.k===k?(SORT.d>0?' ▲':' ▼'):'')+'</th>'};
@@ -1189,7 +1191,8 @@ async function generate(){
       var cands=[];(pool[F.cat]||[]).forEach(function(C){if(C.k===F.k)return;var r=score(F,C);if(r.s>=5)cands.push({k:C.k,name:C.name,br:C.br,sub:C.sub,uom:C.uom,type:C.type,q:C.q,cost:Math.round(C.cost),fq:C.fq,fv:C.fv,bar:C.bar,sc:r.s,why:r.why})});
       cands.sort(function(a,b){return b.sc-a.sc});F.cands=cands.slice(0,6);delete F.t;focus.push(F)});
     focus.sort(function(a,b){return Math.abs(b.fv)-Math.abs(a.fv)});
-    R={focus:focus,meta:{so:fs.name,sqv:srcNote,nSo:nSo,nSqv:sqv.length,nCc:cc.length,at:new Date().toISOString(),ccMeta:(window.__ccMeta&&window.__ccMeta())||{}}};
+    var sov={};Object.keys(so).forEach(function(k){var v=so[k];if(v.fq)sov[k]=[v.fq,v.fv,v.why]});
+    R={focus:focus,sov:sov,meta:{so:fs.name,sqv:srcNote,nSo:nSo,nSqv:sqv.length,nCc:cc.length,at:new Date().toISOString(),ccMeta:(window.__ccMeta&&window.__ccMeta())||{}}};
     try{localStorage.setItem(KEY,JSON.stringify(R))}catch(e){}
     shareSO();render();$('soUp').hidden=true;$('soToggle').textContent='Buka upload ▾';
   }catch(e){say(e.message||String(e),1)}
