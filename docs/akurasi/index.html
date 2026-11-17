@@ -207,7 +207,7 @@ html body:not(.capture-mode) #greySummaryGrid tfoot td:first-child{letter-spacin
 <div id="ccBody" hidden>
 <div class="cc-chips" id="ccChips"></div><div class="cc-kpi" id="ccKpi"></div>
 <nav class="ccsub"><button id="ccT1" class="active" type="button">Rekap per Category</button><button id="ccT2" type="button">Detail Item</button></nav>
-<div id="ccV1"><div class="cc-actions"><div class="field ccrh"><label>Hari ke-</label><details class="category-picker ccmp" id="ccRh" data-all="Semua hari"><summary>Semua hari</summary><div class="ccmpbody"></div></details></div><div class="ccbtns"><button id="ccImg" class="secondary" type="button">🖼 Gambar ringkasan</button><button id="ccTxt" class="secondary" type="button">📋 Salin teks</button><button id="ccXls1" class="secondary" type="button">⬇ Export Excel</button><button id="ccXls3" class="secondary" type="button" title="Daftar tarikan item CC dikelompokkan per lokasi">⬇ Excel per Lokasi</button></div></div>
+<div id="ccV1"><div class="cc-actions"><div class="field ccrh"><label>Hari ke-</label><details class="category-picker ccmp" id="ccRh" data-all="Semua hari"><summary>Semua hari</summary><div class="ccmpbody"></div></details></div><div class="ccbtns"><label class="ccgo" style="display:flex;align-items:center;gap:6px;font-size:13px;color:#46566b;cursor:pointer;margin-right:4px"><input type="checkbox" id="ccGreyOpt" checked> Tabel lokasi grey di gambar &amp; teks</label><button id="ccImg" class="secondary" type="button">🖼 Gambar ringkasan</button><button id="ccTxt" class="secondary" type="button">📋 Salin teks</button><button id="ccXls1" class="secondary" type="button">⬇ Export Excel</button><button id="ccXls3" class="secondary" type="button" title="Daftar tarikan item CC dikelompokkan per lokasi">⬇ Excel per Lokasi</button></div></div>
 <div class="ccwrap"><table class="cct" id="ccRecap"></table></div>
 <h3 class="cch">Per hari pelaksanaan</h3><div class="cc-days" id="ccDay"></div>
 <details class="cc-ket"><summary>Keterangan</summary><div class="small" id="ccNote"></div></details></div>
@@ -1076,7 +1076,7 @@ function ccSumText(){
   S.cats.forEach(function(x){var a=x.a;L.push('• '+x.c+': '+a.n+' item, selisih '+a.df+' ('+pc(a)+'%), over '+a.ov+' / minus '+a.mi+', net '+rp(a.vo+a.vm)+(a.nl?', tidak masuk lokasi '+a.nl:'')+(a.ng?', lokasi grey '+a.ng:''))});
   if(T.nl){L.push('');L.push('*Item tidak masuk lokasi ('+T.nl+')*');S.cats.filter(function(x){return x.a.nl}).forEach(function(x){L.push('• '+x.c+': '+x.a.nl+' item')})}
   if(T.ng){L.push('');L.push('*Item masuk lokasi grey ('+T.ng+')*');S.cats.filter(function(x){return x.a.ng}).forEach(function(x){L.push('• '+x.c+': '+x.a.ng+' item')})}
-  if(S.grey.length){L.push('');L.push('*Lokasi grey ('+S.grey.length+' lokasi)*');S.grey.slice(0,30).forEach(function(o){L.push('• '+o.loc+': '+o.n+' item, qty '+nf.format(o.q)+' — '+o.cl)});if(S.grey.length>30)L.push('…dan '+(S.grey.length-30)+' lokasi lain')}
+  if(S.grey.length&&greyOn()){L.push('');L.push('*Lokasi grey ('+S.grey.length+' lokasi)*');S.grey.slice(0,30).forEach(function(o){L.push('• '+o.loc+': '+o.n+' item, qty '+nf.format(o.q)+' — '+o.cl)});if(S.grey.length>30)L.push('…dan '+(S.grey.length-30)+' lokasi lain')}
   if(S.days.length>1){L.push('');L.push('*Per hari*');S.days.forEach(function(x){var a=x.a;L.push('• Hari ke-'+x.d+': '+a.n+' item, selisih '+a.df+' ('+pc(a)+'%), net '+rp(a.vo+a.vm))})}
   return L.join('\n')
 }
@@ -1086,8 +1086,9 @@ function ccCopyText(){
   if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(function(){done(true)},fb);else fb()
 }
 function jt(v){return (v<0?'-':'')+'Rp '+(Math.abs(v)/1e6).toFixed(1).replace('.',',')+' jt'}
+function greyOn(){var e=document.getElementById('ccGreyOpt');return !e||e.checked}
 function ccImage(){
-  var S=ccSum();if(!S)return;var T=S.T,K=2,W=1100,pad=36,rowH=40,cats=S.cats,gr=S.grey.slice(0,40),gH=gr.length?(54+36*(gr.length+1)+(S.grey.length>40?30:0)):0,H=pad+86+16+110+24+rowH*(cats.length+2)+gH+(S.use.length?44:20)+pad;
+  var S=ccSum();if(!S)return;var T=S.T,K=2,W=1100,pad=36,rowH=40,cats=S.cats,gr=greyOn()?S.grey.slice(0,40):[],gH=gr.length?(54+36*(gr.length+1)+(S.grey.length>40?30:0)):0,H=pad+86+16+110+24+rowH*(cats.length+2)+gH+(S.use.length?44:20)+pad;
   var cv=document.createElement('canvas');cv.width=W*K;cv.height=H*K;var g=cv.getContext('2d');g.scale(K,K);
   var F='system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif',INK='#14284b',MUT='#5b6b82',UP='#0a7d4e',DN='#c23b3b';
   g.fillStyle='#fff';g.fillRect(0,0,W,H);g.fillStyle=INK;g.fillRect(0,0,W,86);
@@ -1119,6 +1120,8 @@ function ccImage(){
   g.fillText('Variance = Qty WMS − Qty Sistem · nilai = variance × harga per unit · dibuat '+new Intl.DateTimeFormat('id-ID',{dateStyle:'medium',timeStyle:'short'}).format(new Date()),pad,fy);
   capPreview([{canvas:cv,name:'Summary_Tools_SOCC.png'}],'Summary Tools SO/CC')
 }
+$('ccGreyOpt').checked=(function(){try{return localStorage.getItem('qbig_cc_greyopt')!=='0'}catch(e){return true}})();$('ccGreyOpt').addEventListener('change',function(){try{localStorage.setItem('qbig_cc_greyopt',this.checked?'1':'0')}catch(e){}});
+$('ccGreyOpt').checked=(function(){try{return localStorage.getItem('qbig_cc_greyopt')!=='0'}catch(e){return true}})();$('ccGreyOpt').addEventListener('change',function(){try{localStorage.setItem('qbig_cc_greyopt',this.checked?'1':'0')}catch(e){}});
 $('ccImg').addEventListener('click',ccImage);$('ccTxt').addEventListener('click',ccCopyText);$('ccXls1').addEventListener('click',function(){xls('all')});$('ccXls2').addEventListener('click',function(){xls('det')});$('ccXls3').addEventListener('click',xlsLoc);
 $('ccRecap').addEventListener('click',function(e){var el=e.target.closest('[data-df]'),tr=e.target.closest('tr');if(!tr||(!el&&!tr.dataset.c))return;var cat=tr.dataset.c||'',k=el?el.dataset.df:'all';['ccFz','ccFs'].forEach(mpClear);mpSet('ccFh',mpVals('ccRh'));if(cat)mpSet('ccFc',[cat]);else mpClear('ccFc');$('ccFq').value='';DR=(k==='all')?null:k;DRL=(cat||'Semua category')+' · '+DRX[k];tab(2);detail()});
 $('ccDet').addEventListener('click',function(e){var t=e.target.closest('th[data-s]');if(!t)return;var k=t.dataset.s;SORT=SORT.k===k?{k:k,d:-SORT.d}:{k:k,d:(k==='cat'||k==='code'||k==='day'||k==='cl'||k==='st')?1:-1};detail()});
