@@ -2544,7 +2544,7 @@ function dParseNp(rows){
     if(!o){o={lp:pv,np:np,cu:g(r,'cust name'),ty:g(r,'type np'),sp:g(r,'sales person name')||g(r,'sales person'),od:dDate(g(r,'order date')),pd:dDate(g(r,'promised delivery date')),cl:dDate(g(r,'close date')),w:dWs(dDate(g(r,'order date')),dDate(g(r,'promised delivery date')),g(r,'pdd status')),k:dKirim(g(r,'comment'),g(r,'amsen/kirim')),on:false,lt:false,it:0,q:0,st:''};map[np]=o;list.push(o)}
     var s=g(r,'status dsl').toUpperCase();if(s)(o.sc||(o.sc={}))[s]=(o.sc[s]||0)+1;if(s==='EARLY'||s==='ONTIME')o.on=true;else if(s)o.lt=true;if(!o.st||s==='LATE'||s==='OTS')o.st=s||o.st;
     var ddv=g(r,'delivery detail');if(ddv&&!o.dd)o.dd=ddv;o.it++;o.q+=dNum(g(r,'qty np'))||0;if(o.pd==null)o.pd=dDate(g(r,'promised delivery date'))}
-  list.forEach(function(o){var f=fin[o.np];if(f){o.on=(f.s==='EARLY'||f.s==='ONTIME');o.lt=!o.on;o.fs=f.s}});
+  list.forEach(function(o){var f=fin[o.np];if(f){o.on=(f.s==='EARLY'||f.s==='ONTIME');o.lt=!o.on;o.fs=f.s;if(f.s==='OTS')o.cl=null;else if(f.c!==Infinity&&f.c>0)o.cl=f.c}});
   /* tabel riwayat bulanan di sisi kanan sheet (Bulan | INTERNAL ... | ALL NP | Ontime Early | Late) */
   var hist={};
   for(var a=0;a<rows.length;a++){var rr=rows[a];for(var c=0;c<rr.length;c++){if(String(rr[c]).trim().toUpperCase()==='BULAN'&&String(rr[c+7]||'').toUpperCase().indexOf('ALL')>=0){
