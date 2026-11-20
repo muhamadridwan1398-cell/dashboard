@@ -45,6 +45,24 @@
 .dsl .dslbt{height:14px;background:#eaeef4}
 @media(max-width:760px){.dsl .dslhero{grid-template-columns:1fr;justify-items:center;padding:16px}.dsl .dslkk{width:100%}}
 @media(prefers-reduced-motion:reduce){.dsl .dslarc{animation:none}}
+/* DSL: rapikan */
+.dsl .dslsrc{margin:12px 0 4px;padding:12px 14px;border:1px solid #e3e8f0;border-radius:12px;background:#f8fafd}
+.dsl .dslsl{margin:0 0 10px;font-size:13px;color:var(--ink2,#3b4a63)}.dsl .dslsl b{color:var(--navy)}
+.dsl .dslup{display:flex;gap:8px;flex-wrap:wrap}.dsl .dslup .btn{cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.dsl .dslum{margin:8px 0 0;font-size:12px;color:var(--ink3)}
+.dsl .dslset{margin:8px 2px}
+.dsl .tablewrap td:first-child,.dsl .tablewrap th:first-child{position:sticky;left:0;z-index:1}
+.dsl .tablewrap td:first-child{background:#fff;white-space:nowrap}.dsl .tablewrap th:first-child{background:#f3f6fb;z-index:2}
+.dsl .tablewrap tbody tr:hover td:first-child{background:#f8fafd}
+@media(max-width:760px){
+ .dsl .dslkk{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.dsl .dslkk>div{padding:10px 11px}.dsl .dslkk b{font-size:21px}
+ .dsl .dslring{width:140px;height:140px}.dsl .dslrc b{font-size:22px}
+ .dsl .dslmon{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch}.dsl .dslmon button{flex:none}
+ .dsl .dslchart{overflow-x:auto}.dsl .dslchart svg{min-width:440px;max-height:none}
+ .dsl .dslup .btn{flex:1 1 100%;justify-content:center}
+ .dsl h3{margin:22px 0 8px!important;padding-top:14px}
+}
+
 </style><link rel="manifest" href="../manifest.webmanifest"><meta name="theme-color" content="#14284b"><link rel="icon" type="image/svg+xml" href="../icons/icon.svg"><link rel="apple-touch-icon" href="../icons/apple-touch-icon.png"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Q-BIG"><meta name="apple-mobile-web-app-status-bar-style" content="default"></head><body>
 <meta charset="utf-8">
 <title>Outstanding NP</title>
@@ -2642,8 +2660,7 @@ function dslPanel(){
   var h='<section class="panel full dsl" id="dslpanel"><div class="mph"><div><h2 style="font-size:16px;font-weight:800;margin:0">Delivery Service Level (DSL)</h2><p class="sub" style="margin:2px 0 0">Per nota unik, per bulan Promise Delivery Date, khusus NP Kirim (titip/Amsen tidak dihitung). Ach % = (Early + Ontime) ÷ semua NP.</p></div>'
     +'<div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn ghost" data-dsl="reload">Muat ulang</button>'+(D.st==='ok'?'<button type="button" class="btn ghost" data-dsl="xl">Unduh Excel</button>':'')+'</div></div>';
   var srcTxt=D.st==='ok'?'Sumber: <b>'+esc(D.src)+'</b> · dimuat '+esc(fmtStamp(D.at))+' · '+fmt(D.np.length)+' NP'+(D.rep?' · <span title="NP yang diposting lebih dari sekali dibaca dari posting terakhir saja (PDD dan status)">'+fmt(D.rep)+' NP diposting ulang, dipakai posting terakhir</span>':''):D.st==='loading'?'Memuat data dari Google Sheets…':'';
-  h+='<p class="sub" style="margin:8px 0">'+srcTxt+'</p>'
-    +'<div class="dslup" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:6px 0 10px"><label class="btn" style="cursor:pointer" title="File tab NP NAV (kolom NPNo, STATUS DSL, Promised Delivery Date), .xlsx atau .csv">⬆ Upload NP NAV<input type="file" id="dslf1" accept=".csv,.xlsx,.xls" hidden></label><label class="btn ghost" style="cursor:pointer" title="Opsional: file tab REASON LATE">⬆ Upload REASON LATE (opsional)<input type="file" id="dslf2" accept=".csv,.xlsx,.xls" hidden></label><span class="sub" id="dslum" style="margin:0">Cukup 1 file NP NAV. Kalau file berisi 2 tab, NP NAV dan REASON LATE dikenali otomatis. REASON LATE yang sudah ada tetap dipakai.</span></div>';
+  h+='<div class="dslsrc"><p class="dslsl">'+(srcTxt||'Belum ada data.')+'</p><div class="dslup"><label class="btn" title="File tab NP NAV (kolom NPNo, STATUS DSL, Promised Delivery Date), .xlsx atau .csv">⬆ Upload NP NAV<input type="file" id="dslf1" accept=".csv,.xlsx,.xls" hidden></label><label class="btn ghost" title="Opsional: file tab REASON LATE">⬆ Upload REASON LATE (opsional)<input type="file" id="dslf2" accept=".csv,.xlsx,.xls" hidden></label></div><p class="dslum" id="dslum">Cukup 1 file NP NAV. Kalau file berisi 2 tab, NP NAV dan REASON LATE dikenali otomatis. REASON LATE yang sudah ada tetap dipakai.</p></div>';
   if(D.st==='err')h+='<div class="dslerr"><b>Data belum bisa dimuat.</b> '+esc(D.err)+'<br>Pastikan spreadsheet bisa dilihat siapa saja yang punya link, atau pakai link "Publikasikan ke web" / upload file di bawah.</div>';
   h+='<details class="dslset"'+(D.st==='err'?' open':'')+'><summary>Atur sumber data</summary><div class="dslgrid">'
     +'<label>Link CSV tab NP NAV (opsional)<input type="url" id="dslu1" placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?gid=467539596&single=true&output=csv" value="'+esc(DS.cfg.u1)+'"></label>'
