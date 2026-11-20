@@ -2642,14 +2642,14 @@ function dslPanel(){
   var h='<section class="panel full dsl" id="dslpanel"><div class="mph"><div><h2 style="font-size:16px;font-weight:800;margin:0">Delivery Service Level (DSL)</h2><p class="sub" style="margin:2px 0 0">Per nota unik, per bulan Promise Delivery Date, khusus NP Kirim (titip/Amsen tidak dihitung). Ach % = (Early + Ontime) ÷ semua NP.</p></div>'
     +'<div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn ghost" data-dsl="reload">Muat ulang</button>'+(D.st==='ok'?'<button type="button" class="btn ghost" data-dsl="xl">Unduh Excel</button>':'')+'</div></div>';
   var srcTxt=D.st==='ok'?'Sumber: <b>'+esc(D.src)+'</b> · dimuat '+esc(fmtStamp(D.at))+' · '+fmt(D.np.length)+' NP'+(D.rep?' · <span title="NP yang diposting lebih dari sekali dibaca dari posting terakhir saja (PDD dan status)">'+fmt(D.rep)+' NP diposting ulang, dipakai posting terakhir</span>':''):D.st==='loading'?'Memuat data dari Google Sheets…':'';
-  h+='<p class="sub" style="margin:8px 0">'+srcTxt+'</p>';
+  h+='<p class="sub" style="margin:8px 0">'+srcTxt+'</p>'
+    +'<div class="dslup" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:6px 0 10px"><label class="btn" style="cursor:pointer" title="File tab NP NAV (kolom NPNo, STATUS DSL, Promised Delivery Date), .xlsx atau .csv">⬆ Upload NP NAV<input type="file" id="dslf1" accept=".csv,.xlsx,.xls" hidden></label><label class="btn ghost" style="cursor:pointer" title="Opsional: file tab REASON LATE">⬆ Upload REASON LATE (opsional)<input type="file" id="dslf2" accept=".csv,.xlsx,.xls" hidden></label><span class="sub" id="dslum" style="margin:0">Cukup 1 file NP NAV. Kalau file berisi 2 tab, NP NAV dan REASON LATE dikenali otomatis. REASON LATE yang sudah ada tetap dipakai.</span></div>';
   if(D.st==='err')h+='<div class="dslerr"><b>Data belum bisa dimuat.</b> '+esc(D.err)+'<br>Pastikan spreadsheet bisa dilihat siapa saja yang punya link, atau pakai link "Publikasikan ke web" / upload file di bawah.</div>';
   h+='<details class="dslset"'+(D.st==='err'?' open':'')+'><summary>Atur sumber data</summary><div class="dslgrid">'
     +'<label>Link CSV tab NP NAV (opsional)<input type="url" id="dslu1" placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?gid=467539596&single=true&output=csv" value="'+esc(DS.cfg.u1)+'"></label>'
     +'<label>Link CSV tab REASON LATE (opsional)<input type="url" id="dslu2" placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?gid=435810186&single=true&output=csv" value="'+esc(DS.cfg.u2)+'"></label>'
     +'<div><button type="button" class="btn ghost" data-dsl="save">Simpan link dan muat ulang</button></div>'
-    +'<label>Upload manual tab NP NAV (.csv / .xlsx)<input type="file" id="dslf1" accept=".csv,.xlsx,.xls"></label><label>Upload manual tab REASON LATE (.csv / .xlsx)<input type="file" id="dslf2" accept=".csv,.xlsx,.xls"></label>'
-    +'</div><p class="sub" style="margin:8px 0 0">Kosongkan link untuk memakai spreadsheet bawaan. Upload manual dipakai kalau akses Google ditolak: unduh kedua tab sebagai CSV, pilih keduanya, lalu data dihitung otomatis.</p></details>';
+    +'</div><p class="sub" style="margin:8px 0 0">Kosongkan link untuk memakai spreadsheet bawaan. Kalau akses Google ditolak, upload file di atas saja.</p></details>';
   if(D.st!=='ok'){return h+(D.st==='loading'?'<p class="empty" style="margin-top:16px">Memuat…</p>':'')+'</section>'}
   var MA=dMonths(),M=MA.filter(function(t){return !t.stub});if(!M.length)return h+'<p class="empty">Belum ada NP Kirim dengan tanggal PDD di data.</p></section>';
   var live=M.filter(function(t){return t.live});if(DS.mon==null||!M.some(function(t){return t.pm===DS.mon}))DS.mon=(live.length?live[live.length-1]:M[M.length-1]).pm;
@@ -2708,9 +2708,19 @@ function dXl(){var M=dMonths().filter(function(t){return !t.stub});if(!M.length)
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(r2),'NP telat '+monLab(cur.pm).slice(0,20));XLSX.writeFile(wb,'DSL_'+monLab(cur.pm).replace(' ','_')+'.xlsx')}
 function dFile(f){return new Promise(function(ok,no){var rd=new FileReader();if(/\.csv$/i.test(f.name)){rd.onload=function(){ok(dCsv(String(rd.result)))};rd.onerror=no;rd.readAsText(f)}
   else{rd.onload=function(){try{var wb=XLSX.read(rd.result,{type:'array',cellDates:false}),ws=wb.Sheets[wb.SheetNames[0]];ok(XLSX.utils.sheet_to_json(ws,{header:1,raw:false,defval:'',dateNF:'m/d/yyyy'}))}catch(e){no(e)}};rd.onerror=no;rd.readAsArrayBuffer(f)}})}
+function dFileAll(f){return new Promise(function(ok,no){var rd=new FileReader();if(/\.csv$/i.test(f.name)){rd.onload=function(){ok([{name:f.name,rows:dCsv(String(rd.result))}])};rd.onerror=no;rd.readAsText(f)}
+  else{rd.onload=function(){try{var wb=XLSX.read(rd.result,{type:'array',cellDates:false});ok(wb.SheetNames.map(function(n){return {name:n,rows:XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:false,defval:'',dateNF:'m/d/yyyy'})}}))}catch(e){no(e)}};rd.onerror=no;rd.readAsArrayBuffer(f)}})}
 var _df={};
 document.addEventListener('change',function(e){var t=e.target;if(!t||!t.id)return;
-  if(t.id==='dslf1'||t.id==='dslf2'){var f=t.files&&t.files[0];if(!f)return;D.st='loading';D.err='';render();dFile(f).then(function(rows){_df[t.id]=rows;if(_df.dslf1&&_df.dslf2){var a=dParseNp(_df.dslf1),b=dParseRs(_df.dslf2);_df={};dApply(a,b,'File upload')}else{D.st='err';D.err='File '+(t.id==='dslf1'?'NP NAV':'REASON LATE')+' dibaca. Pilih juga file '+(t.id==='dslf1'?'REASON LATE':'NP NAV')+'.';render()}}).catch(function(er){_df={};D.st='err';D.err=(er&&er.message)||'File tidak bisa dibaca.';render()});return}
+  if(t.id==='dslf1'||t.id==='dslf2'){var f=t.files&&t.files[0];if(!f)return;var which=t.id;D.st='loading';D.err='';render();
+    dFileAll(f).then(function(sh){var pn=null,pr=null;sh.forEach(function(x){if(!pn&&dHdr(x.rows,['npno','status dsl','promised delivery date']))pn=x.rows;if(!pr&&dHdr(x.rows,['no nota penjualan','reason late customer']))pr=x.rows});
+      if(which==='dslf1'&&!pn)throw new Error('File '+f.name+': kolom NPNo, STATUS DSL, dan Promised Delivery Date tidak ditemukan. Pakai file tab NP NAV.');
+      if(which==='dslf2'&&!pr)throw new Error('File '+f.name+': kolom "No Nota Penjualan" dan "Reason Late Customer" tidak ditemukan. Pakai file tab REASON LATE.');
+      var np=pn?dParseNp(pn):(D.np&&D.np.length?{list:D.np,hist:D.hist,rep:D.rep}:null),rs=pr?dParseRs(pr):(D.rs&&Object.keys(D.rs).length?D.rs:null),need=[];
+      if(!np)need.push(dFetch(DS.cfg.u1||dGviz(DSL_GNP)).then(function(r){np=dParseNp(r)}));
+      if(!rs)need.push(dFetch(DS.cfg.u2||dGviz(DSL_GRS)).then(function(r){rs=dParseRs(r)}).catch(function(){rs={}}));
+      return Promise.all(need).then(function(){if(!np)throw new Error('Data NP NAV belum ada. Upload file NP NAV dulu.');dApply(np,rs||{},'File upload: '+f.name)})
+    }).catch(function(er){D.st='err';D.err=(er&&er.message)||'File tidak bisa dibaca.';render()});return}
   if(t.id==='dslrd'){var q=String(t.value||'').split('-');if(q.length===3){DR.d=Math.floor(Date.UTC(+q[0],+q[1]-1,+q[2])/864e5);render()}return}
   if(t.id==='dslorig'){DS.useOrig=t.checked;DS._o=null;DS.mon=null;DS.shown=100;render();return}
   if(t.id==='dslan'){DS.anm=t.value===''?null:+t.value;render();return}
