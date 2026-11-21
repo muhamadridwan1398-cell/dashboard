@@ -2766,6 +2766,7 @@ document.addEventListener('change',function(e){var t=e.target;if(!t||!t.id)retur
       if(!rs)need.push(dFetch(DS.cfg.u2||dGviz(DSL_GRS)).then(function(r){rs=dParseRs(r)}).catch(function(){rs={}}));
       return Promise.all(need).then(function(){if(!np)throw new Error('Data NP NAV belum ada. Upload file NP NAV dulu.');dApply(np,rs||{},'File upload: '+f.name);dShSave({np:pn?{rows:pn,name:f.name}:null,rs:pr?{rows:pr,name:f.name}:null})})
     }).catch(function(er){D.st='err';D.err=(er&&er.message)||'File tidak bisa dibaca.';render()});return}
+  if(t.id==='dslu1'||t.id==='dslu2'){var u1=document.getElementById('dslu1'),u2=document.getElementById('dslu2');DS.cfg.u1=((u1&&u1.value)||'').trim();DS.cfg.u2=((u2&&u2.value)||'').trim();try{localStorage.setItem(DSL_KEY,JSON.stringify(DS.cfg))}catch(er){}D.st='idle';setTimeout(render,0);return}
   if(t.id==='dslrd'){var q=String(t.value||'').split('-');if(q.length===3){DR.d=Math.floor(Date.UTC(+q[0],+q[1]-1,+q[2])/864e5);render()}return}
   if(t.id==='dslorig'){DS.useOrig=t.checked;DS._o=null;DS.mon=null;DS.shown=100;render();return}
   if(t.id==='dslan'){DS.anm=t.value===''?null:+t.value;render();return}
