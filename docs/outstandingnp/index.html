@@ -2609,8 +2609,7 @@ function dRep(day){var fl=function(v){return (Math.floor(v*100)/100).toFixed(2)}
   if(DR.n)L.push(DR.n);L.push('Berikut Reports DSL',DR.s,'Tgl '+tg,'','PD= '+pd,'OT=  '+ot+' ('+(pd?fl(ot/pd*100):'0.00')+'%)','',
     'Sameday = '+O.s+' ('+pct(O.s)+'%)','Nextday.  = '+O.n+' ('+pct(O.n)+'%)','2 day.       = '+O.t+' ('+pct(O.t)+'%)','>2 day.    = '+O.g+' ('+pct(O.g)+'%)','','');
   var noScr=0;
-  tiers.forEach(function(T,i){L.push('T'+(i+1)+'='+T.length+(T.length?' MS':''))});
-  tiers.forEach(function(T,i){if(!T.length)return;L.push('','','Detail T'+(i+1));
+  tiers.forEach(function(T,i){if(i&&tiers[i-1].length)L.push('','');L.push('T'+(i+1)+'='+T.length+(T.length?' MS':''));if(!T.length)return;
     var by={},ks=[];T.forEach(function(o){var c=(o.x.cu||'-').toUpperCase();if(!by[c]){by[c]=[];ks.push(c)}by[c].push(o)});
     ks.forEach(function(c,ci){L.push(' '+(ci+1)+'. '+c+' ('+by[c].length+'MS)');by[c].forEach(function(o){L.push(o.x.np);var dd=o.z.dd||o.x.dd||'';if(!dd&&o.z.r)dd=o.z.r+(o.z.d?' - '+o.z.d:'');if(dd)L.push(dd);if(!o.z.sc)noScr++})})});
   L.push('','');var nl=late.length;L.push('Bukti Chat = '+(!nl?'-':(noScr===0?'ADA':(noScr===nl?'TIDAK ADA':'SEBAGIAN ('+(nl-noScr)+' dari '+nl+')'))));
