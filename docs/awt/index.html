@@ -404,6 +404,11 @@
             font-weight: 600;
         }
 
+        :where(a:any-link, button, summary, [tabindex]):focus-visible, .filter-bar input:focus-visible, .filter-bar select:focus-visible {
+            outline: 3px solid #2f6df6;
+            outline-offset: 2px;
+        }
+
         .filter-bar input, .filter-bar select {
             padding: 6px 10px;
             border: 1px solid var(--border);
@@ -2121,9 +2126,9 @@
     }
     function sbDlg(cb, onCancel) {
         const old = document.getElementById('lgdlg'); if (old) old.remove();
-        document.body.insertAdjacentHTML('beforeend', '<div class="lgbg" id="lgdlg" role="dialog" aria-modal="true" aria-label="Login admin/editor"><form class="lgbox" id="lgform"><h3>Login Admin / Editor</h3><p>Hanya admin atau editor yang boleh memperbarui data. Setelah login, data otomatis tersimpan untuk semua pengguna.</p><label for="lgem">Username</label><input id="lgem" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required><label for="lgpw">Password</label><input id="lgpw" type="password" autocomplete="current-password" required><div class="lgerr" id="lgerr" role="alert"></div><div class="lgact"><button type="button" id="lgx">Batal</button><button type="submit" class="ok" id="lgok">Masuk</button></div></form></div>');
+        document.body.insertAdjacentHTML('beforeend', '<dialog class="lgbg" id="lgdlg" aria-label="Login admin/editor"><form class="lgbox" id="lgform"><h3>Login Admin / Editor</h3><p>Hanya admin atau editor yang boleh memperbarui data. Setelah login, data otomatis tersimpan untuk semua pengguna.</p><label for="lgem">Username</label><input id="lgem" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required><label for="lgpw">Password</label><input id="lgpw" type="password" autocomplete="current-password" required><div class="lgerr" id="lgerr" role="alert"></div><div class="lgact"><button type="button" id="lgx">Batal</button><button type="submit" class="ok" id="lgok">Masuk</button></div></form></dialog>');
         const d = document.getElementById('lgdlg'), f = document.getElementById('lgform'), er = document.getElementById('lgerr');
-        document.getElementById('lgem').focus();
+        d.showModal(); d.addEventListener('close', function () { if (d.isConnected) { d.remove(); if (onCancel) onCancel(); } }); document.getElementById('lgem').focus();
         document.getElementById('lgx').addEventListener('click', function () { d.remove(); if (onCancel) onCancel(); });
         f.addEventListener('submit', async function (e) {
             e.preventDefault(); const b = document.getElementById('lgok'); b.disabled = true; er.textContent = 'Masuk...';
@@ -2179,7 +2184,7 @@
     (function () {
         const st = document.createElement('style');
         st.textContent = '#sbpill{position:fixed;top:10px;right:12px;z-index:900;display:flex;align-items:center;gap:6px;font:600 12px/1 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#fff;color:#1f2d4d;border:1px solid #d5deee;border-radius:999px;padding:6px 6px 6px 11px;box-shadow:0 2px 8px rgba(20,40,80,.1)}#sbpill button{font:inherit;border:0;border-radius:999px;padding:5px 10px;cursor:pointer;background:#eef3ff;color:#1f4aa8}#sbpill button:hover{background:#dfe8ff}#sbpill i{width:7px;height:7px;border-radius:50%;background:#16a34a;display:inline-block}@media (max-width:640px){#sbpill{top:6px;right:8px;font-size:11px;padding:4px 4px 4px 9px}#sbpill button{padding:4px 8px}}@media print{#sbpill{display:none}}'
-            + '.lgbg{position:fixed;inset:0;z-index:2000;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;padding:16px}.lgbox{background:#fff;color:#1f2937;border-radius:14px;width:min(380px,100%);padding:20px;box-shadow:0 20px 50px rgba(0,0,0,.3);font-family:inherit}.lgbox h3{margin:0 0 4px;font-size:18px}.lgbox p{margin:0 0 12px;font-size:13px;color:#64748b}.lgbox label{display:block;font-size:12px;font-weight:600;margin:10px 0 4px}.lgbox input{width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px}.lgerr{color:#b91c1c;font-size:13px;min-height:18px;margin-top:8px}.lgact{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}.lgact button{border:1px solid #cbd5e1;background:#f8fafc;border-radius:8px;padding:8px 14px;font:inherit;font-size:13px;cursor:pointer}.lgact button.ok{background:#1f4aa8;border-color:#1f4aa8;color:#fff;font-weight:600}';
+            + '.lgbg{position:fixed;inset:0;z-index:2000;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;padding:16px}dialog.lgbg{border:0;margin:0;max-width:none;max-height:none;width:100%;height:100%;background:transparent;display:none;box-sizing:border-box}dialog.lgbg[open]{display:flex}dialog.lgbg::backdrop{background:rgba(15,23,42,.55);overflow:hidden;overscroll-behavior:contain}dialog.lgbg:modal{overscroll-behavior:contain}.lgbox{background:#fff;color:#1f2937;border-radius:14px;width:min(380px,100%);padding:20px;box-shadow:0 20px 50px rgba(0,0,0,.3);font-family:inherit}.lgbox h3{margin:0 0 4px;font-size:18px}.lgbox p{margin:0 0 12px;font-size:13px;color:#64748b}.lgbox label{display:block;font-size:12px;font-weight:600;margin:10px 0 4px}.lgbox input{width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px}.lgerr{color:#b91c1c;font-size:13px;min-height:18px;margin-top:8px}.lgact{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}.lgact button{border:1px solid #cbd5e1;background:#f8fafc;border-radius:8px;padding:8px 14px;font:inherit;font-size:13px;cursor:pointer}.lgact button.ok{background:#1f4aa8;border-color:#1f4aa8;color:#fff;font-weight:600}';
         document.head.appendChild(st);
     })();
     sbPill(); sbRefresh();
