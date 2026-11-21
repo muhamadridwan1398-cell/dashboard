@@ -2611,7 +2611,7 @@ function dRep(day){var fl=function(v){return (Math.floor(v*100)/100).toFixed(2)}
   var noScr=0;
   tiers.forEach(function(T,i){if(i&&tiers[i-1].length)L.push('','');L.push('T'+(i+1)+'='+T.length+(T.length?' MS':''));if(!T.length)return;
     var by={},ks=[];T.forEach(function(o){var c=(o.x.cu||'-').toUpperCase();if(!by[c]){by[c]=[];ks.push(c)}by[c].push(o)});
-    ks.forEach(function(c,ci){L.push(' '+(ci+1)+'. '+c+' ('+by[c].length+'MS)');by[c].forEach(function(o){L.push(o.x.np);var dd=o.z.dd||o.x.dd||'';if(dd)L.push(dd);if(!o.z.sc)noScr++})})});
+    ks.forEach(function(c,ci){L.push(' '+(ci+1)+'. '+c+' ('+by[c].length+'MS)');by[c].forEach(function(o){L.push(o.x.np);var dd=o.z.dd||o.x.dd||'';if(!dd&&o.z.r)dd=o.z.r+(o.z.d?' - '+o.z.d:'');if(dd)L.push(dd);if(!o.z.sc)noScr++})})});
   L.push('','');var nl=late.length;L.push('Bukti Chat = '+(!nl?'-':(noScr===0?'ADA':(noScr===nl?'TIDAK ADA':'SEBAGIAN ('+(nl-noScr)+' dari '+nl+')'))));
   return {text:L.join('\n'),pd:pd,ot:ot,late:nl,tg:tg}}
 function dRepEmpty(){var mx=null,mn=null;D.np.forEach(function(x){var e=dEP(x);if(!x.k||e==null)return;var dy=Math.floor(e/864e5);if(mx==null||dy>mx)mx=dy;if(mn==null||dy<mn)mn=dy});
@@ -2623,7 +2623,7 @@ function dRepHtml(){var day=DR.d!=null?DR.d:dRepDefault();if(day==null)return '<
     +'<div class="dslrk"><span><b>'+R.pd+'</b> PD</span><span><b>'+R.ot+'</b> OT</span><span><b>'+R.late+'</b> telat</span></div>'
     +(R.pd?'':dRepEmpty())+'<textarea id="dslrt" readonly rows="22" aria-label="Teks report">'+esc(R.text)+'</textarea>'
     +'<div style="display:flex;gap:8px;align-items:center;margin-top:8px"><button type="button" class="btn" data-dsl="copy">Salin teks</button><span class="sub" id="dslrm" style="margin:0"></span></div>'
-    +'<p class="sub" style="margin-top:10px">T1/T2/T3 = telat 1 hari / 2 hari / 3 hari atau lebih dari PDD (sampai tanggal close, atau hari ini kalau belum close). Teks di bawah nomor NP diambil dari kolom <b>Delivery Detail</b> di REASON LATE (atau NP NAV). NP berstatus Exclude = Y dihitung OT. Persen Sameday dan seterusnya adalah porsi dari NP yang OT.</p></div>'}
+    +'<p class="sub" style="margin-top:10px">T1/T2/T3 = telat 1 hari / 2 hari / 3 hari atau lebih dari PDD (sampai tanggal close, atau hari ini kalau belum close). Teks di bawah nomor NP diambil dari kolom <b>Delivery Detail</b> di REASON LATE (atau NP NAV); kalau kosong, dipakai <b>Reason Late Customer</b> beserta Keterangan Detailnya. NP berstatus Exclude = Y dihitung OT. Persen Sameday dan seterusnya adalah porsi dari NP yang OT.</p></div>'}
 function dDiff(pm){var mp={};D.np.forEach(function(x){mp[x.np]=x});var late=dLate(pm),ls={};late.forEach(function(x){ls[x.np]=1});
   var noRs=late.filter(function(x){var z=D.rs[x.np];return !(z&&z.r)}),extra=[];
   Object.keys(D.rs).forEach(function(np){var z=D.rs[np];if(z.x||!z.r||ls[np]||!z.m)return;if(((z.y||D.yr)*12+z.m-1)!==pm)return;var x=mp[np],why,st='';
