@@ -2574,10 +2574,30 @@ function dParseRs(rows){
   return out}
 function dGviz(gid){return 'https://docs.google.com/spreadsheets/d/'+DSL_ID+'/gviz/tq?tqx=out:csv&gid='+gid}
 function dFetch(url){return fetch(url,{cache:'no-store'}).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text()}).then(function(t){if(/^\s*<(!doctype|html)/i.test(t))throw new Error('Sheet belum bisa diakses publik (diminta login).');return dCsv(t)})}
+var DSURL='https://igkdetuufvcczmiluvqd.supabase.co/functions/v1/shared-data?name=dsl';
+function dShFetch(){if(DS.noShared||location.protocol==='file:')return Promise.resolve(null);
+  return fetch(DSURL,{cache:'no-store'}).then(function(r){return r.ok?r.json():null}).then(function(j){var d=j&&j.data;return d&&(d.np||d.rs)?{d:d,by:j.by}:null}).catch(function(){return null})}
 function dLoad(){
   D.st='loading';D.err='';
   var u1=DS.cfg.u1||dGviz(DSL_GNP),u2=DS.cfg.u2||dGviz(DSL_GRS);
-  return Promise.all([dFetch(u1),dFetch(u2)]).then(function(R){dApply(dParseNp(R[0]),dParseRs(R[1]),'Google Sheets')}).catch(function(e){D.st='err';D.err=(e&&e.message)||String(e);render()})}
+  return dShFetch().then(function(sh){
+    var d=sh&&sh.d,np=d&&d.np?dParseNp(d.np):null,rs=d&&d.rs?dParseRs(d.rs):null,need=[],src=[];
+    if(np)src.push('NP NAV upload '+((d.npMeta&&d.npMeta.name)||'')+' ('+fmtStamp((d.npMeta&&d.npMeta.at)||'')+')');else need.push(dFetch(u1).then(function(r){np=dParseNp(r)}));
+    if(rs)src.push('REASON LATE upload '+((d.rsMeta&&d.rsMeta.name)||'')+' ('+fmtStamp((d.rsMeta&&d.rsMeta.at)||'')+')');else need.push(dFetch(u2).then(function(r){rs=dParseRs(r)}));
+    return Promise.all(need).then(function(){D.shared=!!d;dApply(np,rs,d?'Tersimpan online: '+src.join(' + ')+(need.length?' · sisanya dari Google Sheets':''):'Google Sheets')})
+  }).catch(function(e){D.st='err';D.err=(e&&e.message)||String(e);render()})}
+function dShMsg(t,err){DS.msg=t;DS.msgErr=!!err;var el=document.getElementById('dslum');if(el){el.textContent=t;el.style.color=err?'#b42318':''}}
+function dShSave(p){
+  if(location.protocol==='file:'){dShMsg('Data hanya dimuat di browser ini. Buka dari alamat website agar tersimpan online.',true);return}
+  if(typeof CompressionStream==='undefined'){dShMsg('Browser belum mendukung simpan online. Pakai Chrome atau Edge terbaru.',true);return}
+  var pl={};if(p.np){pl.np=p.np.rows;pl.npMeta={name:p.np.name}}if(p.rs){pl.rs=p.rs.rows;pl.rsMeta={name:p.rs.name}}
+  if(!pl.np&&!pl.rs)return;
+  dShMsg('Data sudah dimuat di browser ini. Login admin/editor untuk menyimpannya online…');
+  sbAsk(function(tok){dShMsg('Menyimpan ke online…');
+    new Response(new Blob([JSON.stringify(pl)]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer()
+    .then(function(body){return fetch(DSURL,{method:'PUT',headers:{'Content-Type':'application/gzip','Authorization':'Bearer '+tok},body:body})})
+    .then(function(r){return r.json().catch(function(){return {}}).then(function(j){if(!r.ok)throw new Error(j.error||('Simpan gagal ('+r.status+').'));D.shared=true;dShMsg('Tersimpan online ('+fmtStamp(j.savedAt)+'). Semua pengguna memakai data ini sampai ada upload baru.');render()})})
+    .catch(function(e){dShMsg((e&&e.message)||'Gagal menyimpan online.',true)})})}
 function dApply(np,rs,src){
   D.np=np.list;D.rep=np.rep||0;D.hist=np.hist;D.rs=rs;D.src=src;D.at=new Date().toISOString();D.st='ok';
   var mx=0;D.np.forEach(function(x){if(x.pd!=null){var y=new Date(x.pd).getUTCFullYear();if(y>mx)mx=y}});if(mx)D.yr=mx;
@@ -2666,9 +2686,9 @@ function dDetailHtml(pm){var L=dDetailRows(pm),all=dLate(pm).length;
 function dslPanel(){
   if(D.st==='idle')dLoad();
   var h='<section class="panel full dsl" id="dslpanel"><div class="mph"><div><h2 style="font-size:16px;font-weight:800;margin:0">Delivery Service Level (DSL)</h2><p class="sub" style="margin:2px 0 0">Per nota unik, per bulan Promise Delivery Date, khusus NP Kirim (titip/Amsen tidak dihitung). Ach % = (Early + Ontime) ÷ semua NP.</p></div>'
-    +'<div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn ghost" data-dsl="reload">Muat ulang</button>'+(D.st==='ok'?'<button type="button" class="btn ghost" data-dsl="xl">Unduh Excel</button>':'')+'</div></div>';
+    +'<div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn ghost" data-dsl="reload">Muat ulang</button>'+(D.shared?'<button type="button" class="btn ghost" data-dsl="gs" title="Abaikan data upload tersimpan, baca langsung dari Google Sheets (hanya di browser ini)">Pakai Google Sheets</button>':'')+(D.st==='ok'?'<button type="button" class="btn ghost" data-dsl="xl">Unduh Excel</button>':'')+'</div></div>';
   var srcTxt=D.st==='ok'?'Sumber: <b>'+esc(D.src)+'</b> · dimuat '+esc(fmtStamp(D.at))+' · '+fmt(D.np.length)+' NP'+(D.rep?' · <span title="NP yang diposting lebih dari sekali dibaca dari posting terakhir saja (PDD dan status)">'+fmt(D.rep)+' NP diposting ulang, dipakai posting terakhir</span>':''):D.st==='loading'?'Memuat data dari Google Sheets…':'';
-  h+='<div class="dslsrc"><p class="dslsl">'+(srcTxt||'Belum ada data.')+'</p><div class="dslup"><label class="btn" title="File tab NP NAV (kolom NPNo, STATUS DSL, Promised Delivery Date), .xlsx atau .csv">⬆ Upload NP NAV<input type="file" id="dslf1" accept=".csv,.xlsx,.xls" hidden></label><label class="btn ghost" title="Opsional: file tab REASON LATE">⬆ Upload REASON LATE (opsional)<input type="file" id="dslf2" accept=".csv,.xlsx,.xls" hidden></label></div><p class="dslum" id="dslum">Cukup 1 file NP NAV. Kalau file berisi 2 tab, NP NAV dan REASON LATE dikenali otomatis. REASON LATE yang sudah ada tetap dipakai.</p></div>';
+  h+='<div class="dslsrc"><p class="dslsl">'+(srcTxt||'Belum ada data.')+'</p><div class="dslup"><label class="btn" title="File tab NP NAV (kolom NPNo, STATUS DSL, Promised Delivery Date), .xlsx atau .csv">⬆ Upload NP NAV<input type="file" id="dslf1" accept=".csv,.xlsx,.xls" hidden></label><label class="btn ghost" title="Opsional: file tab REASON LATE">⬆ Upload REASON LATE (opsional)<input type="file" id="dslf2" accept=".csv,.xlsx,.xls" hidden></label></div><p class="dslum" id="dslum"'+(DS.msgErr?' style="color:#b42318"':'')+'>'+esc(DS.msg||'Cukup 1 file NP NAV. Kalau file berisi 2 tab, NP NAV dan REASON LATE dikenali otomatis. Setelah upload dan login admin/editor, data tersimpan online untuk semua pengguna.')+'</p></div>';
   if(D.st==='err')h+='<div class="dslerr"><b>Data belum bisa dimuat.</b> '+esc(D.err)+'<br>Pastikan spreadsheet bisa dilihat siapa saja yang punya link, atau pakai link "Publikasikan ke web" / upload file di bawah.</div>';
   h+='<details class="dslset"'+(D.st==='err'?' open':'')+'><summary>Atur sumber data</summary><div class="dslgrid">'
     +'<label>Link CSV tab NP NAV (opsional)<input type="url" id="dslu1" placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?gid=467539596&single=true&output=csv" value="'+esc(DS.cfg.u1)+'"></label>'
@@ -2744,7 +2764,7 @@ document.addEventListener('change',function(e){var t=e.target;if(!t||!t.id)retur
       var np=pn?dParseNp(pn):(D.np&&D.np.length?{list:D.np,hist:D.hist,rep:D.rep}:null),rs=pr?dParseRs(pr):(D.rs&&Object.keys(D.rs).length?D.rs:null),need=[];
       if(!np)need.push(dFetch(DS.cfg.u1||dGviz(DSL_GNP)).then(function(r){np=dParseNp(r)}));
       if(!rs)need.push(dFetch(DS.cfg.u2||dGviz(DSL_GRS)).then(function(r){rs=dParseRs(r)}).catch(function(){rs={}}));
-      return Promise.all(need).then(function(){if(!np)throw new Error('Data NP NAV belum ada. Upload file NP NAV dulu.');dApply(np,rs||{},'File upload: '+f.name)})
+      return Promise.all(need).then(function(){if(!np)throw new Error('Data NP NAV belum ada. Upload file NP NAV dulu.');dApply(np,rs||{},'File upload: '+f.name);dShSave({np:pn?{rows:pn,name:f.name}:null,rs:pr?{rows:pr,name:f.name}:null})})
     }).catch(function(er){D.st='err';D.err=(er&&er.message)||'File tidak bisa dibaca.';render()});return}
   if(t.id==='dslrd'){var q=String(t.value||'').split('-');if(q.length===3){DR.d=Math.floor(Date.UTC(+q[0],+q[1]-1,+q[2])/864e5);render()}return}
   if(t.id==='dslorig'){DS.useOrig=t.checked;DS._o=null;DS.mon=null;DS.shown=100;render();return}
@@ -2762,7 +2782,8 @@ document.addEventListener('click',function(e){var b=e.target.closest&&e.target.c
   else if(k==='wk'){var q=+b.dataset.pm;DS.open[q]=!DS.open[q];render()}
   else if(k==='mon'){DS.mon=+b.dataset.pm;DS.shown=100;DS.rs='';DS.q='';render()}
   else if(k==='more'){DS.shown+=200;dDet()}
-  else if(k==='reload'){D.st='idle';render()}
+  else if(k==='reload'){DS.noShared=false;DS.msg='';D.st='idle';render()}
+  else if(k==='gs'){DS.noShared=true;DS.msg='';D.shared=false;D.st='idle';render()}
   else if(k==='save'){DS.cfg.u1=(document.getElementById('dslu1').value||'').trim();DS.cfg.u2=(document.getElementById('dslu2').value||'').trim();try{localStorage.setItem(DSL_KEY,JSON.stringify(DS.cfg))}catch(er){}D.st='idle';render()}
   else if(k==='xl'){try{dXl()}catch(er){say((er&&er.message)||'Gagal membuat Excel.',true)}}
   e.stopPropagation()},true);
