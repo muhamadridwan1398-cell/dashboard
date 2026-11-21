@@ -2614,11 +2614,14 @@ function dRep(day){var fl=function(v){return (Math.floor(v*100)/100).toFixed(2)}
     ks.forEach(function(c,ci){L.push(' '+(ci+1)+'. '+c+' ('+by[c].length+'MS)');by[c].forEach(function(o){L.push(o.x.np);var dd=o.z.dd||o.x.dd||'';if(dd)L.push(dd);if(!o.z.sc)noScr++})})});
   L.push('','');var nl=late.length;L.push('Bukti Chat = '+(!nl?'-':(noScr===0?'ADA':(noScr===nl?'TIDAK ADA':'SEBAGIAN ('+(nl-noScr)+' dari '+nl+')'))));
   return {text:L.join('\n'),pd:pd,ot:ot,late:nl,tg:tg}}
+function dRepEmpty(){var mx=null,mn=null;D.np.forEach(function(x){var e=dEP(x);if(!x.k||e==null)return;var dy=Math.floor(e/864e5);if(mx==null||dy>mx)mx=dy;if(mn==null||dy<mn)mn=dy});
+  var f=function(d){return new Date(d*864e5).toISOString().slice(0,10).split('-').reverse().join('/')};
+  return '<p class="empty" role="status" style="margin:8px 0;padding:10px 12px;border-radius:8px;background:#fff6e5;color:#7a4b00">Tidak ada NP Kirim dengan PDD tanggal ini.'+(mx!=null?' Data NP NAV yang sedang dimuat hanya mencakup PDD '+f(mn)+' sampai '+f(mx)+'. Kalau tanggal ini seharusnya ada, upload file NP NAV terbaru di kartu upload DSL.':'')+'</p>'}
 function dRepHtml(){var day=DR.d!=null?DR.d:dRepDefault();if(day==null)return '<p class="empty">Belum ada NP Kirim dengan tanggal PDD di data.</p>';DR.d=day;
   var iso=new Date(day*864e5).toISOString().slice(0,10),R=dRep(day);
   return '<div class="dslrep"><div class="dslrf"><label>Tanggal PDD<input type="date" id="dslrd" value="'+iso+'"></label><label>Sapaan (baris pertama)<input type="text" id="dslrn" placeholder="mis. Bu Novi Octarina SM" value="'+esc(DR.n)+'"></label><label>Nama toko<input type="text" id="dslrs" value="'+esc(DR.s)+'"></label></div>'
     +'<div class="dslrk"><span><b>'+R.pd+'</b> PD</span><span><b>'+R.ot+'</b> OT</span><span><b>'+R.late+'</b> telat</span></div>'
-    +'<textarea id="dslrt" readonly rows="22" aria-label="Teks report">'+esc(R.text)+'</textarea>'
+    +(R.pd?'':dRepEmpty())+'<textarea id="dslrt" readonly rows="22" aria-label="Teks report">'+esc(R.text)+'</textarea>'
     +'<div style="display:flex;gap:8px;align-items:center;margin-top:8px"><button type="button" class="btn" data-dsl="copy">Salin teks</button><span class="sub" id="dslrm" style="margin:0"></span></div>'
     +'<p class="sub" style="margin-top:10px">T1/T2/T3 = telat 1 hari / 2 hari / 3 hari atau lebih dari PDD (sampai tanggal close, atau hari ini kalau belum close). Teks di bawah nomor NP diambil dari kolom <b>Delivery Detail</b> di REASON LATE (atau NP NAV). NP berstatus Exclude = Y dihitung OT. Persen Sameday dan seterusnya adalah porsi dari NP yang OT.</p></div>'}
 function dDiff(pm){var mp={};D.np.forEach(function(x){mp[x.np]=x});var late=dLate(pm),ls={};late.forEach(function(x){ls[x.np]=1});
