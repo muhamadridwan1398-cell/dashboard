@@ -1210,6 +1210,8 @@
     const AWT_LIMIT = 30;
     /* Batas yang dipakai tampilan aktif: Cash & Carry via PND memakai 10 menit, tampilan lain 30 menit. */
     let awtLimitNow = AWT_LIMIT;
+    /* Cash & Carry via PND: batas 10 menit, kecuali item "Paid Before Process" / tinting yang memakai 30 menit (sama dengan kolom Status Late By Item di Excel). */
+    function pndLate(it) { if (typeof it.xl === 'boolean') return it.xl; return (Number(it.diffMin) || 0) > (it.tinting ? 30 : 10); }
     function limitFor(q) { return q === 'CCPND' ? 10 : AWT_LIMIT; }
     /* Semua tulisan "30 Min"/"30 Menit" di halaman mengikuti batas aktif (teks asli disimpan per node). */
     const limOrig = new WeakMap();
@@ -1229,7 +1231,7 @@
     function isCcPnd(t) { let n = String(t || '').toLowerCase().replace(/[^a-z]/g, ''); return n.indexOf('cashcarry') > -1 && n.indexOf('pickup') > -1 && n.indexOf('delivery') > -1; } /* tipe: "Cash&Carry via Pickup & Delivery" (PND) */
     function qvMatch(q, it) { return q === 'WHCC' ? (isWhArea(it.area) && isCcGudang(it.notaType)) : q === 'CCPND' ? isCcPnd(it.notaType) : true; }
     function qvHas(q, list) { return q === 'ALL' || list.some(function (it) { return q === 'WHCC' ? isCcGudang(it.notaType) : isCcPnd(it.notaType); }); }
-    const QV_NAME = { WHCC: 'WH Area dan tipe Cash & Carry Gudang', CCPND: 'tipe Cash & Carry via PND (Pickup & Delivery), semua area' };
+    const QV_NAME = { WHCC: 'WH Area dan tipe Cash & Carry Gudang', CCPND: 'tipe Cash & Carry via PND (batas AWT 10 menit, item Paid Before Process 30 menit; semua area)' };
     function isWhArea(a) { return String(a || '').toUpperCase().indexOf('WH') > -1; }
     function setQuickView(q) {
         if (!qvHas(q, fullItems)) {
@@ -1253,7 +1255,7 @@
         let qi = document.getElementById('quickInfo');
         if (qi) qi.textContent = quickView !== 'ALL' ? 'Menampilkan ' + QV_NAME[quickView] + ' saja (' + items.length + ' dari ' + allItems.length + ' item)' : '';
         items.forEach(function (it) {
-            it.late = (Number(it.diffMin) || 0) > awtLimitNow;
+            it.late = quickView === 'CCPND' ? pndLate(it) : (Number(it.diffMin) || 0) > awtLimitNow;
             it.status = it.late ? 'AWT' : 'NO AWT';
         });
         globalData = items;
@@ -1446,6 +1448,7 @@
                     diffMin: diff,
                     late: isLate,
                     tinting: isTintingItem,
+                    xl: isLate,
                     salper: salperCol !== -1 && row[salperCol] != null ? row[salperCol].toString().trim() : '',
                     status: statusStr
                 };
