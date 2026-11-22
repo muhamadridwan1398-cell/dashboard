@@ -199,7 +199,7 @@ html body:not(.capture-mode) #greySummaryGrid tfoot td:first-child{letter-spacin
 </style><link rel="manifest" href="../manifest.webmanifest"><meta name="theme-color" content="#14284b"><link rel="icon" type="image/svg+xml" href="../icons/icon.svg"><link rel="apple-touch-icon" href="../icons/apple-touch-icon.png"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Q-BIG"><meta name="apple-mobile-web-app-status-bar-style" content="default"></head><body><main class="wrap">
 <div class="top"><div><h1>Dashboard Akurasi WMS vs NAV</h1><div class="small" style="font-weight:700;margin:0 0 5px">Created Ridwan</div></div><div class="snapshot"><button id="screenshotMode" class="secondary" type="button" title="Langsung simpan tampilan akurasi sebagai gambar PNG">📷 Simpan gambar</button><button id="downloadScreenshot" type="button" hidden>Unduh PNG</button></div></div>
 <section class="panel upload-panel collapsed" id="uploadPanel"><div class="sectionhead"><div><h2>UPLOAD DATA</h2><div class="small up-desc">Gunakan dua laporan dengan site dan tanggal yang sama.</div></div><button id="uploadToggle" class="secondary" type="button" aria-expanded="false" aria-controls="uploadPanel">Buka ▾</button></div><div class="upload-grid"><div class="field"><label for="wmsUpload">Laporan WMS vs NAV (.xlsx)</label><input type="file" id="wmsUpload" accept=".xlsx"></div><div class="field"><label for="locationUpload">Stok per lokasi dan lot (.xlsx)</label><input type="file" id="locationUpload" accept=".xlsx"></div></div><div class="actions"><button id="applyUpload" disabled>Generate</button><button id="resetDemo" class="secondary">Gunakan data awal</button></div><div class="controls" style="margin-top:12px"><div class="field" hidden><button id="saveSharedData" type="button" hidden>Simpan data</button><button id="reloadSharedData" class="secondary" type="button">Ambil data terbaru</button><span id="sharedDataStatus" class="small">Data terbaru belum diperiksa.</span></div><div id="uploadMessage" class="small" style="margin-top:10px">Memakai data awal.</div><div id="lastUploadTime" class="small" style="margin-top:5px;color:var(--muted)">Waktu pembaruan tampil setelah data dimuat.</div><div id="uploadWarning" class="upload-warning" hidden></div></section>
-<nav class="page-tabs"><button id="tabMain" class="active" type="button">Tampilan utama</button><button id="tabDetails" type="button">Detail item OVER &amp; MINUS</button><button id="tabGrey" type="button">Progress lokasi Grey</button><button id="tabCC" type="button">Tools SO/CC</button><button id="tabSO" type="button">Cek Silang SO</button></nav><section class="panel" id="greyProgPanel" hidden></section>
+<nav class="page-tabs"><button id="tabMain" class="active" type="button">Tampilan utama</button><button id="tabDetails" type="button">Detail item OVER &amp; MINUS</button><button id="tabGrey" type="button">Progress lokasi Grey</button><button id="tabCC" type="button">Tools SO/CC</button><button id="tabSO" type="button">Cek Silang SO</button><button id="tabKD" type="button">Kontrol Daily</button></nav><section class="panel" id="greyProgPanel" hidden></section>
 <section class="panel" id="ccPanel" hidden>
 <div class="sectionhead"><div><h2>Tools SO/CC</h2><div class="small" id="ccSub">Bandingkan stok sistem (NAV + OTS NP) dengan Qty WMS (stok by lokasi) untuk item Cycle Count.</div></div><div class="controls"><button id="ccToggle" class="secondary" type="button">Upload data ▾</button></div></div>
 <div class="ccup" id="ccUp" hidden><label class="upall" id="ccAll" for="ccFAll"><b>Upload semua file sekaligus</b><span>Pilih atau tarik 1 sampai 9 file sekaligus. Jenis tiap file dikenali otomatis dari isinya.</span></label><input type="file" id="ccFAll" accept=".xlsx,.xls,.csv" multiple hidden><div class="small upallm" id="ccAllMsg"></div><div class="upg"><div class="upc" id="ccC_item"><div class="uph"><span class="upn">1</span><b>Item Cycle Count</b><em class="rq">Wajib</em></div><div class="upd">Daftar item yang kena CC</div><div class="ups" id="ccS_item"></div><label class="upz" for="ccFItem"><span>Pilih atau tarik file .xlsx ke sini</span><b id="ccP_item"></b></label><input type="file" id="ccFItem" accept=".xlsx,.xls" hidden></div><div class="upc" id="ccC_nav"><div class="uph"><span class="upn">2</span><b>Stok sistem NAV</b><em class="rq">Wajib</em></div><div class="upd">Laporan Stock Qty and Value</div><div class="ups" id="ccS_nav"></div><label class="upz" for="ccFNav"><span>Pilih atau tarik file .xlsx ke sini</span><b id="ccP_nav"></b></label><input type="file" id="ccFNav" accept=".xlsx,.xls" hidden></div><div class="upc" id="ccC_loc"><div class="uph"><span class="upn">3</span><b>Stok fisik WMS</b><em class="rq">Wajib</em></div><div class="upd">Stock Warehouse By Location (SWBL)</div><div class="ups" id="ccS_loc"></div><label class="upz" for="ccFLoc"><span>Pilih atau tarik file .xlsx ke sini</span><b id="ccP_loc"></b></label><input type="file" id="ccFLoc" accept=".xlsx,.xls" hidden></div><div class="upc" id="ccC_ots"><div class="uph"><span class="upn">4</span><b>OTS NP</b><em class="op">Opsional</em></div><div class="upd">Outstanding Nota Penjualan WMS dan NAV</div><div class="ups" id="ccS_ots"></div><label class="upz" for="ccFOts"><span>Pilih atau tarik file .xlsx ke sini</span><b id="ccP_ots"></b></label><input type="file" id="ccFOts" accept=".xlsx,.xls" hidden><button class="upx secondary" type="button" data-x="ots" hidden>Hapus data OTS NP</button></div><div class="upc" id="ccC_bb"><div class="uph"><span class="upn">5</span><b>OTS BB</b><em class="op">Opsional</em></div><div class="upd">Outstanding Failed Delivery TMS</div><div class="ups" id="ccS_bb"></div><label class="upz" for="ccFBb"><span>Pilih atau tarik file .xlsx ke sini</span><b id="ccP_bb"></b></label><input type="file" id="ccFBb" accept=".xlsx,.xls" hidden><button class="upx secondary" type="button" data-x="bb" hidden>Hapus data OTS BB</button></div><div class="upc" id="ccC_cnc"><div class="uph"><span class="upn">6</span><b>OTS DR</b><em class="op">Opsional</em></div><div class="upd">Outstanding Cash&amp;Carry via Gudang Store</div><div class="ups" id="ccS_cnc"></div><label class="upz" for="ccFCnc"><span>Pilih atau tarik file .xlsx ke sini</span><b id="ccP_cnc"></b></label><input type="file" id="ccFCnc" accept=".xlsx,.xls" hidden><button class="upx secondary" type="button" data-x="cnc" hidden>Hapus data OTS DR</button></div><div class="upc" id="ccC_sal"><div class="uph"><span class="upn">7</span><b>Penjualan</b><em class="op">Opsional</em></div><div class="upd">Sales Detail Report (.csv), mengurangi Qty Sistem</div><div class="ups" id="ccS_sal"></div><label class="upz" for="ccFSal"><span>Pilih atau tarik file .csv ke sini</span><b id="ccP_sal"></b></label><input type="file" id="ccFSal" accept=".csv,.xlsx,.xls" hidden><button class="upx secondary" type="button" data-x="sal" hidden>Hapus data penjualan</button></div><div class="upc" id="ccC_inb"><div class="uph"><span class="upn">8</span><b>Barang masuk</b><em class="op">Opsional</em></div><div class="upd">Report Reconcile Inbound (kolom Qty Rec), menambah Qty Sistem</div><div class="ups" id="ccS_inb"></div><label class="upz" for="ccFInb"><span>Pilih atau tarik file .xlsx ke sini</span><b id="ccP_inb"></b></label><input type="file" id="ccFInb" accept=".xlsx,.xls,.csv" hidden><button class="upx secondary" type="button" data-x="inb" hidden>Hapus data barang masuk</button></div><div class="upc" id="ccC_dmg"><div class="uph"><span class="upn">9</span><b>Damage</b><em class="op">Opsional</em></div><div class="upd">Report Adjust Breakage WMS (kolom Final Qty Adjust), damage yang belum di-adjust minus di NAV, mengurangi Qty Sistem</div><div class="ups" id="ccS_dmg"></div><label class="upz" for="ccFDmg"><span>Pilih atau tarik file .xlsx ke sini</span><b id="ccP_dmg"></b></label><input type="file" id="ccFDmg" accept=".xlsx,.xls,.csv" hidden><button class="upx secondary" type="button" data-x="dmg" hidden>Hapus data damage</button></div></div><div class="actions upa"><button id="ccGo" disabled>Generate</button><button id="ccClear" class="secondary" type="button">Hapus semua data</button><span class="small" id="ccHint"></span></div></div>
@@ -230,6 +230,12 @@ html body:not(.capture-mode) #greySummaryGrid tfoot td:first-child{letter-spacin
 <div class="ccwrap" style="max-height:74vh;overflow:auto"><table class="cct" id="soTab"></table></div>
 <details class="cc-ket"><summary>Keterangan</summary><div class="small" id="soNote"></div></details>
 </div></section>
+<section class="panel" id="kdPanel" hidden>
+<div class="sectionhead"><div><h2>Kontrol Daily Akurasi Gudang</h2><div class="small" id="kdSub">Tugas harian per lokasi untuk setiap PIC. TL dan Manager memantau progres.</div></div><div class="controls"><span id="kdWho" class="small"></span><button id="kdOut" class="secondary" type="button" hidden>Keluar</button><button id="kdAdmBtn" class="secondary" type="button">Pengaturan PIC</button></div></div>
+<div id="kdMsg" class="small" style="margin:6px 0"></div>
+<div id="kdAdm" hidden></div>
+<div id="kdBody"></div>
+</section>
 
 
 <section class="panel" id="accuracyPanel"><div class="sectionhead"><div><h2>Akurasi WMS vs NAV per Category</h2><div class="small">Akurasi = HIT ÷ total item.</div></div><div class="controls"><div class="field" style="max-width:210px;min-width:170px"><label for="consignFilter">Item Consign</label><select id="consignFilter"><option value="NO" selected>NO</option><option value="YES">YES</option></select></div><div class="field" style="max-width:300px;min-width:230px"><label>Category</label><details class="category-picker"><summary id="accuracyCategorySummary">Semua category</summary><label class="category-option"><input type="checkbox" id="accuracyCategoryAll" checked><span>Semua category</span></label><div id="accuracyCategoryOptions"></div></details></div></div></div><div class="cards" id="accuracyCards"></div><div class="monitor-tables"><section><h2>Ringkasan per Category</h2><div class="grid" id="accuracyGrid"></div></section><section><h2>Ringkasan per Zona</h2><div class="grid" id="zoneAccuracyGrid"></div></section></div><div class="score-head"><h2 class="score-heading">BY CATEGORY</h2><details class="category-picker score-filter"><summary id="displayCategorySummary">Semua category</summary><label class="category-option"><input type="checkbox" id="displayCategoryAll" checked><span>Semua category</span></label><div id="displayCategoryOptions"></div></details></div><div class="score-cards" id="categoryScoreCards"></div><div class="score-head"><h2 class="score-heading">BY ZONASI</h2><details class="category-picker score-filter"><summary id="displayZoneSummary">Semua zona</summary><label class="category-option"><input type="checkbox" id="displayZoneAll" checked><span>Semua zona</span></label><div id="displayZoneOptions"></div></details></div><div class="score-cards zone-scores" id="zoneScoreCards"></div><section class="panel" id="greySummaryPanel"><div class="sectionhead"><h2>Qty lokasi Grey per Category</h2><span class="small">Jumlah Available Qty per lokasi</span></div><div class="grid" id="greySummaryGrid"></div></section></section>
@@ -546,7 +552,7 @@ function sbAsk(cb){
   sbRefresh().then(ok=>{if(ok){cb(_tok);return}sbDlg(cb)})
 }
 sbPill();sbRefresh();
-window.__shr={put:function(name,obj){return new Promise(function(ok,no){if(location.protocol==='file:')return no(new Error('Buka dari alamat website agar tersimpan untuk semua orang.'));sbAsk(function(tok){var st=new Blob([JSON.stringify(obj)]).stream().pipeThrough(new CompressionStream('gzip'));new Response(st).arrayBuffer().then(function(body){return fetch(SHARED_API+'?name='+name,{method:'PUT',headers:{'Content-Type':'application/gzip','Authorization':'Bearer '+tok},body:body})}).then(function(r){return r.json().catch(function(){return{}}).then(function(j){if(!r.ok)throw new Error(j.error||('Simpan gagal ('+r.status+').'));ok(j)})}).catch(no)})})},
+window.__sbAsk=sbAsk;window.__shr={put:function(name,obj){return new Promise(function(ok,no){if(location.protocol==='file:')return no(new Error('Buka dari alamat website agar tersimpan untuk semua orang.'));sbAsk(function(tok){var st=new Blob([JSON.stringify(obj)]).stream().pipeThrough(new CompressionStream('gzip'));new Response(st).arrayBuffer().then(function(body){return fetch(SHARED_API+'?name='+name,{method:'PUT',headers:{'Content-Type':'application/gzip','Authorization':'Bearer '+tok},body:body})}).then(function(r){return r.json().catch(function(){return{}}).then(function(j){if(!r.ok)throw new Error(j.error||('Simpan gagal ('+r.status+').'));ok(j)})}).catch(no)})})},
 get:function(name){return fetch(SHARED_API+'?name='+name,{cache:'no-store'}).then(function(r){if(!r.ok)return null;return r.json()}).then(function(j){return j&&j.data?j:null}).catch(function(){return null})}};
 function sbDlg(cb){
   const old=document.getElementById('lgdlg');if(old)old.remove();
@@ -1333,7 +1339,189 @@ function wire(){initMP();
 }
 wire();
 })();
-</script><script src="../pwa.js" defer></script>
+</script><style id="kd-style">
+#kdPanel .kdlogin{max-width:380px;margin:18px auto;padding:18px;border:1px solid var(--line);border-radius:12px;background:#fff;display:grid;gap:10px}
+#kdPanel .kdlogin input,#kdPanel .kdadm input,#kdPanel .kdadm select{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:9px;font-size:16px}
+#kdPanel .kdlogin button,#kdPanel .kdadm button{padding:11px 14px}
+#kdPanel .kdchips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+#kdPanel .kdchip{border:1px solid var(--line);background:#fff;color:#46566b;border-radius:999px;padding:7px 14px;font-weight:700;cursor:pointer}
+#kdPanel .kdchip.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+#kdPanel .kdchip small{font-weight:600;opacity:.8;margin-left:4px}
+#kdPanel .kdkpi{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0 12px}
+#kdPanel .kdk{flex:1 1 130px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:#fff}
+#kdPanel .kdk b{display:block;font-size:22px;line-height:1.1;color:var(--navy)}#kdPanel .kdk span{font-size:11px;color:var(--muted)}
+#kdPanel .kdbar{height:9px;background:#e6ecf2;border-radius:99px;overflow:hidden;min-width:90px}
+#kdPanel .kdbar i{display:block;height:100%;background:var(--green);border-radius:99px}
+#kdPanel .kdbar.lo i{background:var(--red)}#kdPanel .kdbar.mid i{background:var(--amber)}
+#kdPanel .kdcard{border:1px solid var(--line);border-radius:10px;background:#fff;margin:8px 0;padding:10px 12px}
+#kdPanel .kdcard.ok{background:#f1f9f4;border-color:#bfe0cb}
+#kdPanel .kdh{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+#kdPanel .kdh b{font-size:16px;letter-spacing:.3px}#kdPanel .kdh .sp{flex:1;color:var(--muted);font-size:12px}
+#kdPanel .kdcard details{margin-top:6px}#kdPanel .kdcard summary{cursor:pointer;color:#356b97;font-size:12px}
+#kdPanel .kdcard table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}
+#kdPanel .kdcard td,#kdPanel .kdcard th{padding:4px 6px;border-bottom:1px solid #edf1f5;text-align:left}#kdPanel .kdcard td.n{text-align:right}
+#kdPanel .kdgo{background:var(--green);color:#fff;border:0;border-radius:9px;padding:10px 16px;font-weight:700;cursor:pointer}
+#kdPanel .kdgo.undo{background:#eef2f6;color:#46566b}
+#kdPanel .kdtools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
+#kdPanel table.kdt{width:100%;border-collapse:collapse;font-size:13px}
+#kdPanel table.kdt th{background:var(--navy);color:#fff;padding:8px 10px;text-align:left;white-space:nowrap}
+#kdPanel table.kdt td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+#kdPanel table.kdt tr.pr{cursor:pointer}#kdPanel table.kdt tr.pr:hover td{background:#f4f7fa}
+#kdPanel .kdst{display:inline-block;border-radius:99px;padding:2px 10px;font-size:11.5px;font-weight:700}
+#kdPanel .kdst.s0{background:#fde8e8;color:#a94c4c}#kdPanel .kdst.s1{background:#fff3d6;color:#8a6414}#kdPanel .kdst.s2{background:#dff3e6;color:#2f6b49}#kdPanel .kdst.s3{background:#eef2f6;color:#6d7b88}
+#kdPanel .kdlocs{display:flex;flex-wrap:wrap;gap:5px;padding:6px 2px}
+#kdPanel .kdlocs span{font-size:11.5px;border:1px solid var(--line);border-radius:6px;padding:2px 7px;background:#fff}#kdPanel .kdlocs span.d{background:#dff3e6;border-color:#bfe0cb}
+#kdPanel .kdadm{border:1px solid var(--line);border-radius:10px;padding:12px;margin:8px 0 14px;background:#fafcfd;display:grid;gap:12px}
+#kdPanel .kdadm h3{margin:0;font-size:14px}
+#kdPanel .kdrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}#kdPanel .kdrow>*{flex:1 1 150px}#kdPanel .kdrow>button{flex:0 0 auto}
+#kdPanel .kdpin{font-family:ui-monospace,Consolas,monospace;font-weight:700}
+@media(max-width:640px){#kdPanel .kdgo{width:100%}#kdPanel table.kdt{font-size:12px}}
+</style><script>(function(){
+var $=function(i){return document.getElementById(i)};
+var API='https://igkdetuufvcczmiluvqd.supabase.co/functions/v1/pic-daily',CCKEY='qbig_cc_v1',AUTHK='qbig_kd_auth',XLU='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+var A=null,MAP={},DONE={},DONEROWS=[],CCD=null,DAY='',FIL='todo',TMR=null,OPEN={},BUSY=false,ADM=false;
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function say(t,err){var m=$('kdMsg');if(!m)return;m.textContent=t||'';m.style.color=err?'#a94c4c':'#46566b'}
+function call(op,body,tok){var h={'Content-Type':'application/json'};if(tok)h.Authorization='Bearer '+tok;
+  return fetch(API,{method:'POST',headers:h,body:JSON.stringify(Object.assign({op:op},body||{}))}).then(function(r){return r.json().catch(function(){return{}}).then(function(j){if(!r.ok)throw new Error(j.error||('Gagal ('+r.status+')'));return j})})}
+function ucall(op,body){return call(op,Object.assign({name:A.name,pin:A.pin},body||{}))}
+function adm(op,body){return new Promise(function(ok,no){if(typeof window.__sbAsk!=='function')return no(new Error('Login editor belum tersedia di halaman ini.'));window.__sbAsk(function(tok){call(op,body,tok).then(ok,no)})})}
+function fmt(n){return new Intl.NumberFormat('id-ID',{maximumFractionDigits:2}).format(n)}
+function hhmm(iso){try{return new Intl.DateTimeFormat('id-ID',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'Asia/Jakarta',hourCycle:'h23'}).format(new Date(iso))}catch(e){return ''}}
+function numSort(a,b){var x=parseFloat(a),y=parseFloat(b);return (isNaN(x)||isNaN(y))?String(a).localeCompare(String(b),'en',{numeric:true}):x-y}
+
+/* ---------- data CC (tugas) ---------- */
+function loadCC(force){
+  var local=function(){try{var d=JSON.parse(localStorage.getItem(CCKEY)||'null');if(d&&d.items&&d.items.length)return d}catch(e){}return null};
+  if(window.__shr&&(force||!CCD)){return window.__shr.get('cc').then(function(j){var d=j&&j.data;if(d&&d.items&&d.items.length){CCD=d;return}CCD=local()}).catch(function(){CCD=local()})}
+  if(!CCD)CCD=local();return Promise.resolve()}
+function taskDays(){
+  var T={},NP={};if(!CCD)return {T:T,NP:NP};
+  CCD.items.forEach(function(x){var d=String(x.day==null?'':x.day).trim();if(!d)return;
+    (x.locs||[]).forEach(function(l){var loc=String(l[0]||'').toUpperCase(),q=+l[1]||0;if(!loc||q<=0)return;var pic=MAP[loc];
+      if(!pic){if(loc.charAt(0)==='W'){(NP[d]||(NP[d]={}))[loc]=1}return}
+      var o=(T[d]||(T[d]={}))[loc]||(T[d][loc]={pic:pic,items:[],q:0});o.items.push({c:x.code||x.k||'',n:x.name||'',q:q,u:x.uom||''});o.q+=q})});
+  return {T:T,NP:NP}}
+
+/* ---------- login ---------- */
+function saveAuth(){try{sessionStorage.setItem(AUTHK,JSON.stringify(A))}catch(e){}}
+function restoreAuth(){try{var a=JSON.parse(sessionStorage.getItem(AUTHK)||'null');if(a&&a.name&&a.pin&&a.role)A=a}catch(e){}}
+function loginView(){
+  $('kdBody').innerHTML='<div class="kdlogin"><b>Masuk</b><div class="small">Pakai nama dan PIN dari tim akurasi.</div><input id="kdN" placeholder="Nama (mis. HASBI)" autocomplete="username"><input id="kdP" type="password" inputmode="numeric" placeholder="PIN" autocomplete="current-password"><button id="kdLg" type="button">Masuk</button></div>';
+  var go=function(){var n=$('kdN').value.trim(),p=$('kdP').value.trim();if(!n||!p){say('Isi nama dan PIN.',1);return}
+    $('kdLg').disabled=true;say('Memeriksa…');call('login',{name:n,pin:p}).then(function(j){A={name:j.name,pin:p,role:j.role};saveAuth();say('');start()}).catch(function(e){say(e.message,1)}).finally(function(){var b=$('kdLg');if(b)b.disabled=false})};
+  $('kdLg').addEventListener('click',go);$('kdP').addEventListener('keydown',function(e){if(e.key==='Enter')go()});$('kdN').addEventListener('keydown',function(e){if(e.key==='Enter')$('kdP').focus()})}
+function topbar(){var w=$('kdWho'),o=$('kdOut');if(A){w.textContent=A.name+' · '+({pic:'PIC',tl:'Tim Leader',manager:'Manager'}[A.role]||A.role);o.hidden=false}else{w.textContent='';o.hidden=true}}
+
+/* ---------- muat data ---------- */
+function refresh(quiet){
+  if(!A||BUSY)return Promise.resolve();BUSY=true;
+  return Promise.all([ucall('map'),loadCC()]).then(function(r){MAP={};(r[0].map||[]).forEach(function(x){MAP[x[0]]=x[1]});
+    var td=taskDays(),ds=Object.keys(td.T).sort(numSort);
+    return ucall('done_get',{days:ds}).then(function(j){
+      DONE={};DONEROWS=j.done||[];DONEROWS.forEach(function(x){DONE[x[0]+'|'+x[1]]={pic:x[2],note:x[3],t:x[4]}});
+      if(!DAY||ds.indexOf(DAY)<0)DAY=pickDay(td,ds);render()})}).catch(function(e){
+    if(/Nama atau PIN/.test(e.message)){A=null;try{sessionStorage.removeItem(AUTHK)}catch(x){}topbar();loginView()}
+    say(quiet?'Gagal memuat ulang: '+e.message:e.message,1)}).finally(function(){BUSY=false})}
+function pickDay(td,ds){for(var i=0;i<ds.length;i++){var L=td.T[ds[i]],ks=Object.keys(L).filter(function(k){return A.role!=='pic'||L[k].pic===A.name});if(ks.some(function(k){return!DONE[ds[i]+'|'+k]}))return ds[i]}return ds[ds.length-1]||''}
+
+/* ---------- tampilan ---------- */
+function bar(p){return '<div class="kdbar '+(p>=100?'':(p>=60?'mid':'lo'))+'"><i style="width:'+Math.min(100,p)+'%"></i></div>'}
+function chips(td,ds){return '<div class="kdchips">'+ds.map(function(d){var L=td.T[d],ks=Object.keys(L).filter(function(k){return A.role!=='pic'||L[k].pic===A.name}),dn=ks.filter(function(k){return DONE[d+'|'+k]}).length;
+  return '<button type="button" class="kdchip'+(d===DAY?' on':'')+'" data-day="'+esc(d)+'">Hari ke-'+esc(d)+'<small>'+dn+'/'+ks.length+'</small></button>'}).join('')+'</div>'}
+function render(){
+  topbar();if(!A){loginView();return}
+  var td=taskDays(),ds=Object.keys(td.T).sort(numSort);
+  if(!CCD||!ds.length){$('kdBody').innerHTML='<div class="small" style="padding:14px">Belum ada tugas. Data item Cycle Count dengan kolom Hari ke- belum diupload di tab Tools SO/CC, atau lokasinya belum punya PIC.</div>';return}
+  if(!DAY||ds.indexOf(DAY)<0)DAY=pickDay(td,ds);
+  $('kdBody').innerHTML=chips(td,ds)+(A.role==='pic'?picView(td):leadView(td));
+  $('kdSub').textContent=A.role==='pic'?'Lokasi yang harus Anda cek. Tekan Sudah dicek setelah selesai.':'Progres pengerjaan akurasi daily per PIC.'}
+function picView(td){
+  var L=td.T[DAY]||{},ks=Object.keys(L).filter(function(k){return L[k].pic===A.name}).sort(numSort);
+  var dn=ks.filter(function(k){return DONE[DAY+'|'+k]}).length,pc=ks.length?Math.round(dn/ks.length*100):0;
+  var show=ks.filter(function(k){return FIL==='all'||!DONE[DAY+'|'+k]});
+  var h='<div class="kdkpi"><div class="kdk"><b>'+dn+' / '+ks.length+'</b><span>lokasi selesai (Hari ke-'+esc(DAY)+')</span></div><div class="kdk"><b>'+pc+'%</b><span>progres</span>'+bar(pc)+'</div><div class="kdk"><b>'+(ks.length-dn)+'</b><span>lokasi belum dicek</span></div></div>';
+  h+='<div class="kdtools"><button class="secondary" data-fil="todo" type="button">Belum dicek</button><button class="secondary" data-fil="all" type="button">Semua</button><span class="small">Tampil: '+(FIL==='all'?'semua':'belum dicek')+' ('+show.length+')</span>'+(show.length&&FIL!=='all'?'<button class="secondary" id="kdAll" type="button">Tandai semua yang tampil sudah dicek</button>':'')+'</div>';
+  if(!ks.length)h+='<div class="small">Tidak ada lokasi untuk Anda di Hari ke-'+esc(DAY)+'.</div>';
+  else if(!show.length)h+='<div class="kdcard ok"><b>Semua lokasi Hari ke-'+esc(DAY)+' sudah dicek. Terima kasih.</b></div>';
+  return h+show.map(function(k){var o=L[k],d=DONE[DAY+'|'+k];
+    return '<div class="kdcard'+(d?' ok':'')+'" data-loc="'+esc(k)+'"><div class="kdh"><b>'+esc(k)+'</b><span class="sp">'+o.items.length+' item · qty WMS '+fmt(o.q)+(d?' · selesai '+esc(hhmm(d.t)):'')+'</span><button type="button" class="kdgo'+(d?' undo':'')+'" data-mark="'+(d?'0':'1')+'">'+(d?'Batalkan':'Sudah dicek')+'</button></div>'+
+      '<details'+(OPEN[k]?' open':'')+'><summary>Lihat item ('+o.items.length+')</summary><table><thead><tr><th>Kode</th><th>Nama item</th><th class="n">Qty WMS</th></tr></thead><tbody>'+o.items.map(function(i){return '<tr><td>'+esc(i.c)+'</td><td>'+esc(i.n)+'</td><td class="n">'+fmt(i.q)+' '+esc(i.u)+'</td></tr>'}).join('')+'</tbody></table></details></div>'}).join('')}
+function leadStats(td){
+  var L=td.T[DAY]||{},P={};
+  Object.keys(L).forEach(function(k){var o=L[k],p=P[o.pic]||(P[o.pic]={pic:o.pic,locs:[],done:0,last:''});var d=DONE[DAY+'|'+k];p.locs.push({loc:k,d:d});if(d){p.done++;if(d.t>p.last)p.last=d.t}});
+  var arr=Object.keys(P).map(function(k){var p=P[k];p.n=p.locs.length;p.pc=p.n?Math.round(p.done/p.n*100):0;p.s=p.done===0?0:(p.done<p.n?1:2);return p});
+  arr.sort(function(a,b){return a.s-b.s||a.pc-b.pc||a.pic.localeCompare(b.pic)});return arr}
+function leadView(td){
+  var arr=leadStats(td),tot=0,dn=0,full=0;arr.forEach(function(p){tot+=p.n;dn+=p.done;if(p.s===2)full++});
+  var pc=tot?Math.round(dn/tot*100):0,np=Object.keys(td.NP[DAY]||{}).length,stl=['Belum mulai','Sedang jalan','Selesai'];
+  var h='<div class="kdkpi"><div class="kdk"><b>'+pc+'%</b><span>progres lokasi (Hari ke-'+esc(DAY)+')</span>'+bar(pc)+'</div><div class="kdk"><b>'+dn+' / '+tot+'</b><span>lokasi selesai</span></div><div class="kdk"><b>'+full+' / '+arr.length+'</b><span>PIC selesai 100%</span></div><div class="kdk"><b>'+arr.filter(function(p){return p.s===0}).length+'</b><span>PIC belum mulai</span></div></div>';
+  h+='<div class="kdtools"><button class="secondary" id="kdCopy" type="button">Salin ringkasan WA</button>'+(np?'<span class="small">'+np+' lokasi W di Hari ke-'+esc(DAY)+' belum punya PIC di daftar.</span>':'')+'<span class="small">Klik baris PIC untuk melihat lokasinya. Diperbarui otomatis tiap 45 detik.</span></div>';
+  h+='<div class="ccwrap" style="overflow-x:auto"><table class="kdt"><thead><tr><th>PIC</th><th>Lokasi</th><th>Selesai</th><th>Progres</th><th>Status</th><th>Terakhir</th></tr></thead><tbody>'+arr.map(function(p){
+    return '<tr class="pr" data-pic="'+esc(p.pic)+'"><td><b>'+esc(p.pic)+'</b></td><td>'+p.n+'</td><td>'+p.done+'</td><td style="min-width:130px">'+bar(p.pc)+'<span class="small">'+p.pc+'%</span></td><td><span class="kdst s'+p.s+'">'+stl[p.s]+'</span></td><td class="small">'+(p.last?esc(hhmm(p.last)):'–')+'</td></tr>'+
+    (OPEN['p:'+p.pic]?'<tr><td colspan="6"><div class="kdlocs">'+p.locs.map(function(l){return '<span class="'+(l.d?'d':'')+'" title="'+(l.d?esc(hhmm(l.d.t)+(l.d.note?' · '+l.d.note:'')):'Belum dicek')+'">'+esc(l.loc)+(l.d?' ✓':'')+'</span>'}).join('')+'</div></td></tr>':'')}).join('')+'</tbody></table></div>';
+  return h}
+function summaryText(){
+  var td=taskDays(),arr=leadStats(td),tot=0,dn=0;arr.forEach(function(p){tot+=p.n;dn+=p.done});
+  var t='Progres Akurasi Daily - Hari ke-'+DAY+'\nTotal: '+dn+'/'+tot+' lokasi ('+(tot?Math.round(dn/tot*100):0)+'%)\n';
+  arr.forEach(function(p){t+='\n'+(p.s===2?'[OK] ':(p.s===1?'[..] ':'[  ] '))+p.pic+': '+p.done+'/'+p.n+' ('+p.pc+'%)'});return t}
+
+/* ---------- aksi ---------- */
+function mark(locs,done,note){
+  locs.forEach(function(l){if(done)DONE[DAY+'|'+l]={pic:MAP[l]||'',note:note||'',t:new Date().toISOString()};else delete DONE[DAY+'|'+l]});render();
+  return ucall('done_set',{day:DAY,locs:locs,done:done,note:note||''}).then(function(){say(done?'Tersimpan.':'Dibatalkan.')}).catch(function(e){say(e.message,1);return refresh(1)})}
+$('kdBody').addEventListener('click',function(e){
+  var t=e.target;var c=t.closest('[data-day]');if(c){DAY=c.dataset.day;render();return}
+  c=t.closest('[data-fil]');if(c){FIL=c.dataset.fil;render();return}
+  c=t.closest('[data-mark]');if(c){var card=c.closest('[data-loc]');mark([card.dataset.loc],c.dataset.mark==='1');return}
+  if(t.id==='kdAll'){if(t.dataset.ok!=='1'){t.dataset.ok='1';t.textContent='Yakin? Tekan lagi untuk menandai semua';setTimeout(function(){if(t&&t.isConnected){t.dataset.ok='';t.textContent='Tandai semua yang tampil sudah dicek'}},4000);return}
+    var td=taskDays(),L=td.T[DAY]||{},ks=Object.keys(L).filter(function(k){return L[k].pic===A.name&&!DONE[DAY+'|'+k]});if(ks.length)mark(ks,true);return}
+  if(t.id==='kdCopy'){var s=summaryText();(navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(s):Promise.reject()).then(function(){say('Ringkasan disalin. Tempel di WhatsApp.')}).catch(function(){say('Salin otomatis gagal. Ringkasan ada di bawah.',1);var p=document.createElement('pre');p.textContent=s;$('kdBody').appendChild(p)});return}
+  c=t.closest('tr[data-pic]');if(c){var k='p:'+c.dataset.pic;OPEN[k]=!OPEN[k];render();return}
+  var d=t.closest('details');if(d&&t.closest('summary')){var card2=d.closest('[data-loc]');if(card2)OPEN[card2.dataset.loc]=!d.open}});
+$('kdOut').addEventListener('click',function(){A=null;try{sessionStorage.removeItem(AUTHK)}catch(e){}stopTimer();topbar();say('');loginView()});
+
+/* ---------- pengaturan (editor) ---------- */
+function ensureXL(){return new Promise(function(ok,no){if(window.XLSX)return ok();var s=document.createElement('script');s.integrity='sha384-vtjasyidUo0kW94K5MXDXntzOJpQgBKXmE7e2Ga4LG0skTTLeBi97eFAXsqewJjw';s.crossOrigin='anonymous';s.src=XLU;s.onload=function(){ok()};s.onerror=function(){no(new Error('Gagal memuat pembaca Excel.'))};document.head.appendChild(s)})}
+function pinTable(list){return '<table class="kdt"><thead><tr><th>Nama</th><th>Peran</th><th>PIN</th></tr></thead><tbody>'+list.map(function(u){return '<tr><td>'+esc(u.name)+'</td><td>'+esc(u.role)+'</td><td class="kdpin">'+esc(u.pin)+'</td></tr>'}).join('')+'</tbody></table><div class="small">PIN hanya tampil sekarang. Salin dan bagikan ke masing-masing orang.</div><button class="secondary" type="button" data-copy="'+esc(list.map(function(u){return u.name+'\t'+u.pin}).join('\n'))+'">Salin daftar PIN</button>'}
+function admView(){
+  Promise.all([adm('users_list'),adm('map_pics')]).then(function(r){
+    var us=r[0].users||[],pics=r[1].pics||{},names=Object.keys(pics).sort(),have={};us.forEach(function(u){have[u.name]=u});
+    var missing=names.filter(function(n){return!have[n]});
+    $('kdAdm').innerHTML='<div class="kdadm"><h3>1. Daftar PIC per lokasi</h3><div class="small">'+(names.length?names.length+' PIC, '+names.reduce(function(a,n){return a+pics[n]},0)+' lokasi tersimpan.':'Belum ada daftar.')+' Upload file Excel dengan kolom Storage Location Id dan Pic Name. Daftar lama diganti.</div><div class="kdrow"><input type="file" id="kdFile" accept=".xlsx,.xls"></div></div>'+
+    '<div class="kdadm"><h3>2. Akun PIN</h3><div class="small">'+us.length+' akun. '+(missing.length?missing.length+' PIC belum punya PIN.':'Semua PIC sudah punya PIN.')+'</div><div class="kdrow"><button id="kdGen" type="button"'+(missing.length?'':' disabled')+'>Buat PIN untuk PIC baru</button></div>'+
+    '<div class="kdrow"><input id="kdUn" placeholder="Nama TL / Manager"><select id="kdUr"><option value="tl">Tim Leader</option><option value="manager">Manager</option><option value="pic">PIC</option></select><input id="kdUp" inputmode="numeric" placeholder="PIN 4-8 angka (kosong = acak)"><button id="kdUs" type="button">Simpan akun</button></div>'+
+    '<div id="kdPins"></div><div class="ccwrap" style="overflow-x:auto"><table class="kdt"><thead><tr><th>Nama</th><th>Peran</th><th></th></tr></thead><tbody>'+us.map(function(u){return '<tr><td>'+esc(u.name)+'</td><td>'+esc(u.role)+'</td><td><button class="secondary" type="button" data-reset="'+esc(u.name)+'" data-role="'+esc(u.role)+'">Reset PIN</button> <button class="secondary" type="button" data-del="'+esc(u.name)+'">Hapus</button></td></tr>'}).join('')+'</tbody></table></div></div>';
+  }).catch(function(e){say(e.message,1);$('kdAdm').hidden=true;ADM=false})}
+$('kdAdmBtn').addEventListener('click',function(){if(ADM){ADM=false;$('kdAdm').hidden=true;return}
+  if(typeof window.__sbAsk!=='function'){say('Login editor belum tersedia.',1);return}
+  window.__sbAsk(function(){ADM=true;$('kdAdm').hidden=false;admView()})});
+$('kdAdm').addEventListener('change',function(e){if(e.target.id!=='kdFile')return;var f=e.target.files[0];if(!f)return;say('Membaca file…');
+  ensureXL().then(function(){return f.arrayBuffer()}).then(function(buf){var wb=XLSX.read(buf,{type:'array'}),ws=wb.Sheets[wb.SheetNames[0]],rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''}),hi=-1,ci=-1,pi=-1;
+    for(var i=0;i<Math.min(rows.length,15);i++){var r=rows[i].map(function(x){return String(x).trim().toLowerCase()});var a=r.indexOf('storage location id'),b=r.indexOf('pic name');if(a>=0&&b>=0){hi=i;ci=a;pi=b;break}}
+    if(hi<0)throw new Error('Kolom Storage Location Id dan Pic Name tidak ditemukan.');
+    var out=[];for(var j=hi+1;j<rows.length;j++){var l=String(rows[j][ci]||'').trim(),p=String(rows[j][pi]||'').trim();if(l&&p)out.push([l,p])}
+    if(!out.length)throw new Error('Tidak ada baris data.');say('Menyimpan '+out.length+' lokasi…');return adm('map_put',{rows:out})}).then(function(j){say('Tersimpan: '+j.locs+' lokasi, '+j.pics+' PIC.');e.target.value='';admView();refresh(1)}).catch(function(x){say(x.message,1)})});
+$('kdAdm').addEventListener('click',function(e){var t=e.target;
+  if(t.id==='kdGen'){t.disabled=true;adm('users_gen').then(function(j){$('kdPins').innerHTML=pinTable(j.created||[]);say((j.created||[]).length+' akun PIC dibuat.');t.disabled=false}).catch(function(x){say(x.message,1);t.disabled=false})}
+  else if(t.id==='kdUs'){var n=$('kdUn').value.trim();if(!n){say('Isi nama.',1);return}adm('users_set',{name:n,role:$('kdUr').value,pin:$('kdUp').value.trim()}).then(function(j){$('kdPins').innerHTML=pinTable([j]);say('Akun tersimpan.');$('kdUn').value='';$('kdUp').value=''}).catch(function(x){say(x.message,1)})}
+  else if(t.dataset.reset){adm('users_set',{name:t.dataset.reset,role:t.dataset.role}).then(function(j){$('kdPins').innerHTML=pinTable([j]);say('PIN direset.')}).catch(function(x){say(x.message,1)})}
+  else if(t.dataset.del){adm('users_del',{name:t.dataset.del}).then(function(){say('Akun dihapus.');admView()}).catch(function(x){say(x.message,1)})}
+  else if(t.dataset.copy){(navigator.clipboard?navigator.clipboard.writeText(t.dataset.copy):Promise.reject()).then(function(){say('Daftar PIN disalin.')}).catch(function(){say('Salin otomatis gagal.',1)})}});
+
+/* ---------- siklus ---------- */
+function stopTimer(){if(TMR){clearInterval(TMR);TMR=null}}
+function startTimer(){stopTimer();TMR=setInterval(function(){if(!$('kdPanel').hidden&&A&&!document.hidden)refresh(1)},45000)}
+function start(){topbar();say('Memuat…');refresh().then(function(){if(A){say('');startTimer()}})}
+function open(){restoreAuth();topbar();if(A){start()}else{loginView()}}
+var prev=window.switchPage;
+window.switchPage=function(mode){
+  var tabs=['tabMain','tabDetails','tabGrey','tabCC','tabSO'];
+  if(mode==='kd'){['accuracyPanel','adjustmentPanel','minusPanel','detailsPanel','greyProgPanel','ccPanel','soPanel'].forEach(function(i){var e=$(i);if(e)e.hidden=true});
+    tabs.forEach(function(i){var e=$(i);if(e)e.classList.remove('active')});$('kdPanel').hidden=false;$('tabKD').classList.add('active');open();return}
+  $('kdPanel').hidden=true;$('tabKD').classList.remove('active');stopTimer();return prev(mode)};
+$('tabKD').addEventListener('click',function(){window.switchPage('kd')});
+})();</script><script src="../pwa.js" defer></script>
 <style id="qb-layer">
 
 body{padding-bottom:max(16px,env(safe-area-inset-bottom))}
