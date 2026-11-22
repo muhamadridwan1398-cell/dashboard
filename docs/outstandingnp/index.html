@@ -1341,7 +1341,7 @@ function waItems(vn){
 function waCall(pn){var w=String(pn||'').replace(/\(.*?\)/g,' ').trim().split(/[\s,\/]+/).filter(Boolean),t=w[0]?w[0].toUpperCase().replace(/\./g,''):'',pre='Bapak/Ibu';if(/^(PAK|BAPAK|BPK|BP)$/.test(t)){pre='Bapak';w.shift()}else if(/^(BU|IBU)$/.test(t)){pre='Ibu';w.shift()}var n=w[0]?w[0].charAt(0).toUpperCase()+w[0].slice(1).toLowerCase():'';return n?pre+' '+n:''}
 function waMsg(vn,pn,full){
   var it=waItems(vn),nm=waCall(pn),lines=[],hd=waGreet()+(nm?' '+nm:'')+',\nKami dari MITRA10 Q-BIG. Mohon update status pengiriman item berikut dari '+vn+':\n',cap=full?1e9:2200,len=hd.length,more=0;
-  it.forEach(function(o,i){var r=o.r,z=o.z,l=(i+1)+'. '+z.no+' | '+(r.inm||'')+' ('+(r.ino||'')+') | Qty '+(z.tr?'TR':'PO')+' '+(z.q!=null?fmt(z.q):'-')+(r.pdD!=null?' | PDD '+dstr(r.pdD):'');
+  it.forEach(function(o,i){var r=o.r,z=o.z,l=(i+1)+'. '+z.no+' | '+(r.inm||'')+' ('+(r.ino||'')+') | OTS '+(z.tr?'TR':'PO')+' '+(z.oq!=null?fmt(z.oq):'-')+(r.pdD!=null?' | PDD '+dstr(r.pdD):'');
     if(len+l.length+1>cap){more++;return}lines.push(l);len+=l.length+1});
   return hd+'\n'+lines.join('\n')+(more?'\n(+'+more+' item lainnya, kami kirim lewat Excel)':'')+'\n\nMohon info tanggal kirim / estimasi tiba. Terima kasih.';
 }
@@ -1349,13 +1349,13 @@ function waShots(vn,PER){
   var it=waItems(vn);SHOTQ=[];
   if(!it.length)return Promise.reject(new Error('Tidak ada item untuk '+vn+' di filter ini.'));
   var pages=Math.ceil(it.length/PER),chain=loadH2C();
-  var cols=[['No','c'],['No PO/TR','n'],['No NP','n'],['Kode Item','n'],['Nama Item',''],['Qty','r'],['Diterima','r'],['PDD','c'],['Status','']];
+  var cols=[['No','c'],['No PO/TR','n'],['No NP','n'],['Kode Item','n'],['Nama Item',''],['Qty OTS','r'],['Diterima','r'],['PDD','c'],['Status','']];
   var sub=['Laporan ditarik '+S.reportLabel,vn,fmt(it.length)+' PO/TR'];
   for(let pg=0;pg<pages;pg++){
     chain=chain.then(function(){
       var st=shotStage();
       var rows=it.slice(pg*PER,(pg+1)*PER).map(function(o,i){var r=o.r,z=o.z;
-        return '<tr><td class="c">'+(pg*PER+i+1)+'</td><td class="n">'+esc(z.no)+'</td><td class="n">'+esc(r.np)+'</td><td class="n">'+esc(r.ino||'')+'</td><td>'+esc(r.inm||'')+'</td><td class="r">'+(z.q!=null?fmt(z.q):'-')+'</td><td class="r">'+(z.rv!=null?fmt(z.rv):'-')+'</td><td class="c">'+(r.pdD!=null?dstr(r.pdD):'–')+'</td><td>'+esc(z.st||'')+'</td></tr>'}).join('');
+        return '<tr><td class="c">'+(pg*PER+i+1)+'</td><td class="n">'+esc(z.no)+'</td><td class="n">'+esc(r.np)+'</td><td class="n">'+esc(r.ino||'')+'</td><td>'+esc(r.inm||'')+'</td><td class="r">'+(z.oq!=null?fmt(z.oq):'-')+'</td><td class="r">'+(z.rv!=null?fmt(z.rv):'-')+'</td><td class="c">'+(r.pdD!=null?dstr(r.pdD):'–')+'</td><td>'+esc(z.st||'')+'</td></tr>'}).join('');
       st.innerHTML='<table class="shwa"><thead><tr>'+cols.map(function(c){return '<th class="'+c[1]+'">'+c[0]+'</th>'}).join('')+'</tr></thead><tbody>'+rows+'</tbody></table>';
       return shotRun(st,'WA_'+vn.replace(/[^A-Za-z0-9]+/g,'-').replace(/^-|-$/g,'')+'_'+todayStr()+(pages>1?'_'+(pg+1)+'-dari-'+pages:'')+'.png',2).finally(function(){st.remove()});
     });
@@ -1436,8 +1436,8 @@ function fuLines(rows){
   var out=[];
   rows.forEach(function(r){
     var ds=[];
-    r.pos.forEach(function(p){ds.push({v:p.pon+(nmOnly(p.vn)?' · '+nmOnly(p.vn):''),no:p.pon,vn:nmOnly(p.vn)||'',q:p.ord,rv:p.rec,st:p.st||''})});
-    r.trs.forEach(function(t){ds.push({v:t.trn+(nmOnly(t.tfrom)?' · '+nmOnly(t.tfrom):''),no:t.trn,tr:1,vn:nmOnly(t.tfrom)||'',q:t.trq,rv:t.tiq,st:t.st||''})});
+    r.pos.forEach(function(p){ds.push({v:p.pon+(nmOnly(p.vn)?' · '+nmOnly(p.vn):''),no:p.pon,vn:nmOnly(p.vn)||'',q:p.ord,oq:p.poo,rv:p.rec,st:p.st||''})});
+    r.trs.forEach(function(t){ds.push({v:t.trn+(nmOnly(t.tfrom)?' · '+nmOnly(t.tfrom):''),no:t.trn,tr:1,vn:nmOnly(t.tfrom)||'',q:t.trq,oq:t.tro,rv:t.tiq,st:t.st||''})});
     var d=null;
     if(ds.length){
       var act=ds.filter(function(z){return !deadDoc(z.st)});
