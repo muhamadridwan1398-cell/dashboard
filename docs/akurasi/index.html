@@ -1376,10 +1376,14 @@ wire();
 #kdPanel .kdrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}#kdPanel .kdrow>*{flex:1 1 150px}#kdPanel .kdrow>button{flex:0 0 auto}
 #kdPanel .kdpin{font-family:ui-monospace,Consolas,monospace;font-weight:700}
 @media(max-width:640px){#kdPanel .kdgo{width:100%}#kdPanel table.kdt{font-size:12px}}
+#kdPanel .kdw{font-size:11.5px;font-weight:700;border-radius:99px;padding:2px 9px}
+#kdPanel .kdw.w2{background:#dff3e6;color:#2f6b49}#kdPanel .kdw.w1{background:#fff3d6;color:#8a6414}#kdPanel .kdw.w0{background:#eef2f6;color:#6d7b88}
+#kdPanel .kdgap{color:#a94c4c;font-size:11.5px}
+#kdPanel .kdlocs span.r{background:#fff3d6;border-color:#ecd28c}
 </style><script>(function(){
 var $=function(i){return document.getElementById(i)};
 var API='https://igkdetuufvcczmiluvqd.supabase.co/functions/v1/pic-daily',CCKEY='qbig_cc_v1',AUTHK='qbig_kd_auth',XLU='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
-var A=null,MAP={},DONE={},DONEROWS=[],CCD=null,DAY='',FIL='todo',TMR=null,OPEN={},BUSY=false,ADM=false;
+var A=null,MAP={},DONE={},DONEROWS=[],CCD=null,RAW=null,REAL=null,DAY='',FIL='todo',TMR=null,OPEN={},BUSY=false,ADM=false;
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 function say(t,err){var m=$('kdMsg');if(!m)return;m.textContent=t||'';m.style.color=err?'#a94c4c':'#46566b'}
 function call(op,body,tok){var h={'Content-Type':'application/json'};if(tok)h.Authorization='Bearer '+tok;
@@ -1403,6 +1407,19 @@ function taskDays(){
       var o=(T[d]||(T[d]={}))[loc]||(T[d][loc]={pic:pic,items:[],q:0});o.items.push({c:x.code||x.k||'',n:x.name||'',q:q,u:x.uom||''});o.q+=q})});
   return {T:T,NP:NP}}
 
+/* ---------- data real WMS (Report Cycle Count Summary) ---------- */
+function jkDate(iso){try{return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Jakarta'}).format(new Date(iso))}catch(e){return ''}}
+function nz(c){return String(c==null?'':c).trim().replace(/^0+/,'')}
+function buildReal(){
+  REAL=null;if(!RAW||!RAW.meta)return;
+  var b=CCD&&CCD.meta&&CCD.meta.src&&CCD.meta.src.item&&CCD.meta.src.item.at,R={idx:{},base:b?jkDate(b):'',meta:RAW.meta};
+  (RAW.rows||[]).forEach(function(r){if(r[1]!=='DONE'||r[6]==null)return;var d=r[2]||'';if(R.base&&d&&d<R.base)return;var k=nz(r[4])+'|'+r[3],o=R.idx[k];
+    if(!o||d>=o.d)R.idx[k]={d:d,m:r[7]==='Matched',qc:r[6],qs:r[5]}});
+  REAL=R}
+function locReal(o,loc){var dn=0,mt=0,ld='';if(!REAL)return null;
+  o.items.forEach(function(i){var x=REAL.idx[nz(i.c)+'|'+loc];if(x){dn++;if(x.m)mt++;if(x.d>ld)ld=x.d}});
+  return {n:o.items.length,dn:dn,mt:mt,full:o.items.length>0&&dn===o.items.length,last:ld}}
+
 /* ---------- login ---------- */
 function saveAuth(){try{sessionStorage.setItem(AUTHK,JSON.stringify(A))}catch(e){}}
 function restoreAuth(){try{var a=JSON.parse(sessionStorage.getItem(AUTHK)||'null');if(a&&a.name&&a.pin&&a.role)A=a}catch(e){}}
@@ -1416,7 +1433,7 @@ function topbar(){var w=$('kdWho'),o=$('kdOut');if(A){w.textContent=A.name+' · 
 /* ---------- muat data ---------- */
 function refresh(quiet){
   if(!A||BUSY)return Promise.resolve();BUSY=true;
-  return Promise.all([ucall('map'),loadCC()]).then(function(r){MAP={};(r[0].map||[]).forEach(function(x){MAP[x[0]]=x[1]});
+  return Promise.all([ucall('map'),loadCC(),ucall('real_get').catch(function(){return null})]).then(function(r){MAP={};(r[0].map||[]).forEach(function(x){MAP[x[0]]=x[1]});RAW=r[2];buildReal();
     var td=taskDays(),ds=Object.keys(td.T).sort(numSort);
     return ucall('done_get',{days:ds}).then(function(j){
       DONE={};DONEROWS=j.done||[];DONEROWS.forEach(function(x){DONE[x[0]+'|'+x[1]]={pic:x[2],note:x[3],t:x[4]}});
@@ -1427,7 +1444,7 @@ function pickDay(td,ds){for(var i=0;i<ds.length;i++){var L=td.T[ds[i]],ks=Object
 
 /* ---------- tampilan ---------- */
 function bar(p){return '<div class="kdbar '+(p>=100?'':(p>=60?'mid':'lo'))+'"><i style="width:'+Math.min(100,p)+'%"></i></div>'}
-function chips(td,ds){return '<div class="kdchips">'+ds.map(function(d){var L=td.T[d],ks=Object.keys(L).filter(function(k){return A.role!=='pic'||L[k].pic===A.name}),dn=ks.filter(function(k){return DONE[d+'|'+k]}).length;
+function chips(td,ds){return '<div class="kdchips">'+ds.map(function(d){var L=td.T[d],ks=Object.keys(L).filter(function(k){return A.role!=='pic'||L[k].pic===A.name}),dn=ks.filter(function(k){if(A.role!=='pic'&&REAL){var r=locReal(L[k],k);return r&&r.full}return DONE[d+'|'+k]}).length;
   return '<button type="button" class="kdchip'+(d===DAY?' on':'')+'" data-day="'+esc(d)+'">Hari ke-'+esc(d)+'<small>'+dn+'/'+ks.length+'</small></button>'}).join('')+'</div>'}
 function render(){
   topbar();if(!A){loginView();return}
@@ -1436,6 +1453,8 @@ function render(){
   if(!DAY||ds.indexOf(DAY)<0)DAY=pickDay(td,ds);
   $('kdBody').innerHTML=chips(td,ds)+(A.role==='pic'?picView(td):leadView(td));
   $('kdSub').textContent=A.role==='pic'?'Lokasi yang harus Anda cek. Tekan Sudah dicek setelah selesai.':'Progres pengerjaan akurasi daily per PIC.'}
+function wmsBadge(r){if(!r)return '';var c=r.full?'w2':(r.dn?'w1':'w0'),t=r.full?'WMS selesai':(r.dn?'WMS sebagian':'Belum di WMS');
+  return '<span class="kdw '+c+'" title="Item di lokasi ini yang sudah berstatus DONE di laporan Cycle Count WMS">'+t+' · '+r.dn+'/'+r.n+' item'+(r.dn?' · '+r.mt+' cocok':'')+'</span>'}
 function picView(td){
   var L=td.T[DAY]||{},ks=Object.keys(L).filter(function(k){return L[k].pic===A.name}).sort(numSort);
   var dn=ks.filter(function(k){return DONE[DAY+'|'+k]}).length,pc=ks.length?Math.round(dn/ks.length*100):0;
@@ -1445,26 +1464,30 @@ function picView(td){
   if(!ks.length)h+='<div class="small">Tidak ada lokasi untuk Anda di Hari ke-'+esc(DAY)+'.</div>';
   else if(!show.length)h+='<div class="kdcard ok"><b>Semua lokasi Hari ke-'+esc(DAY)+' sudah dicek. Terima kasih.</b></div>';
   return h+show.map(function(k){var o=L[k],d=DONE[DAY+'|'+k];
-    return '<div class="kdcard'+(d?' ok':'')+'" data-loc="'+esc(k)+'"><div class="kdh"><b>'+esc(k)+'</b><span class="sp">'+o.items.length+' item · qty WMS '+fmt(o.q)+(d?' · selesai '+esc(hhmm(d.t)):'')+'</span><button type="button" class="kdgo'+(d?' undo':'')+'" data-mark="'+(d?'0':'1')+'">'+(d?'Batalkan':'Sudah dicek')+'</button></div>'+
+    return '<div class="kdcard'+(d?' ok':'')+'" data-loc="'+esc(k)+'"><div class="kdh"><b>'+esc(k)+'</b><span class="sp">'+o.items.length+' item · qty WMS '+fmt(o.q)+(d?' · selesai '+esc(hhmm(d.t)):'')+'</span>'+wmsBadge(locReal(o,k))+'<button type="button" class="kdgo'+(d?' undo':'')+'" data-mark="'+(d?'0':'1')+'">'+(d?'Batalkan':'Sudah dicek')+'</button></div>'+
       '<details'+(OPEN[k]?' open':'')+'><summary>Lihat item ('+o.items.length+')</summary><table><thead><tr><th>Kode</th><th>Nama item</th><th class="n">Qty WMS</th></tr></thead><tbody>'+o.items.map(function(i){return '<tr><td>'+esc(i.c)+'</td><td>'+esc(i.n)+'</td><td class="n">'+fmt(i.q)+' '+esc(i.u)+'</td></tr>'}).join('')+'</tbody></table></details></div>'}).join('')}
 function leadStats(td){
   var L=td.T[DAY]||{},P={};
-  Object.keys(L).forEach(function(k){var o=L[k],p=P[o.pic]||(P[o.pic]={pic:o.pic,locs:[],done:0,last:''});var d=DONE[DAY+'|'+k];p.locs.push({loc:k,d:d});if(d){p.done++;if(d.t>p.last)p.last=d.t}});
-  var arr=Object.keys(P).map(function(k){var p=P[k];p.n=p.locs.length;p.pc=p.n?Math.round(p.done/p.n*100):0;p.s=p.done===0?0:(p.done<p.n?1:2);return p});
+  Object.keys(L).forEach(function(k){var o=L[k],p=P[o.pic]||(P[o.pic]={pic:o.pic,locs:[],rep:0,real:0,items:0,idn:0,imt:0,last:'',gap:0});var d=DONE[DAY+'|'+k],r=locReal(o,k);
+    var st=r?(r.full?'real':(d?'rep':'')):(d?'rep':'');p.locs.push({loc:k,d:d,r:r,st:st});
+    if(d)p.rep++;if(r){p.items+=r.n;p.idn+=r.dn;p.imt+=r.mt;if(r.full)p.real++;if(d&&!r.full)p.gap++;var t=r.last||'';if(t>p.last)p.last=t}else if(d&&d.t>p.last)p.last=d.t});
+  var arr=Object.keys(P).map(function(k){var p=P[k];p.n=p.locs.length;p.done=REAL?p.real:p.rep;p.pc=p.n?Math.round(p.done/p.n*100):0;p.s=p.done===0?0:(p.done<p.n?1:2);p.mp=p.idn?Math.round(p.imt/p.idn*100):null;return p});
   arr.sort(function(a,b){return a.s-b.s||a.pc-b.pc||a.pic.localeCompare(b.pic)});return arr}
 function leadView(td){
-  var arr=leadStats(td),tot=0,dn=0,full=0;arr.forEach(function(p){tot+=p.n;dn+=p.done;if(p.s===2)full++});
-  var pc=tot?Math.round(dn/tot*100):0,np=Object.keys(td.NP[DAY]||{}).length,stl=['Belum mulai','Sedang jalan','Selesai'];
-  var h='<div class="kdkpi"><div class="kdk"><b>'+pc+'%</b><span>progres lokasi (Hari ke-'+esc(DAY)+')</span>'+bar(pc)+'</div><div class="kdk"><b>'+dn+' / '+tot+'</b><span>lokasi selesai</span></div><div class="kdk"><b>'+full+' / '+arr.length+'</b><span>PIC selesai 100%</span></div><div class="kdk"><b>'+arr.filter(function(p){return p.s===0}).length+'</b><span>PIC belum mulai</span></div></div>';
+  var arr=leadStats(td),tot=0,dn=0,full=0,gap=0,rp=0;arr.forEach(function(p){tot+=p.n;dn+=p.done;rp+=p.rep;gap+=p.gap;if(p.s===2)full++});
+  var pc=tot?Math.round(dn/tot*100):0,np=Object.keys(td.NP[DAY]||{}).length,stl=['Belum mulai','Sedang jalan','Selesai'],src=REAL?'Real WMS':'Laporan PIC';
+  var h='<div class="kdkpi"><div class="kdk"><b>'+pc+'%</b><span>progres lokasi · '+src+' (Hari ke-'+esc(DAY)+')</span>'+bar(pc)+'</div><div class="kdk"><b>'+dn+' / '+tot+'</b><span>lokasi selesai ('+src+')</span></div><div class="kdk"><b>'+full+' / '+arr.length+'</b><span>PIC selesai 100%</span></div>'+(REAL?'<div class="kdk"><b>'+rp+'</b><span>lokasi dilaporkan PIC'+(gap?' · '+gap+' belum ada di WMS':'')+'</span></div>':'<div class="kdk"><b>'+arr.filter(function(p){return p.s===0}).length+'</b><span>PIC belum mulai</span></div>')+'</div>';
   h+='<div class="kdtools"><button class="secondary" id="kdCopy" type="button">Salin ringkasan WA</button>'+(np?'<span class="small">'+np+' lokasi W di Hari ke-'+esc(DAY)+' belum punya PIC di daftar.</span>':'')+'<span class="small">Klik baris PIC untuk melihat lokasinya. Diperbarui otomatis tiap 45 detik.</span></div>';
-  h+='<div class="ccwrap" style="overflow-x:auto"><table class="kdt"><thead><tr><th>PIC</th><th>Lokasi</th><th>Selesai</th><th>Progres</th><th>Status</th><th>Terakhir</th></tr></thead><tbody>'+arr.map(function(p){
-    return '<tr class="pr" data-pic="'+esc(p.pic)+'"><td><b>'+esc(p.pic)+'</b></td><td>'+p.n+'</td><td>'+p.done+'</td><td style="min-width:130px">'+bar(p.pc)+'<span class="small">'+p.pc+'%</span></td><td><span class="kdst s'+p.s+'">'+stl[p.s]+'</span></td><td class="small">'+(p.last?esc(hhmm(p.last)):'–')+'</td></tr>'+
-    (OPEN['p:'+p.pic]?'<tr><td colspan="6"><div class="kdlocs">'+p.locs.map(function(l){return '<span class="'+(l.d?'d':'')+'" title="'+(l.d?esc(hhmm(l.d.t)+(l.d.note?' · '+l.d.note:'')):'Belum dicek')+'">'+esc(l.loc)+(l.d?' ✓':'')+'</span>'}).join('')+'</div></td></tr>':'')}).join('')+'</tbody></table></div>';
+  h+=(REAL?'<div class="small" style="margin:0 0 8px">Real WMS: laporan Cycle Count periode '+esc(REAL.meta.from_d||'?')+' s.d. '+esc(REAL.meta.to_d||'?')+', diperbarui '+esc(hhmm(REAL.meta.at))+'. Lokasi selesai bila semua item tugasnya berstatus DONE dengan Qty Counted terisi'+(REAL.base?' sejak '+esc(REAL.base):'')+'.</div>':'<div class="small" style="margin:0 0 8px">Laporan Cycle Count WMS belum diupload, jadi progres memakai laporan PIC saja.</div>');
+  h+='<div class="ccwrap" style="overflow-x:auto"><table class="kdt"><thead><tr><th>PIC</th><th>Lokasi</th><th>Lapor PIC</th>'+(REAL?'<th>Real WMS</th><th>Cocok</th>':'')+'<th>Progres</th><th>Status</th><th>Terakhir</th></tr></thead><tbody>'+arr.map(function(p){
+    return '<tr class="pr" data-pic="'+esc(p.pic)+'"><td><b>'+esc(p.pic)+'</b></td><td>'+p.n+'</td><td>'+p.rep+(p.gap?' <span class="kdgap" title="Dilaporkan PIC tetapi belum selesai di WMS">('+p.gap+' belum di WMS)</span>':'')+'</td>'+(REAL?'<td>'+p.real+'</td><td>'+(p.mp==null?'–':p.mp+'%')+'</td>':'')+'<td style="min-width:130px">'+bar(p.pc)+'<span class="small">'+p.pc+'%</span></td><td><span class="kdst s'+p.s+'">'+stl[p.s]+'</span></td><td class="small">'+(p.last?esc(p.last.length>10?hhmm(p.last):p.last):'–')+'</td></tr>'+
+    (OPEN['p:'+p.pic]?'<tr><td colspan="'+(REAL?8:6)+'"><div class="kdlocs">'+p.locs.map(function(l){var t=l.st==='real'?'WMS selesai'+(l.r?' · '+l.r.dn+'/'+l.r.n+' item, '+l.r.mt+' cocok':''):(l.st==='rep'?'Dilaporkan PIC, belum selesai di WMS'+(l.r?' ('+l.r.dn+'/'+l.r.n+' item)':''):'Belum dicek');
+      return '<span class="'+(l.st==='real'?'d':(l.st==='rep'?'r':''))+'" title="'+esc(t+(l.d&&l.d.note?' · '+l.d.note:''))+'">'+esc(l.loc)+(l.st==='real'?' ✓':(l.st==='rep'?' ●':''))+'</span>'}).join('')+'</div></td></tr>':'')}).join('')+'</tbody></table></div>';
   return h}
 function summaryText(){
   var td=taskDays(),arr=leadStats(td),tot=0,dn=0;arr.forEach(function(p){tot+=p.n;dn+=p.done});
-  var t='Progres Akurasi Daily - Hari ke-'+DAY+'\nTotal: '+dn+'/'+tot+' lokasi ('+(tot?Math.round(dn/tot*100):0)+'%)\n';
-  arr.forEach(function(p){t+='\n'+(p.s===2?'[OK] ':(p.s===1?'[..] ':'[  ] '))+p.pic+': '+p.done+'/'+p.n+' ('+p.pc+'%)'});return t}
+  var t='Progres Akurasi Daily - Hari ke-'+DAY+'\nTotal: '+dn+'/'+tot+' lokasi ('+(tot?Math.round(dn/tot*100):0)+'%) - '+(REAL?'real WMS':'laporan PIC')+'\n';
+  arr.forEach(function(p){t+='\n'+(p.s===2?'[OK] ':(p.s===1?'[..] ':'[  ] '))+p.pic+': '+p.done+'/'+p.n+' ('+p.pc+'%)'+(REAL&&p.mp!=null?' cocok '+p.mp+'%':'')});return t}
 
 /* ---------- aksi ---------- */
 function mark(locs,done,note){
@@ -1491,7 +1514,8 @@ function admView(){
     $('kdAdm').innerHTML='<div class="kdadm"><h3>1. Daftar PIC per lokasi</h3><div class="small">'+(names.length?names.length+' PIC, '+names.reduce(function(a,n){return a+pics[n]},0)+' lokasi tersimpan.':'Belum ada daftar.')+' Upload file Excel dengan kolom Storage Location Id dan Pic Name. Daftar lama diganti.</div><div class="kdrow"><input type="file" id="kdFile" accept=".xlsx,.xls"></div></div>'+
     '<div class="kdadm"><h3>2. Akun PIN</h3><div class="small">'+us.length+' akun. '+(missing.length?missing.length+' PIC belum punya PIN.':'Semua PIC sudah punya PIN.')+'</div><div class="kdrow"><button id="kdGen" type="button"'+(missing.length?'':' disabled')+'>Buat PIN untuk PIC baru</button></div>'+
     '<div class="kdrow"><input id="kdUn" placeholder="Nama TL / Manager"><select id="kdUr"><option value="tl">Tim Leader</option><option value="manager">Manager</option><option value="pic">PIC</option></select><input id="kdUp" inputmode="numeric" placeholder="PIN 4-8 angka (kosong = acak)"><button id="kdUs" type="button">Simpan akun</button></div>'+
-    '<div id="kdPins"></div><div class="ccwrap" style="overflow-x:auto"><table class="kdt"><thead><tr><th>Nama</th><th>Peran</th><th></th></tr></thead><tbody>'+us.map(function(u){return '<tr><td>'+esc(u.name)+'</td><td>'+esc(u.role)+'</td><td><button class="secondary" type="button" data-reset="'+esc(u.name)+'" data-role="'+esc(u.role)+'">Reset PIN</button> <button class="secondary" type="button" data-del="'+esc(u.name)+'">Hapus</button></td></tr>'}).join('')+'</tbody></table></div></div>';
+    '<div id="kdPins"></div><div class="ccwrap" style="overflow-x:auto"><table class="kdt"><thead><tr><th>Nama</th><th>Peran</th><th></th></tr></thead><tbody>'+us.map(function(u){return '<tr><td>'+esc(u.name)+'</td><td>'+esc(u.role)+'</td><td><button class="secondary" type="button" data-reset="'+esc(u.name)+'" data-role="'+esc(u.role)+'">Reset PIN</button> <button class="secondary" type="button" data-del="'+esc(u.name)+'">Hapus</button></td></tr>'}).join('')+'</tbody></table></div></div>'+
+    '<div class="kdadm"><h3>3. Report Cycle Count Summary (WMS)</h3><div class="small">Upload laporan Cycle Count Summary dari WMS untuk memperbarui progres riil. Data lama diganti. PIC hanya melaporkan lokasi yang sudah dikerjakan, progres resmi memakai laporan ini.</div><div class="kdrow"><input type="file" id="kdReal" accept=".xlsx,.xls"></div></div>';
   }).catch(function(e){say(e.message,1);$('kdAdm').hidden=true;ADM=false})}
 $('kdAdmBtn').addEventListener('click',function(){if(ADM){ADM=false;$('kdAdm').hidden=true;return}
   if(typeof window.__sbAsk!=='function'){say('Login editor belum tersedia.',1);return}
@@ -1502,6 +1526,18 @@ $('kdAdm').addEventListener('change',function(e){if(e.target.id!=='kdFile')retur
     if(hi<0)throw new Error('Kolom Storage Location Id dan Pic Name tidak ditemukan.');
     var out=[];for(var j=hi+1;j<rows.length;j++){var l=String(rows[j][ci]||'').trim(),p=String(rows[j][pi]||'').trim();if(l&&p)out.push([l,p])}
     if(!out.length)throw new Error('Tidak ada baris data.');say('Menyimpan '+out.length+' lokasi…');return adm('map_put',{rows:out})}).then(function(j){say('Tersimpan: '+j.locs+' lokasi, '+j.pics+' PIC.');e.target.value='';admView();refresh(1)}).catch(function(x){say(x.message,1)})});
+function ymd(v){if(v instanceof Date&&!isNaN(v)){v=new Date(v.getTime()+12*36e5);var m=v.getMonth()+1,d=v.getDate();return v.getFullYear()+'-'+(m<10?'0':'')+m+'-'+(d<10?'0':'')+d}var s=String(v||'').trim(),x=s.match(/^(\d{4})-(\d{2})-(\d{2})/);return x?x[0]:''}
+$('kdAdm').addEventListener('change',function(e){if(e.target.id!=='kdReal')return;var f=e.target.files[0];if(!f)return;say('Membaca laporan Cycle Count…');
+  ensureXL().then(function(){return f.arrayBuffer()}).then(function(buf){var wb=XLSX.read(buf,{type:'array',cellDates:true}),ws=wb.Sheets[wb.SheetNames[0]],rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:null,raw:true}),hi=-1,H={};
+    var top=String(rows[0]&&rows[0][0]||''),fm=top.match(/From:\s*(\d{4}-\d{2}-\d{2})/),tm=top.match(/To:\s*(\d{4}-\d{2}-\d{2})/);
+    for(var i=0;i<Math.min(rows.length,10);i++){var r=(rows[i]||[]).map(function(x){return String(x==null?'':x).trim().toLowerCase()});if(r.indexOf('task order no.')>=0&&r.indexOf('storage location')>=0){hi=i;r.forEach(function(n,j){if(n&&!(n in H))H[n]=j});break}}
+    if(hi<0)throw new Error('Header laporan tidak ditemukan. Pastikan ini Report Cycle Count Summary.');
+    var need=['task order no.','task status','planning date','storage location','item number','qty system','qty counted','matched/not matched','assigned user'];
+    for(var q=0;q<need.length;q++)if(!(need[q] in H))throw new Error('Kolom "'+need[q]+'" tidak ada di laporan.');
+    var nn=function(x){if(x==null||x==='')return null;var v=parseFloat(String(x).replace(/,/g,''));return isNaN(v)?null:v},g=function(r,k){return k in H?r[H[k]]:null},out=[];
+    for(var j=hi+1;j<rows.length;j++){var r=rows[j]||[],loc=String(g(r,'storage location')||'').trim();if(!loc)continue;
+      out.push([String(g(r,'task order no.')||''),String(g(r,'task status')||''),ymd(g(r,'planning date')),loc,String(g(r,'item number')||'').trim(),nn(g(r,'qty system')),nn(g(r,'qty counted')),String(g(r,'matched/not matched')||''),String(g(r,'assigned user')||''),String(g(r,'remarks')||''),String(g(r,'ext. document no.')||'')])}
+    if(!out.length)throw new Error('Tidak ada baris data.');say('Menyimpan '+out.length+' baris…');return adm('real_put',{rows:out,from:fm?fm[1]:'',to:tm?tm[1]:''}).then(function(j){return {n:j.n,from:fm?fm[1]:'',to:tm?tm[1]:''}})}).then(function(j){say('Tersimpan: '+j.n+' baris laporan Cycle Count ('+(j.from||'?')+' s.d. '+(j.to||'?')+'). Progres riil diperbarui.');e.target.value='';refresh(1)}).catch(function(x){say(x.message,1)})});
 $('kdAdm').addEventListener('click',function(e){var t=e.target;
   if(t.id==='kdGen'){t.disabled=true;adm('users_gen').then(function(j){$('kdPins').innerHTML=pinTable(j.created||[]);say((j.created||[]).length+' akun PIC dibuat.');t.disabled=false}).catch(function(x){say(x.message,1);t.disabled=false})}
   else if(t.id==='kdUs'){var n=$('kdUn').value.trim();if(!n){say('Isi nama.',1);return}adm('users_set',{name:n,role:$('kdUr').value,pin:$('kdUp').value.trim()}).then(function(j){$('kdPins').innerHTML=pinTable([j]);say('Akun tersimpan.');$('kdUn').value='';$('kdUp').value=''}).catch(function(x){say(x.message,1)})}
