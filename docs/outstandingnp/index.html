@@ -1345,11 +1345,10 @@ function waMsg(vn,pn,full){
     if(len+l.length+1>cap){more++;return}lines.push(l);len+=l.length+1});
   return hd+'\n'+lines.join('\n')+(more?'\n(+'+more+' item lainnya, kami kirim lewat Excel)':'')+'\n\nMohon info tanggal kirim / estimasi tiba. Terima kasih.';
 }
-function waImg(vn,btn){
-  var it=waItems(vn),m=document.getElementById('msg'),say=function(x,err){if(m){m.className=err?'err':'';m.textContent=x}},lb=btn.textContent;
-  if(!it.length){say('Tidak ada item untuk '+vn+' di filter ini.',true);return}
-  btn.disabled=true;btn.textContent='Membuat…';SHOTQ=[];
-  var PER=25,pages=Math.ceil(it.length/PER),chain=loadH2C();
+function waShots(vn,PER){
+  var it=waItems(vn);SHOTQ=[];
+  if(!it.length)return Promise.reject(new Error('Tidak ada item untuk '+vn+' di filter ini.'));
+  var pages=Math.ceil(it.length/PER),chain=loadH2C();
   var cols=[['No','c'],['No PO/TR','n'],['No NP','n'],['Kode Item','n'],['Nama Item',''],['Qty','r'],['Diterima','r'],['PDD','c'],['Status','']];
   var sub=['Laporan ditarik '+S.reportLabel,vn,fmt(it.length)+' PO/TR'];
   for(let pg=0;pg<pages;pg++){
@@ -1361,7 +1360,32 @@ function waImg(vn,btn){
       return shotRun(st,'WA_'+vn.replace(/[^A-Za-z0-9]+/g,'-').replace(/^-|-$/g,'')+'_'+todayStr()+(pages>1?'_'+(pg+1)+'-dari-'+pages:'')+'.png',2).finally(function(){st.remove()});
     });
   }
-  chain.then(function(){capPreview(SHOTQ,'WA · '+vn);say('Gambar siap. Salin gambar, buka chat WhatsApp PIC, lalu tempel (Ctrl+V).')}).catch(function(e){say(e.message||'Gambar gagal dibuat.',true)}).finally(function(){btn.disabled=false;btn.textContent=lb});
+  return chain;
+}
+function waImg(vn,btn){
+  var m=document.getElementById('msg'),say=function(x,err){if(m){m.className=err?'err':'';m.textContent=x}},lb=btn.textContent;
+  btn.disabled=true;btn.textContent='Membuat…';
+  waShots(vn,25).then(function(){capPreview(SHOTQ,'WA · '+vn);say('Gambar siap. Salin gambar, buka chat WhatsApp PIC, lalu tempel (Ctrl+V).')}).catch(function(e){say(e.message||'Gambar gagal dibuat.',true)}).finally(function(){btn.disabled=false;btn.textContent=lb});
+}
+/* Kirim = pesan + gambar: gambar dibuat dulu dan disalin ke clipboard, lalu WhatsApp dibuka dengan pesan terisi. Di chat tinggal tempel (Ctrl+V). */
+function waSend(num,vn,pn,btn){
+  var m=document.getElementById('msg'),say=function(x,err){if(m){m.className=err?'err':'';m.textContent=x}},lb=btn.innerHTML;
+  btn.disabled=true;btn.textContent='Membuat gambar…';
+  waShots(vn,40).then(function(){
+    var c=SHOTQ[0]&&SHOTQ[0].canvas;
+    return new Promise(function(res){c.toBlob(res,'image/png')}).then(function(bl){
+      if(!(navigator.clipboard&&window.ClipboardItem&&bl))throw new Error('noclip');
+      return navigator.clipboard.write([new ClipboardItem({'image/png':bl})])
+    });
+  }).then(function(){
+    waOpen(num,vn,pn);
+    say('Gambar sudah disalin. Di chat WhatsApp, klik kolom pesan lalu tekan Ctrl+V untuk menempel gambar'+(SHOTQ.length>1?' (gambar bagian lain ada di preview)':'')+'.');
+    if(SHOTQ.length>1)capPreview(SHOTQ,'WA · '+vn);
+  }).catch(function(e){
+    waOpen(num,vn,pn);
+    if(SHOTQ.length){capPreview(SHOTQ,'WA · '+vn);say('Gambar tidak bisa disalin otomatis. Klik Salin atau Unduh di preview, lalu tempel di chat WhatsApp.',true)}
+    else say(e.message||'Gambar gagal dibuat; pesan teks tetap dibuka.',true);
+  }).finally(function(){btn.disabled=false;btn.innerHTML=lb});
 }
 function waVendors(){
   var m={};(S.fuL||[]).forEach(function(x){if(!x.d)return;x.d.ds.forEach(function(z){if(!z.vn||waDone(z))return;var o=m[z.vn]||(m[z.vn]={vn:z.vn,n:0,nps:{}});o.n++;o.nps[x.r.np+'|'+x.r.ino]=1})});
@@ -1407,7 +1431,7 @@ function waDlg(vn){
   }
   h+='</div></div></div>';document.body.insertAdjacentHTML('beforeend',h);
 }
-function waRow(vn,p){return '<div class="war"><div><b>'+esc(p.n)+'</b><span>'+esc(p.b||p.s)+' · +'+esc(p.p)+'</span></div><button type="button" class="wasend" data-wasend="'+esc(p.p)+'" data-wav="'+esc(vn)+'" data-wan="'+esc(p.n)+'">'+WAI+' Kirim</button><button type="button" class="btn ghost" data-wacopy="1" data-wav="'+esc(vn)+'" data-wan="'+esc(p.n)+'" title="Salin pesan lengkap (semua item)">Salin</button><button type="button" class="btn ghost" data-waimg="1" data-wav="'+esc(vn)+'" title="Buat gambar tabel item vendor ini (seperti Excel), lalu salin dan tempel ke chat WhatsApp">Gambar</button></div>'}
+function waRow(vn,p){return '<div class="war"><div><b>'+esc(p.n)+'</b><span>'+esc(p.b||p.s)+' · +'+esc(p.p)+'</span></div><button type="button" class="wasend" data-wasend="'+esc(p.p)+'" title="Buka WhatsApp dengan pesan terisi; gambar tabel item otomatis disalin untuk ditempel" data-wav="'+esc(vn)+'" data-wan="'+esc(p.n)+'">'+WAI+' Kirim</button><button type="button" class="btn ghost" data-wacopy="1" data-wav="'+esc(vn)+'" data-wan="'+esc(p.n)+'" title="Salin pesan lengkap (semua item)">Salin</button><button type="button" class="btn ghost" data-waimg="1" data-wav="'+esc(vn)+'" title="Hanya buat gambar tabel item (tanpa membuka WhatsApp)">Gambar</button></div>'}
 function fuLines(rows){
   var out=[];
   rows.forEach(function(r){
@@ -2046,7 +2070,7 @@ document.addEventListener('click',function(e){var pb=e.target.closest&&e.target.
   var t=e.target.closest('button,th,tr.nota,tr.mrow,label');if(!t)return;
   if(t.dataset.wadlg){waDlg('');return}
   if(t.dataset.wa){var wm=picFind(t.dataset.wa),wp=wm?picPeople(wm):[];if(wp.length===1)waOpen(wp[0].p,t.dataset.wa,wp[0].n);else waDlg(t.dataset.wa);return}
-  if(t.dataset.wasend){waOpen(t.dataset.wasend,t.dataset.wav,t.dataset.wan);return}
+  if(t.dataset.wasend){waSend(t.dataset.wasend,t.dataset.wav,t.dataset.wan,t);return}
   if(t.dataset.wacopy){waCopy(t.dataset.wav,t.dataset.wan,t);return}
   if(t.dataset.waimg){waImg(t.dataset.wav,t);return}
   if(t.dataset.wax){var wd=document.getElementById('wadlg');if(wd)wd.remove();return}
