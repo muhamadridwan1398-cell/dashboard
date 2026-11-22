@@ -864,6 +864,16 @@
 
     <div id="tab-bulan" class="tab-panel">
         <div id="captureAreaBulan">
+            <div class="quick-view" id="quickView2">
+                <span class="quick-label">Tampilan data:</span>
+                <button type="button" class="quick-btn active" data-t="GDG" onclick="setQuickType('GDG')">Cash &amp; Carry via Gudang</button>
+                <button type="button" class="quick-btn" data-t="PND" onclick="setQuickType('PND')">Cash &amp; Carry via PND</button>
+                <span class="quick-sep" aria-hidden="true"></span>
+                <span class="quick-label">Area:</span>
+                <button type="button" class="quick-btn quick-sub" data-a="ALL" onclick="setQuickArea('ALL')">Semua Area</button>
+                <button type="button" class="quick-btn quick-sub active" data-a="WH" onclick="setQuickArea('WH')">WH Area</button>
+                <span class="quick-info" id="quickInfo2"></span>
+            </div>
             <div class="card" style="margin-bottom: 20px;">
                 <div class="card-header">
                     <span>🗓️ Rekap AWT Per Bulan</span>
@@ -1261,8 +1271,9 @@
         if (!qvHas(quickView, allItems)) quickView = 'ALL';
         awtLimitNow = limitFor(quickView); /* tipe tidak ada di data: tampilkan semua */
         let items = quickView === 'ALL' ? allItems : allItems.filter(function (it) { return qvMatch(quickView, it); });
-        document.querySelectorAll('#quickView .quick-btn').forEach(function (b) { let qt = quickView.split('_')[0], qa = quickView.split('_')[1]; b.classList.toggle('active', quickView !== 'ALL' && (b.dataset.t ? b.dataset.t === qt : b.dataset.a === qa)); });
-        let qi = document.getElementById('quickInfo');
+        document.querySelectorAll('#quickView .quick-btn, #quickView2 .quick-btn').forEach(function (b) { let qt = quickView.split('_')[0], qa = quickView.split('_')[1]; b.classList.toggle('active', quickView !== 'ALL' && (b.dataset.t ? b.dataset.t === qt : b.dataset.a === qa)); });
+        let qi = document.getElementById('quickInfo'), qi2 = document.getElementById('quickInfo2');
+        if (qi2) qi2.textContent = quickView !== 'ALL' ? 'Menampilkan ' + qvName(quickView) + ' (' + items.length + ' dari ' + allItems.length + ' item)' : '';
         if (qi) qi.textContent = quickView !== 'ALL' ? 'Menampilkan ' + qvName(quickView) + ' (' + items.length + ' dari ' + allItems.length + ' item)' : '';
         items.forEach(function (it) {
             it.late = quickView.indexOf('PND') === 0 ? pndLate(it) : (Number(it.diffMin) || 0) > awtLimitNow;
