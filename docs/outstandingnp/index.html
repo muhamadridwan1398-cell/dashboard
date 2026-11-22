@@ -464,6 +464,7 @@ body.shot .datapanel{display:none!important}
 .shotstage .shh-m{font-size:12px;color:var(--ink3);margin-top:2px}
 .shotstage .shh-f{font-size:12px;color:var(--ink2);margin:0 0 10px}
 .shotstage .tiles{margin-bottom:14px}
+.shotstage .shwa{border-collapse:collapse;font-size:13px;width:100%}.shotstage .shwa th{background:var(--navy);color:#fff;padding:7px 10px;text-align:left;font-weight:700;white-space:nowrap}.shotstage .shwa td{padding:6px 10px;border-bottom:1px solid var(--line);vertical-align:top}.shotstage .shwa tr:nth-child(even) td{background:#f6f8fb}.shotstage .shwa .c{text-align:center}.shotstage .shwa .r{text-align:right}.shotstage .shwa .n{white-space:nowrap}.shotstage .shwa td:nth-child(5){min-width:240px}
 .shotstage .shotfu{max-height:none!important;overflow:visible!important;border:1px solid var(--line)}
 .shotstage .shotfu table{font-size:12.5px}
 .shotstage .shotfu th{font-size:10.5px;padding:8px 8px;line-height:1.25;white-space:normal}
@@ -1344,6 +1345,24 @@ function waMsg(vn,pn,full){
     if(len+l.length+1>cap){more++;return}lines.push(l);len+=l.length+1});
   return hd+'\n'+lines.join('\n')+(more?'\n(+'+more+' item lainnya, kami kirim lewat Excel)':'')+'\n\nMohon info tanggal kirim / estimasi tiba. Terima kasih.';
 }
+function waImg(vn,btn){
+  var it=waItems(vn),m=document.getElementById('msg'),say=function(x,err){if(m){m.className=err?'err':'';m.textContent=x}},lb=btn.textContent;
+  if(!it.length){say('Tidak ada item untuk '+vn+' di filter ini.',true);return}
+  btn.disabled=true;btn.textContent='Membuat…';SHOTQ=[];
+  var PER=25,pages=Math.ceil(it.length/PER),chain=loadH2C();
+  var cols=[['No','c'],['No PO/TR','n'],['No NP','n'],['Kode Item','n'],['Nama Item',''],['Qty','r'],['Diterima','r'],['PDD','c'],['Status','']];
+  var sub=['Laporan ditarik '+S.reportLabel,vn,fmt(it.length)+' PO/TR'];
+  for(let pg=0;pg<pages;pg++){
+    chain=chain.then(function(){
+      var st=shotStage();
+      var rows=it.slice(pg*PER,(pg+1)*PER).map(function(o,i){var r=o.r,z=o.z;
+        return '<tr><td class="c">'+(pg*PER+i+1)+'</td><td class="n">'+esc(z.no)+'</td><td class="n">'+esc(r.np)+'</td><td class="n">'+esc(r.ino||'')+'</td><td>'+esc(r.inm||'')+'</td><td class="r">'+(z.q!=null?fmt(z.q):'-')+'</td><td class="r">'+(z.rv!=null?fmt(z.rv):'-')+'</td><td class="c">'+(r.pdD!=null?dstr(r.pdD):'–')+'</td><td>'+esc(z.st||'')+'</td></tr>'}).join('');
+      st.innerHTML=shotHead('Update status pengiriman'+(pages>1?' (bagian '+(pg+1)+' dari '+pages+')':''),sub)+'<table class="shwa"><thead><tr>'+cols.map(function(c){return '<th class="'+c[1]+'">'+c[0]+'</th>'}).join('')+'</tr></thead><tbody>'+rows+'</tbody></table>';
+      return shotRun(st,'WA_'+vn.replace(/[^A-Za-z0-9]+/g,'-').replace(/^-|-$/g,'')+'_'+todayStr()+(pages>1?'_'+(pg+1)+'-dari-'+pages:'')+'.png',2).finally(function(){st.remove()});
+    });
+  }
+  chain.then(function(){capPreview(SHOTQ,'WA · '+vn);say('Gambar siap. Salin gambar, buka chat WhatsApp PIC, lalu tempel (Ctrl+V).')}).catch(function(e){say(e.message||'Gambar gagal dibuat.',true)}).finally(function(){btn.disabled=false;btn.textContent=lb});
+}
 function waVendors(){
   var m={};(S.fuL||[]).forEach(function(x){if(!x.d)return;x.d.ds.forEach(function(z){if(!z.vn||waDone(z))return;var o=m[z.vn]||(m[z.vn]={vn:z.vn,n:0,nps:{}});o.n++;o.nps[x.r.np+'|'+x.r.ino]=1})});
   return Object.keys(m).map(function(k){var o=m[k];o.items=Object.keys(o.nps).length;o.m=picFind(k);return o}).sort(function(a,b){return (b.m?1:0)-(a.m?1:0)||b.n-a.n});
@@ -1388,7 +1407,7 @@ function waDlg(vn){
   }
   h+='</div></div></div>';document.body.insertAdjacentHTML('beforeend',h);
 }
-function waRow(vn,p){return '<div class="war"><div><b>'+esc(p.n)+'</b><span>'+esc(p.b||p.s)+' · +'+esc(p.p)+'</span></div><button type="button" class="wasend" data-wasend="'+esc(p.p)+'" data-wav="'+esc(vn)+'" data-wan="'+esc(p.n)+'">'+WAI+' Kirim</button><button type="button" class="btn ghost" data-wacopy="1" data-wav="'+esc(vn)+'" data-wan="'+esc(p.n)+'" title="Salin pesan lengkap (semua item)">Salin</button></div>'}
+function waRow(vn,p){return '<div class="war"><div><b>'+esc(p.n)+'</b><span>'+esc(p.b||p.s)+' · +'+esc(p.p)+'</span></div><button type="button" class="wasend" data-wasend="'+esc(p.p)+'" data-wav="'+esc(vn)+'" data-wan="'+esc(p.n)+'">'+WAI+' Kirim</button><button type="button" class="btn ghost" data-wacopy="1" data-wav="'+esc(vn)+'" data-wan="'+esc(p.n)+'" title="Salin pesan lengkap (semua item)">Salin</button><button type="button" class="btn ghost" data-waimg="1" data-wav="'+esc(vn)+'" title="Buat gambar tabel item vendor ini (seperti Excel), lalu salin dan tempel ke chat WhatsApp">Gambar</button></div>'}
 function fuLines(rows){
   var out=[];
   rows.forEach(function(r){
@@ -2029,6 +2048,7 @@ document.addEventListener('click',function(e){var pb=e.target.closest&&e.target.
   if(t.dataset.wa){var wm=picFind(t.dataset.wa),wp=wm?picPeople(wm):[];if(wp.length===1)waOpen(wp[0].p,t.dataset.wa,wp[0].n);else waDlg(t.dataset.wa);return}
   if(t.dataset.wasend){waOpen(t.dataset.wasend,t.dataset.wav,t.dataset.wan);return}
   if(t.dataset.wacopy){waCopy(t.dataset.wav,t.dataset.wan,t);return}
+  if(t.dataset.waimg){waImg(t.dataset.wav,t);return}
   if(t.dataset.wax){var wd=document.getElementById('wadlg');if(wd)wd.remove();return}
   if(t.dataset.fxl){exportFollowup(t.dataset.fxl==='2',t.dataset.fxl==='3');return}
   if(t.dataset.dtx){exportDelivery();return}
