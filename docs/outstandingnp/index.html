@@ -1436,8 +1436,8 @@ function fuLines(rows){
   var out=[];
   rows.forEach(function(r){
     var ds=[];
-    r.pos.forEach(function(p){ds.push({v:p.pon+(nmOnly(p.vn)?' · '+nmOnly(p.vn):''),no:p.pon,vn:nmOnly(p.vn)||'',q:p.ord,oq:p.poo,rv:p.rec,st:p.st||''})});
-    r.trs.forEach(function(t){ds.push({v:t.trn+(nmOnly(t.tfrom)?' · '+nmOnly(t.tfrom):''),no:t.trn,tr:1,vn:nmOnly(t.tfrom)||'',q:t.trq,oq:t.tro,rv:t.tiq,st:t.st||''})});
+    r.pos.forEach(function(p){ds.push({v:p.pon+(nmOnly(p.vn)?' · '+nmOnly(p.vn):''),no:p.pon,vn:nmOnly(p.vn)||'',q:p.ord,oq:p.ok?p.poo:null,rv:p.rec,st:p.st||''})});
+    r.trs.forEach(function(t){ds.push({v:t.trn+(nmOnly(t.tfrom)?' · '+nmOnly(t.tfrom):''),no:t.trn,tr:1,vn:nmOnly(t.tfrom)||'',q:t.trq,oq:t.ok?t.tro:null,rv:t.tiq,st:t.st||''})});
     var d=null;
     if(ds.length){
       var act=ds.filter(function(z){return !deadDoc(z.st)});
