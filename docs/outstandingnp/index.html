@@ -1356,7 +1356,7 @@ function waShots(vn,PER){
       var st=shotStage();
       var rows=it.slice(pg*PER,(pg+1)*PER).map(function(o,i){var r=o.r,z=o.z;
         return '<tr><td class="c">'+(pg*PER+i+1)+'</td><td class="n">'+esc(z.no)+'</td><td class="n">'+esc(r.np)+'</td><td class="n">'+esc(r.ino||'')+'</td><td>'+esc(r.inm||'')+'</td><td class="r">'+(z.q!=null?fmt(z.q):'-')+'</td><td class="r">'+(z.rv!=null?fmt(z.rv):'-')+'</td><td class="c">'+(r.pdD!=null?dstr(r.pdD):'–')+'</td><td>'+esc(z.st||'')+'</td></tr>'}).join('');
-      st.innerHTML=shotHead('Update status pengiriman'+(pages>1?' (bagian '+(pg+1)+' dari '+pages+')':''),sub)+'<table class="shwa"><thead><tr>'+cols.map(function(c){return '<th class="'+c[1]+'">'+c[0]+'</th>'}).join('')+'</tr></thead><tbody>'+rows+'</tbody></table>';
+      st.innerHTML='<table class="shwa"><thead><tr>'+cols.map(function(c){return '<th class="'+c[1]+'">'+c[0]+'</th>'}).join('')+'</tr></thead><tbody>'+rows+'</tbody></table>';
       return shotRun(st,'WA_'+vn.replace(/[^A-Za-z0-9]+/g,'-').replace(/^-|-$/g,'')+'_'+todayStr()+(pages>1?'_'+(pg+1)+'-dari-'+pages:'')+'.png',2).finally(function(){st.remove()});
     });
   }
