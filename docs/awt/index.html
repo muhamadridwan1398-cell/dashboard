@@ -680,6 +680,12 @@
         <input type="file" id="excelInput" accept=".xlsx, .xls" style="display: none;" onchange="handleExcelUpload(this.files[0])">
     </div>
 
+    <div class="sales-row" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:-4px 0 12px;font-size:12px;color:var(--text-muted)">
+        <button type="button" class="btn-action" style="padding:6px 12px;font-size:12px" onclick="document.getElementById('salesInput').click()">👤 Upload Salper ID</button>
+        <input type="file" id="salesInput" accept=".xlsx, .xls" style="display:none" onchange="handleSalesUpload(this.files[0]);this.value=''">
+        <span id="salesInfo">Daftar Salper belum diupload</span>
+    </div>
+
     <div class="nav-tabs">
         <div class="tab-buttons">
             <button class="nav-btn active" id="btn-tab-dash" onclick="switchTab('tab-dash')">📊 1. Dashboard Utama</button>
@@ -934,7 +940,7 @@
                 <div class="filter-left">
                     <div class="filter-group">
                         <label>🔍 Cari:</label>
-                        <input type="text" id="searchFilter" style="width: 180px;" placeholder="Kode Item / MS / Cust..." oninput="applyDetailFiltersSoon()">
+                        <input type="text" id="searchFilter" style="width: 180px;" placeholder="Kode Item / MS / Cust / Sales..." oninput="applyDetailFiltersSoon()">
                     </div>
 
                     <div class="filter-group">
@@ -1008,6 +1014,7 @@
                             <th>Nama / Deskripsi Barang</th>
                             <th>Qty</th>
                             <th>Customer</th>
+                            <th>Sales Person</th>
                             <th>Picking Area</th>
                             <th>Time Paid (AQ)</th>
                             <th>Time Ready (AY)</th>
@@ -1017,7 +1024,7 @@
                     </thead>
                     <tbody id="detailTableBody">
                         <tr>
-                            <td colspan="13" class="empty-placeholder">Silakan upload file Excel terlebih dahulu.</td>
+                            <td colspan="14" class="empty-placeholder">Silakan upload file Excel terlebih dahulu.</td>
                         </tr>
                     </tbody>
                 </table>
@@ -1030,6 +1037,47 @@
     let globalData = []; 
     let globalUniqueDNs = []; 
     let currentFilteredData = [];
+    /* Daftar Salper ID -> nama (diupload terpisah, ikut tersimpan online bersama data AWT) */
+    let salesRows = [], salesMap = {}, salesAt = '', lastFileName = '';
+    function salKey(v) { return String(v == null ? '' : v).trim().toUpperCase(); }
+    function salName(it) { let k = salKey(it.salper); if (!k) return '-'; let m = salesMap[k]; return m ? m.n : k; }
+    function setSales(rows, at) {
+        salesRows = Array.isArray(rows) ? rows : []; salesAt = at || '';
+        salesMap = {};
+        salesRows.forEach(function (r) { let k = salKey(r[0]); if (k) salesMap[k] = { t: String(r[1] || ''), n: String(r[2] || ''), c: String(r[3] || '') }; });
+        let info = document.getElementById('salesInfo');
+        if (info) info.textContent = salesRows.length ? salesRows.length + ' sales terdaftar' + (salesAt ? ' · diperbarui ' + shStamp(salesAt) : '') : 'Daftar Salper belum diupload';
+        if (fullItems.length) applyDetailFilters();
+    }
+    function handleSalesUpload(file) {
+        if (!file) return;
+        let reader = new FileReader();
+        reader.onload = function (e) {
+            try {
+                let wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+                let rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 });
+                let hi = -1, ci = -1, ni = -1, ti = -1, gi = -1;
+                for (let i = 0; i < Math.min(rows.length, 10) && hi < 0; i++) {
+                    let h = (rows[i] || []).map(function (x) { return String(x == null ? '' : x).trim().toLowerCase(); });
+                    let a = h.findIndex(function (x) { return /^sal(es)?\s*per(son)?\s*id$/.test(x); }), b = h.findIndex(function (x) { return /^sal(es)?\s*per(son)?\s*name$/.test(x); });
+                    if (a > -1 && b > -1) { hi = i; ci = a; ni = b; ti = h.findIndex(function (x) { return /^type/.test(x); }); gi = h.findIndex(function (x) { return /^categ/.test(x); }); }
+                }
+                if (hi < 0) { alert('Format tidak sesuai. File harus punya kolom "Salper ID" dan "Salper Name".'); return; }
+                let seen = {}, out = [];
+                for (let r = hi + 1; r < rows.length; r++) {
+                    let row = rows[r]; if (!row) continue;
+                    let id = String(row[ci] == null ? '' : row[ci]).trim(); if (!id || seen[id.toUpperCase()]) continue;
+                    seen[id.toUpperCase()] = 1;
+                    out.push([id, ti > -1 ? String(row[ti] == null ? '' : row[ti]).trim() : '', String(row[ni] == null ? '' : row[ni]).trim(), gi > -1 ? String(row[gi] == null ? '' : row[gi]).trim() : '']);
+                }
+                if (!out.length) { alert('Tidak ada baris Salper ID di file ini.'); return; }
+                setSales(out, new Date().toISOString());
+                showToast('✅ ' + out.length + ' sales dimuat');
+                if (fullItems.length) shSave(lastFileName); else showToast('Upload data AWT dulu supaya daftar Salper ikut tersimpan online.');
+            } catch (err) { alert('File tidak bisa dibaca: ' + (err && err.message || err)); }
+        };
+        reader.readAsArrayBuffer(file);
+    }
     let currentCanvas = null;
 
     window.addEventListener('dragover', function(e) {
@@ -1262,6 +1310,7 @@
             let paidBeforeCol = headers.findIndex(h => /^paid before process/i.test((h || '').toString().trim()));
             let statusCol = headers.findIndex(h => /^status late/i.test((h || '').toString().trim()));
             let selisihCol = headers.findIndex(h => /^selisih/i.test((h || '').toString().trim()));
+            let salperCol = headers.findIndex(h => /sal(es)?\s*-?\s*per(son)?/i.test((h || '').toString()) && !/name|nama/i.test((h || '').toString()));
             hasCategoryCol = catCol !== -1;
 
             globalData = [];
@@ -1362,6 +1411,7 @@
                     diffMin: diff,
                     late: isLate,
                     tinting: isTintingItem,
+                    salper: salperCol !== -1 && row[salperCol] != null ? row[salperCol].toString().trim() : '',
                     status: statusStr
                 };
 
@@ -1390,7 +1440,7 @@
 
             buildFromItems(globalData);
             document.getElementById('status-text').innerText = `Data Berhasil Dimuat (${globalUniqueDNs.length} MS Unik / ${globalData.length} Items)`;
-            showToast("✅ Data Excel Berhasil Dimuat!");
+            showToast(salperCol === -1 ? "✅ Data dimuat. Kolom Salper ID tidak ditemukan di file ini." : "✅ Data Excel Berhasil Dimuat!");
             shSave(file.name);
         };
         reader.readAsArrayBuffer(file);
@@ -1681,7 +1731,9 @@
             let matchesSearch = d.itemNo.toString().toLowerCase().includes(search) ||
                                 d.itemDesc.toLowerCase().includes(search) ||
                                 d.dnNo.toLowerCase().includes(search) ||
-                                d.customer.toLowerCase().includes(search);
+                                d.customer.toLowerCase().includes(search) ||
+                                salName(d).toLowerCase().includes(search) ||
+                                String(d.salper || '').toLowerCase().includes(search);
             let matchesDate = dateVal === 'ALL' || d.date === dateVal;
             let matchesStatus = statusVal === 'ALL' || d.status.toLowerCase() === statusVal.toLowerCase();
             let matchesArea = areaVal === 'ALL' || d.area.toUpperCase().includes(areaVal);
@@ -1701,7 +1753,7 @@
         document.getElementById('detail-counter').innerText = `${currentFilteredData.length} Baris Item Tampil`;
 
         if (currentFilteredData.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="13" class="empty-placeholder">Tidak ada data transaksi yang sesuai dengan filter.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="14" class="empty-placeholder">Tidak ada data transaksi yang sesuai dengan filter.</td></tr>`;
             return;
         }
         renderDetailChunk();
@@ -1729,6 +1781,7 @@
                 <td style="text-align: left; font-weight: 600;">${escH(row.itemDesc)}</td>
                 <td><strong>${escH(row.qty)}</strong></td>
                 <td style="text-align: left;">${escH(row.customer)}</td>
+                <td style="text-align: left;" title="${escH(row.salper)}">${escH(salName(row))}</td>
                 <td><span style="font-weight: 600; color: #1f4e78;">${escH(row.area)}</span></td>
                 <td>${escH(row.tPaid)}</td>
                 <td>${escH(row.tReady)}</td>
@@ -1737,7 +1790,7 @@
             </tr>`);
         }
         detailShown = end;
-        if (end < currentFilteredData.length) html.push(`<tr id="detailMore"><td colspan="13" class="empty-placeholder">Memuat ${Math.min(DETAIL_CHUNK, currentFilteredData.length - end)} baris berikutnya… (${end} dari ${currentFilteredData.length})</td></tr>`);
+        if (end < currentFilteredData.length) html.push(`<tr id="detailMore"><td colspan="14" class="empty-placeholder">Memuat ${Math.min(DETAIL_CHUNK, currentFilteredData.length - end)} baris berikutnya… (${end} dari ${currentFilteredData.length})</td></tr>`);
         tbody.insertAdjacentHTML('beforeend', html.join(''));
         let more = document.getElementById('detailMore');
         if (more) {
@@ -1768,6 +1821,8 @@
             { header: 'Nama / Deskripsi Barang', key: 'itemDesc', width: 45 },
             { header: 'Qty', key: 'qty', width: 8 },
             { header: 'Customer', key: 'customer', width: 32 },
+            { header: 'Salper ID', key: 'salperId', width: 20 },
+            { header: 'Salper Name', key: 'salperName', width: 26 },
             { header: 'Picking Area', key: 'area', width: 16 },
             { header: 'Time Paid', key: 'tPaid', width: 13 },
             { header: 'Time Ready Actual', key: 'tReady', width: 18 },
@@ -1801,6 +1856,8 @@
                 itemDesc: row.itemDesc,
                 qty: row.qty,
                 customer: row.customer,
+                salperId: row.salper || '',
+                salperName: row.salper ? salName(row) : '',
                 area: row.area,
                 tPaid: row.tPaid,
                 tReady: row.tReady,
@@ -1818,7 +1875,7 @@
                     right: { style: 'thin', color: { argb: 'FFD0D7DE' } }
                 };
 
-                if (colNumber === 4 || colNumber === 6 || colNumber === 8) {
+                if (colNumber === 4 || colNumber === 6 || colNumber === 8 || colNumber === 10) {
                     cell.alignment = { vertical: 'middle', horizontal: 'left' };
                 } else {
                     cell.alignment = { vertical: 'middle', horizontal: 'center' };
@@ -1826,14 +1883,14 @@
 
                 if (isAwt) {
                     cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFECEC' } };
-                    if (colNumber === 13) {
+                    if (colNumber === 15) {
                         cell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FFE53E3E' } };
                         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFADBD8' } };
                     } else {
                         cell.font = { name: 'Segoe UI', size: 10, color: { argb: 'FF2D3748' } };
                     }
                 } else {
-                    if (colNumber === 13) {
+                    if (colNumber === 15) {
                         cell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FF27AE60' } };
                         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD4EFDF' } };
                     } else {
@@ -2196,6 +2253,8 @@
             const sh = await r.json();
             const items = sh && sh.data && Array.isArray(sh.data.items) ? sh.data.items : null;
             if (!items || !items.length) { shBanner(0); shMsg('Belum ada data tersimpan. Silakan upload data.'); return; }
+            lastFileName = (sh.data.fileName || '');
+            setSales(sh.data.sales && sh.data.sales.rows, sh.data.sales && sh.data.sales.at);
             buildFromItems(items);
             shBanner(0);
             shMsg('Data terakhir disimpan: ' + shStamp(sh.savedAt) + (sh.data.fileName ? ' (' + sh.data.fileName + ')' : '') + ' · ' + globalUniqueDNs.length + ' MS Unik / ' + globalData.length + ' Items');
@@ -2207,12 +2266,13 @@
         const items = fullItems;
         const run = function (tok) {
             shMsg('Menyimpan data untuk semua pengguna…');
-            const stream = new Blob([JSON.stringify({ items: items, fileName: fileName || '', uploadedAt: new Date().toISOString() })]).stream().pipeThrough(new CompressionStream('gzip'));
+            const stream = new Blob([JSON.stringify({ items: items, fileName: fileName || lastFileName || '', uploadedAt: new Date().toISOString(), sales: salesRows.length ? { rows: salesRows, at: salesAt } : undefined })]).stream().pipeThrough(new CompressionStream('gzip'));
             new Response(stream).arrayBuffer().then(function (body) {
                 return fetch(SHURL, { method: 'PUT', headers: { 'Content-Type': 'application/gzip', 'Authorization': 'Bearer ' + tok }, body: body });
             }).then(function (r) {
                 return r.json().catch(function () { return {}; }).then(function (j) {
                     if (!r.ok) throw new Error(j.error || ('Simpan gagal (' + r.status + ').'));
+                    if (fileName) lastFileName = fileName;
                     shMsg('Data tersimpan untuk semua pengguna (' + shStamp(j.savedAt) + ') · ' + globalUniqueDNs.length + ' MS Unik / ' + items.length + ' Items');
                     showToast('✅ Data tersimpan untuk semua pengguna');
                 });
