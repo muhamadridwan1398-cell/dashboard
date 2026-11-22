@@ -1381,7 +1381,9 @@ wire();
 #kdPanel .kdgap{color:#a94c4c;font-size:11.5px}
 #kdPanel .kdlocs span.r{background:#fff3d6;border-color:#ecd28c}
 #kdPanel .secondary.on{background:var(--navy);color:#fff}
-</style><script>(function(){
+body.kdonly .page-tabs,body.kdonly #uploadPanel,body.kdonly .snapshot,body.kdonly .panel:not(#kdPanel){display:none!important}
+</style>
+body.kdonly .page-tabs,body.kdonly #uploadPanel,body.kdonly .snapshot,body.kdonly .panel:not(#kdPanel){display:none!important}<script>(function(){
 var $=function(i){return document.getElementById(i)};
 var API='https://igkdetuufvcczmiluvqd.supabase.co/functions/v1/pic-daily',CCKEY='qbig_cc_v1',AUTHK='qbig_kd_auth',XLU='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
 var A=null,MAP={},DONE={},RAW=null,REAL=null,FIL='todo',LF='todo',SINCE='',TMR=null,OPEN={},BUSY=false,ADM=false,DK='ALL',G=null,GV='prog',GQ='',GF='no',GX=null;
@@ -1413,7 +1415,9 @@ function loginView(){
   var go=function(){var n=$('kdN').value.trim(),p=$('kdP').value.trim();if(!n||!p){say('Isi nama dan PIN.',1);return}
     $('kdLg').disabled=true;say('Memeriksa…');call('login',{name:n,pin:p}).then(function(j){A={name:j.name,pin:p,role:j.role};saveAuth();say('');start()}).catch(function(e){say(e.message,1)}).finally(function(){var b=$('kdLg');if(b)b.disabled=false})};
   $('kdLg').addEventListener('click',go);$('kdP').addEventListener('keydown',function(e){if(e.key==='Enter')go()});$('kdN').addEventListener('keydown',function(e){if(e.key==='Enter')$('kdP').focus()})}
-function topbar(){var w=$('kdWho'),o=$('kdOut');if(A){w.textContent=A.name+' · '+({pic:'PIC',tl:'Tim Leader',manager:'Manager',security:'Satpam'}[A.role]||A.role);o.hidden=false}else{w.textContent='';o.hidden=true}}
+var URLONLY=/[?&]kd(=|&|$)/.test(location.search);
+function onlyMode(){var on=URLONLY||!!(A&&(A.role==='pic'||A.role==='security'));document.body.classList.toggle('kdonly',on);return on}
+function topbar(){onlyMode();var w=$('kdWho'),o=$('kdOut');if(A){w.textContent=A.name+' · '+({pic:'PIC',tl:'Tim Leader',manager:'Manager',security:'Satpam'}[A.role]||A.role);o.hidden=false}else{w.textContent='';o.hidden=true}}
 
 /* ---------- muat data ---------- */
 function refresh(quiet){
@@ -1563,11 +1567,13 @@ function start(){topbar();say('Memuat…');refresh().then(function(){if(A){say('
 function open(){restoreAuth();topbar();if(A){start()}else{loginView()}}
 var prev=window.switchPage;
 window.switchPage=function(mode){
+  if(mode!=='kd'&&onlyMode())mode='kd';
   var tabs=['tabMain','tabDetails','tabGrey','tabCC','tabSO'];
   if(mode==='kd'){['accuracyPanel','adjustmentPanel','minusPanel','detailsPanel','greyProgPanel','ccPanel','soPanel'].forEach(function(i){var e=$(i);if(e)e.hidden=true});
     tabs.forEach(function(i){var e=$(i);if(e)e.classList.remove('active')});$('kdPanel').hidden=false;$('tabKD').classList.add('active');open();return}
   $('kdPanel').hidden=true;$('tabKD').classList.remove('active');stopTimer();return prev(mode)};
 $('tabKD').addEventListener('click',function(){window.switchPage('kd')});
+if(URLONLY){document.title='Kontrol Daily Akurasi';var h1=document.querySelector('.top h1');if(h1)h1.textContent='Kontrol Daily Akurasi Gudang';window.switchPage('kd')}
 })();</script>
 <script src="../pwa.js" defer></script>
 <style id="qb-layer">
