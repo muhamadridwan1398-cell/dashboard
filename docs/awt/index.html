@@ -209,6 +209,8 @@
         .quick-btn { border: 1px solid #cbd5e1; background: #fff; color: #1f4e78; border-radius: 999px; padding: 7px 14px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
         .quick-btn:hover { background: #eef3ff; }
         .quick-btn.active { background: #1f4e78; border-color: #1f4e78; color: #fff; }
+        .quick-sub { padding: 5px 12px; font-size: 12px; }
+        .quick-sep { width: 1px; align-self: stretch; background: #cbd5e1; margin: 2px 4px; }
         .quick-info { font-size: 12px; color: var(--text-muted); }
         .kpi-grid {
             display: grid;
@@ -705,9 +707,12 @@
         <div id="captureArea">
             <div class="quick-view" id="quickView">
                 <span class="quick-label">Tampilan data:</span>
-                <button type="button" class="quick-btn" data-q="ALL" onclick="setQuickView('ALL')">Semua Data</button>
-                <button type="button" class="quick-btn active" data-q="WHCC" onclick="setQuickView('WHCC')">WH Area · Cash &amp; Carry Gudang</button>
-                <button type="button" class="quick-btn" data-q="CCPND" onclick="setQuickView('CCPND')">Cash &amp; Carry via PND</button>
+                <button type="button" class="quick-btn active" data-t="GDG" onclick="setQuickType('GDG')">Cash &amp; Carry via Gudang</button>
+                <button type="button" class="quick-btn" data-t="PND" onclick="setQuickType('PND')">Cash &amp; Carry via PND</button>
+                <span class="quick-sep" aria-hidden="true"></span>
+                <span class="quick-label">Area:</span>
+                <button type="button" class="quick-btn quick-sub" data-a="ALL" onclick="setQuickArea('ALL')">Semua Area</button>
+                <button type="button" class="quick-btn quick-sub active" data-a="WH" onclick="setQuickArea('WH')">WH Area</button>
                 <span class="quick-info" id="quickInfo"></span>
             </div>
             <div class="kpi-grid">
@@ -1212,7 +1217,7 @@
     let awtLimitNow = AWT_LIMIT;
     /* Cash & Carry via PND: batas 10 menit, kecuali item "Paid Before Process" / tinting yang memakai 30 menit (sama dengan kolom Status Late By Item di Excel). */
     function pndLate(it) { if (typeof it.xl === 'boolean') return it.xl; return (Number(it.diffMin) || 0) > (it.tinting ? 30 : 10); }
-    function limitFor(q) { return q === 'CCPND' ? 10 : AWT_LIMIT; }
+    function limitFor(q) { return q.indexOf('PND') === 0 ? 10 : AWT_LIMIT; }
     /* Semua tulisan "30 Min"/"30 Menit" di halaman mengikuti batas aktif (teks asli disimpan per node). */
     const limOrig = new WeakMap();
     function applyLimitLabels() {
@@ -1226,17 +1231,22 @@
         });
     }
     let fullItems = [];
-    let quickView = 'WHCC'; /* tampilan awal: WH Area + Cash & Carry Gudang */
+    let quickView = 'GDG_WH'; /* tampilan: tipe (GDG = Cash & Carry via Gudang, PND = Cash & Carry via PND) + area (ALL / WH); awal: Gudang + WH Area */
     function isCcGudang(t) { let n = String(t || '').toLowerCase().replace(/[^a-z]/g, ''); return n.indexOf('cashcarry') > -1 && n.indexOf('gudang') > -1; } /* contoh tipe: "Cash&Carry via Gudang Store" */
     function isCcPnd(t) { let n = String(t || '').toLowerCase().replace(/[^a-z]/g, ''); return n.indexOf('cashcarry') > -1 && n.indexOf('pickup') > -1 && n.indexOf('delivery') > -1; } /* tipe: "Cash&Carry via Pickup & Delivery" (PND) */
-    function qvMatch(q, it) { return q === 'WHCC' ? (isWhArea(it.area) && isCcGudang(it.notaType)) : q === 'CCPND' ? isCcPnd(it.notaType) : true; }
-    function qvHas(q, list) { return q === 'ALL' || list.some(function (it) { return q === 'WHCC' ? isCcGudang(it.notaType) : isCcPnd(it.notaType); }); }
-    const QV_NAME = { WHCC: 'WH Area dan tipe Cash & Carry Gudang', CCPND: 'tipe Cash & Carry via PND (batas AWT 10 menit, item Paid Before Process 30 menit; semua area)' };
+    function qvMatch(q, it) { let t = q.split('_')[0], a = q.split('_')[1]; return (t === 'GDG' ? isCcGudang(it.notaType) : isCcPnd(it.notaType)) && (a !== 'WH' || isWhArea(it.area)); }
+    function qvHas(q, list) { return q === 'ALL' || list.some(function (it) { return q.indexOf('GDG') === 0 ? isCcGudang(it.notaType) : isCcPnd(it.notaType); }); }
+    function qvName(q) {
+        let t = q.split('_')[0], a = q.split('_')[1];
+        return (t === 'GDG' ? 'Cash & Carry via Gudang' : 'Cash & Carry via PND (batas AWT 10 menit, item Paid Before Process 30 menit)') + (a === 'WH' ? ', WH Area saja' : ', semua area');
+    }
+    function setQuickType(t) { setQuickView(t + '_' + (t === 'GDG' ? 'WH' : 'ALL')); } /* default area: Gudang = WH Area, PND = Semua Area */
+    function setQuickArea(a) { setQuickView((quickView === 'ALL' ? 'GDG' : quickView.split('_')[0]) + '_' + a); }
     function isWhArea(a) { return String(a || '').toUpperCase().indexOf('WH') > -1; }
     function setQuickView(q) {
         if (!qvHas(q, fullItems)) {
             let tp = Array.from(new Set(fullItems.map(function (d) { return d.notaType; }))).join(', ') || '(belum ada data)';
-            showToast('Tipe ' + (q === 'CCPND' ? 'Cash & Carry via PND' : 'Cash & Carry Gudang') + ' tidak ditemukan di data. Tipe yang ada: ' + tp);
+            showToast('Tipe ' + (q.indexOf('PND') === 0 ? 'Cash & Carry via PND' : 'Cash & Carry via Gudang') + ' tidak ditemukan di data. Tipe yang ada: ' + tp);
             return;
         }
         quickView = q;
@@ -1251,11 +1261,11 @@
         if (!qvHas(quickView, allItems)) quickView = 'ALL';
         awtLimitNow = limitFor(quickView); /* tipe tidak ada di data: tampilkan semua */
         let items = quickView === 'ALL' ? allItems : allItems.filter(function (it) { return qvMatch(quickView, it); });
-        document.querySelectorAll('#quickView .quick-btn').forEach(function (b) { b.classList.toggle('active', b.dataset.q === quickView); });
+        document.querySelectorAll('#quickView .quick-btn').forEach(function (b) { let qt = quickView.split('_')[0], qa = quickView.split('_')[1]; b.classList.toggle('active', quickView !== 'ALL' && (b.dataset.t ? b.dataset.t === qt : b.dataset.a === qa)); });
         let qi = document.getElementById('quickInfo');
-        if (qi) qi.textContent = quickView !== 'ALL' ? 'Menampilkan ' + QV_NAME[quickView] + ' saja (' + items.length + ' dari ' + allItems.length + ' item)' : '';
+        if (qi) qi.textContent = quickView !== 'ALL' ? 'Menampilkan ' + qvName(quickView) + ' (' + items.length + ' dari ' + allItems.length + ' item)' : '';
         items.forEach(function (it) {
-            it.late = quickView === 'CCPND' ? pndLate(it) : (Number(it.diffMin) || 0) > awtLimitNow;
+            it.late = quickView.indexOf('PND') === 0 ? pndLate(it) : (Number(it.diffMin) || 0) > awtLimitNow;
             it.status = it.late ? 'AWT' : 'NO AWT';
         });
         globalData = items;
@@ -2074,7 +2084,7 @@
     function renderWaReport() {
         let dt = document.getElementById('waDate').value;
         document.getElementById('waText').value = buildWaReport(dt);
-        document.getElementById('waNote').textContent = 'Daily = tanggal ' + dt + ' · MTD = tanggal 1 sampai ' + dt + ' · Total DR = jumlah MS unik · Late = lebih dari ' + awtLimitNow + ' menit' + (quickView === 'WHCC' ? ' · tampilan WH Area / Cash & Carry Gudang' : quickView === 'CCPND' ? ' · tampilan Cash & Carry via PND' : '');
+        document.getElementById('waNote').textContent = 'Daily = tanggal ' + dt + ' · MTD = tanggal 1 sampai ' + dt + ' · Total DR = jumlah MS unik · Late = lebih dari ' + awtLimitNow + ' menit' + (quickView !== 'ALL' ? ' · tampilan ' + qvName(quickView).replace(/ \(batas.*?\)/, '') : '');
     }
     var WA_DEFAULT = [
         { n: 'Ridwan', p: '6285213099276' },
