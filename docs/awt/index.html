@@ -951,6 +951,17 @@
                     </div>
 
                     <div class="filter-group">
+                        <label>Week:</label>
+                        <select id="weekFilter" onchange="applyDetailFilters()">
+                            <option value="ALL">Semua Week</option>
+                            <option value="0">Week 1 (tgl 1–7)</option>
+                            <option value="1">Week 2 (tgl 8–14)</option>
+                            <option value="2">Week 3 (tgl 15–21)</option>
+                            <option value="3">Week 4 (tgl 22–akhir)</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
                         <label>Status:</label>
                         <select id="statusFilter" onchange="applyDetailFilters()">
                             <option value="ALL">Semua Status</option>
@@ -1133,6 +1144,7 @@
         switchTab('tab-detail');
 
         document.getElementById('dateFilter').value = dateStr;
+        document.getElementById('weekFilter').value = 'ALL';
         document.getElementById('areaFilter').value = areaVal;
         document.getElementById('durationTierFilter').value = tierVal;
         document.getElementById('statusFilter').value = tierVal === 'lt10' ? 'no awt' : (tierVal === 'ALL' && areaVal === 'ALL' ? 'ALL' : 'AWT');
@@ -1149,6 +1161,7 @@
 
     function resetDetailFilters() {
         document.getElementById('dateFilter').value = 'ALL';
+        document.getElementById('weekFilter').value = 'ALL';
         document.getElementById('areaFilter').value = 'ALL';
         document.getElementById('statusFilter').value = 'ALL';
         let tierEl = document.getElementById('durationTierFilter');
@@ -1716,9 +1729,12 @@
         document.getElementById('rekapTableFoot').style.display = 'table-row-group';
     }
 
+    /* Week: tgl 1–7, 8–14, 15–21, 22–akhir bulan (sama dengan dashboard Outstanding) */
+    function weekOfDate(ds) { let n = parseInt(String(ds || '').slice(8, 10), 10); if (!n) return -1; return n <= 7 ? 0 : n <= 14 ? 1 : n <= 21 ? 2 : 3; }
     function applyDetailFilters() {
         let search = document.getElementById('searchFilter').value.toLowerCase();
         let dateVal = document.getElementById('dateFilter').value;
+        let weekVal = document.getElementById('weekFilter').value;
         let statusVal = document.getElementById('statusFilter').value;
         let areaVal = document.getElementById('areaFilter').value;
         let tierEl = document.getElementById('durationTierFilter');
@@ -1735,6 +1751,7 @@
                                 salName(d).toLowerCase().includes(search) ||
                                 String(d.salper || '').toLowerCase().includes(search);
             let matchesDate = dateVal === 'ALL' || d.date === dateVal;
+            let matchesWeek = weekVal === 'ALL' || weekOfDate(d.date) === Number(weekVal);
             let matchesStatus = statusVal === 'ALL' || d.status.toLowerCase() === statusVal.toLowerCase();
             let matchesArea = areaVal === 'ALL' || d.area.toUpperCase().includes(areaVal);
             let matchesType = isAllTypesChecked || selectedTypes.includes(d.notaType);
@@ -1743,7 +1760,7 @@
             if (tierVal === 'gt10') matchesTier = d.late;
             else if (tierVal === 'lt10') matchesTier = !d.late;
 
-            return matchesSearch && matchesDate && matchesStatus && matchesArea && matchesType && matchesTier;
+            return matchesSearch && matchesDate && matchesWeek && matchesStatus && matchesArea && matchesType && matchesTier;
         });
 
         let tbody = document.getElementById('detailTableBody');
@@ -1905,7 +1922,8 @@
         let url = URL.createObjectURL(blob);
         let a = document.createElement('a');
         a.href = url;
-        a.download = 'Laporan_Monitoring_AWT.xlsx';
+        let wkSel = document.getElementById('weekFilter').value;
+        a.download = 'Laporan_Monitoring_AWT' + (wkSel !== 'ALL' ? '_Week' + (Number(wkSel) + 1) : '') + '.xlsx';
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
