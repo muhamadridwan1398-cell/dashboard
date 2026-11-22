@@ -696,6 +696,7 @@ function num(v){var n=parseFloat(v);return isNaN(n)?null:n}
 /* ---------- klasifikasi ---------- */
 function classRes(cm){
   var c=String(cm||'').toUpperCase();
+  if(c.split(';')[0].trim().split(/\s+/)[0].replace(/[^A-Z]/g,'')==='KIRIM')return 'Kirim';
   if(/AMSEN|TITIP|AMBIL SENDIRI|^\s*AMBIL/.test(c))return 'Amsen';
   var first=c.split(';')[0].trim().split(/\s+/)[0]||'';
   first=first.replace(/[^A-Z]/g,'');
