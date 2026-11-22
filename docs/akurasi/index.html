@@ -1382,11 +1382,12 @@ wire();
 #kdPanel .kdlocs span.r{background:#fff3d6;border-color:#ecd28c}
 #kdPanel .secondary.on{background:var(--navy);color:#fff}
 body.kdonly .page-tabs,body.kdonly #uploadPanel,body.kdonly .snapshot,body.kdonly .panel:not(#kdPanel){display:none!important}
+#kdPanel .kdlocs label{font-size:11.5px;border:1px solid var(--line);border-radius:6px;padding:3px 8px;background:#fff;cursor:pointer;display:inline-flex;gap:5px;align-items:center}#kdPanel .kdlocs label.d{background:#dff3e6;border-color:#bfe0cb}#kdPanel .kdlocs label.v{outline:2px solid #2f6b49}#kdPanel .kdlocs label input{margin:0;width:16px;height:16px}
 </style>
 body.kdonly .page-tabs,body.kdonly #uploadPanel,body.kdonly .snapshot,body.kdonly .panel:not(#kdPanel){display:none!important}<script>(function(){
 var $=function(i){return document.getElementById(i)};
 var API='https://igkdetuufvcczmiluvqd.supabase.co/functions/v1/pic-daily',CCKEY='qbig_cc_v1',AUTHK='qbig_kd_auth',XLU='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
-var A=null,MAP={},DONE={},RAW=null,REAL=null,FIL='todo',LF='todo',SINCE='',TMR=null,OPEN={},BUSY=false,ADM=false,DK='ALL',G=null,GV='prog',GQ='',GF='no',GX=null;
+var A=null,MAP={},DONE={},RAW=null,REAL=null,FIL='todo',LF='todo',SINCE='',TMR=null,OPEN={},BUSY=false,ADM=false,DK='ALL',VER={},G=null,GV='prog',GQ='',GF='no',GX=null;
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 function say(t,err){var m=$('kdMsg');if(!m)return;m.textContent=t||'';m.style.color=err?'#a94c4c':'#46566b'}
 function call(op,body,tok){var h={'Content-Type':'application/json'};if(tok)h.Authorization='Bearer '+tok;
@@ -1423,7 +1424,7 @@ function topbar(){onlyMode();var w=$('kdWho'),o=$('kdOut');if(A){w.textContent=A
 function refresh(quiet){
   if(!A||BUSY)return Promise.resolve();BUSY=true;
   if(A.role==='security')return ucall('gate_get').then(function(j){G=j;render()}).catch(function(e){if(/Nama atau PIN/.test(e.message)){A=null;try{sessionStorage.removeItem(AUTHK)}catch(x){}topbar();loginView()}say(e.message,1)}).finally(function(){BUSY=false});
-  return Promise.all([ucall('map'),ucall('real_get').catch(function(){return null}),ucall('done_get',{days:[DK]}),GV==='gate'?ucall('gate_get').catch(function(){return null}):Promise.resolve(G)]).then(function(r){G=r[3];
+  return Promise.all([ucall('map'),ucall('real_get').catch(function(){return null}),ucall('done_get',{days:[DK]}),GV==='gate'?ucall('gate_get').catch(function(){return null}):Promise.resolve(G),ucall('verify_get').catch(function(){return null})]).then(function(r){G=r[3];if(r[4]){VER={};(r[4].ver||[]).forEach(function(x){VER[x[0]]={by:x[1],t:x[2]}})}
     MAP={};(r[0].map||[]).forEach(function(x){MAP[x[0]]=x[1]});RAW=r[1];buildReal();
     DONE={};(r[2].done||[]).forEach(function(x){DONE[x[1]]={pic:x[2],note:x[3],t:x[4]}});render()}).catch(function(e){
     if(/Nama atau PIN/.test(e.message)){A=null;try{sessionStorage.removeItem(AUTHK)}catch(x){}topbar();loginView()}
@@ -1453,26 +1454,26 @@ function picView(){
   if(!ks.length)h+='<div class="small">Tidak ada lokasi untuk Anda.</div>';
   else if(!show.length)h+='<div class="kdcard ok"><b>'+(FIL==='todo'?'Semua lokasi sudah akurasi. Terima kasih.':'Tidak ada lokasi di filter ini.')+'</b></div>';
   return h+show.map(function(k){var st=S[k],d=st.d,ok=REAL?st.real:st.rep;
-    return '<div class="kdcard'+(ok?' ok':'')+'" data-loc="'+esc(k)+'"><div class="kdh"><b>'+esc(k)+'</b><span class="sp">'+(d?'Dilaporkan '+esc(hhmm(d.t)):'Belum dilaporkan')+'</span>'+wmsBadge(st)+'<button type="button" class="kdgo'+(d?' undo':'')+'" data-mark="'+(d?'0':'1')+'">'+(d?'Batalkan laporan':'Lapor sudah dicek')+'</button></div>'+
+    return '<div class="kdcard'+(ok?' ok':'')+'" data-loc="'+esc(k)+'"><div class="kdh"><b>'+esc(k)+'</b><span class="sp">'+(d?'Dilaporkan '+esc(hhmm(d.t)):'Belum dilaporkan')+'</span>'+wmsBadge(st)+(VER[k]?'<span class="kdw w2" title="Diverifikasi TL/MOD">Diverifikasi '+esc(VER[k].by)+' · '+esc(hhmm(VER[k].t))+'</span>':'')+'<button type="button" class="kdgo'+(d?' undo':'')+'" data-mark="'+(d?'0':'1')+'">'+(d?'Batalkan laporan':'Lapor sudah dicek')+'</button></div>'+
       (st.real?'<details><summary>Hasil hitung terakhir ('+st.r.n+' item)</summary><table><thead><tr><th>Item</th><th class="n">Qty sistem</th><th class="n">Qty hitung</th><th>Hasil</th><th>Tanggal</th></tr></thead><tbody>'+st.r.list.map(function(i){return '<tr><td>'+esc(i.c)+'</td><td class="n">'+fmt(i.qs||0)+'</td><td class="n">'+fmt(i.qc||0)+'</td><td>'+(i.m?'Cocok':'<b style="color:#a94c4c">Tidak cocok</b>')+'</td><td>'+esc(shortD(i.d))+'</td></tr>'}).join('')+'</tbody></table></details>':'')+'</div>'}).join('')}
 function leadStats(){
   var P={};
   locList().forEach(function(k){var pic=MAP[k],p=P[pic]||(P[pic]={pic:pic,locs:[],rep:0,real:0,items:0,mt:0,gap:0,last:''}),st=locStat(k);p.locs.push({loc:k,st:st});
     if(st.rep)p.rep++;if(st.real){p.real++;p.items+=st.r.n;p.mt+=st.r.mt;if(st.r.last>p.last)p.last=st.r.last}else if(st.rep)p.gap++;if(!REAL&&st.rep&&st.d.t>p.last)p.last=st.d.t});
-  var arr=Object.keys(P).map(function(k){var p=P[k];p.n=p.locs.length;p.done=REAL?p.real:p.rep;p.pc=p.n?Math.round(p.done/p.n*100):0;p.s=p.done===0?0:(p.done<p.n?1:2);p.mp=p.items?Math.round(p.mt/p.items*100):null;return p});
+  var arr=Object.keys(P).map(function(k){var p=P[k];p.n=p.locs.length;p.done=REAL?p.real:p.rep;p.pc=p.n?Math.round(p.done/p.n*100):0;p.vf=p.locs.filter(function(l){return VER[l.loc]}).length;p.s=p.done===0?0:(p.done<p.n?1:2);p.mp=p.items?Math.round(p.mt/p.items*100):null;return p});
   arr.sort(function(a,b){return a.s-b.s||a.pc-b.pc||a.pic.localeCompare(b.pic)});return arr}
 function leadView(){
   var arr=leadStats(),tot=0,dn=0,full=0,gap=0,rp=0,it=0,mt=0;arr.forEach(function(p){tot+=p.n;dn+=p.done;rp+=p.rep;gap+=p.gap;it+=p.items;mt+=p.mt;if(p.s===2)full++});
   var pc=tot?Math.round(dn/tot*100):0,stl=['Belum mulai','Sedang jalan','Selesai'],src=REAL?'Real WMS':'Laporan PIC';
   var h='<div class="kdkpi"><div class="kdk"><b>'+pc+'%</b><span>lokasi sudah akurasi · '+src+'</span>'+bar(pc)+'</div><div class="kdk"><b>'+dn+' / '+tot+'</b><span>lokasi sudah akurasi</span></div><div class="kdk"><b>'+full+' / '+arr.length+'</b><span>PIC selesai 100%</span></div>'+(REAL?'<div class="kdk"><b>'+(it?Math.round(mt/it*100):0)+'%</b><span>item cocok ('+mt+' dari '+it+')</span></div>':'<div class="kdk"><b>'+arr.filter(function(p){return p.s===0}).length+'</b><span>PIC belum mulai</span></div>')+'</div>';
-  h+=realNote()+sinceBox()+'<div class="kdtools"><button class="secondary" id="kdCopy" type="button">Salin ringkasan WA</button>'+(REAL&&gap?'<span class="small">'+gap+' lokasi dilaporkan PIC tapi belum ada di WMS.</span>':'')+'<span class="small">Klik baris PIC untuk melihat lokasi yang sudah dan belum akurasi. Diperbarui tiap 45 detik.</span></div>';
-  h+='<div class="ccwrap" style="overflow-x:auto"><table class="kdt"><thead><tr><th>PIC</th><th>Lokasi</th>'+(REAL?'<th>Sudah akurasi</th><th>Cocok</th>':'')+'<th>Lapor PIC</th><th>Progres</th><th>Status</th><th>Terakhir</th></tr></thead><tbody>'+arr.map(function(p){
-    var row='<tr class="pr" data-pic="'+esc(p.pic)+'"><td><b>'+esc(p.pic)+'</b></td><td>'+p.n+'</td>'+(REAL?'<td>'+p.real+'</td><td>'+(p.mp==null?'–':p.mp+'%')+'</td>':'')+'<td>'+p.rep+(REAL&&p.gap?' <span class="kdgap" title="Dilaporkan PIC tetapi belum ada di laporan WMS">('+p.gap+' belum di WMS)</span>':'')+'</td><td style="min-width:130px">'+bar(p.pc)+'<span class="small">'+p.pc+'%</span></td><td><span class="kdst s'+p.s+'">'+stl[p.s]+'</span></td><td class="small">'+(p.last?esc(p.last.length>10?hhmm(p.last):shortD(p.last)):'–')+'</td></tr>';
+  h+=realNote()+sinceBox()+'<div class="kdtools"><button class="secondary" id="kdCopy" type="button">Salin ringkasan WA</button>'+(REAL&&gap?'<span class="small">'+gap+' lokasi dilaporkan PIC tapi belum ada di WMS.</span>':'')+'<span class="small">Klik baris PIC untuk melihat lokasi dan mencentang verifikasi TL/MOD. Diperbarui tiap 45 detik.</span></div>';
+  h+='<div class="ccwrap" style="overflow-x:auto"><table class="kdt"><thead><tr><th>PIC</th><th>Lokasi</th>'+(REAL?'<th>Sudah akurasi</th><th>Cocok</th>':'')+'<th>Lapor PIC</th><th>Progres</th><th>Status</th><th>Verifikasi TL/MOD</th><th>Terakhir</th></tr></thead><tbody>'+arr.map(function(p){
+    var row='<tr class="pr" data-pic="'+esc(p.pic)+'"><td><b>'+esc(p.pic)+'</b></td><td>'+p.n+'</td>'+(REAL?'<td>'+p.real+'</td><td>'+(p.mp==null?'–':p.mp+'%')+'</td>':'')+'<td>'+p.rep+(REAL&&p.gap?' <span class="kdgap" title="Dilaporkan PIC tetapi belum ada di laporan WMS">('+p.gap+' belum di WMS)</span>':'')+'</td><td style="min-width:130px">'+bar(p.pc)+'<span class="small">'+p.pc+'%</span></td><td><span class="kdst s'+p.s+'">'+stl[p.s]+'</span></td><td>'+p.vf+' / '+p.n+'</td><td class="small">'+(p.last?esc(p.last.length>10?hhmm(p.last):shortD(p.last)):'–')+'</td></tr>';
     if(!OPEN['p:'+p.pic])return row;
     var ls=p.locs.filter(function(l){var x=REAL?l.st.real:l.st.rep;return LF==='all'||(LF==='done'?x:!x)}),nd=p.locs.filter(function(l){return REAL?l.st.real:l.st.rep}).length;
-    return row+'<tr><td colspan="'+(REAL?8:6)+'"><div class="kdtools"><button class="secondary'+(LF==='todo'?' on':'')+'" data-lf="todo" type="button">Belum ('+(p.n-nd)+')</button><button class="secondary'+(LF==='done'?' on':'')+'" data-lf="done" type="button">Sudah ('+nd+')</button><button class="secondary'+(LF==='all'?' on':'')+'" data-lf="all" type="button">Semua ('+p.n+')</button></div>'+
+    return row+'<tr><td colspan="'+(REAL?9:7)+'"><div class="kdtools"><button class="secondary'+(LF==='todo'?' on':'')+'" data-lf="todo" type="button">Belum ('+(p.n-nd)+')</button><button class="secondary'+(LF==='done'?' on':'')+'" data-lf="done" type="button">Sudah ('+nd+')</button><button class="secondary'+(LF==='all'?' on':'')+'" data-lf="all" type="button">Semua ('+p.n+')</button><button class="secondary" type="button" data-verall="'+esc(p.pic)+'">Centang semua yang sudah akurasi</button><span class="small">Centang = lokasi sudah Anda verifikasi.</span></div>'+
       '<div class="kdlocs">'+ls.map(function(l){var st=l.st,c=st.real?'d':(st.rep?'r':''),t=st.real?'Sudah akurasi '+shortD(st.r.last)+' · '+st.r.n+' item, '+st.r.mt+' cocok'+(st.rep?' · dilaporkan PIC':''):(st.rep?'Dilaporkan PIC, belum ada di WMS':'Belum akurasi');
-        return '<span class="'+c+'" title="'+esc(t)+'">'+esc(l.loc)+(st.real?' ✓ '+esc(shortD(st.r.last)):(st.rep?' ●':''))+'</span>'}).join('')+(ls.length?'':'<span class="small" style="border:0">Tidak ada lokasi di filter ini.</span>')+'</div></td></tr>'}).join('')+'</tbody></table></div>';
+        var v=VER[l.loc];return '<label class="'+c+(v?' v':'')+'" title="'+esc(t+(v?' · diverifikasi '+v.by+' '+hhmm(v.t):''))+'"><input type="checkbox" data-ver="'+esc(l.loc)+'"'+(v?' checked':'')+'> '+esc(l.loc)+(st.real?' ✓ '+esc(shortD(st.r.last)):(st.rep?' ●':''))+'</label>'}).join('')+(ls.length?'':'<span class="small" style="border:0">Tidak ada lokasi di filter ini.</span>')+'</div></td></tr>'}).join('')+'</tbody></table></div>';
   return h}
 
 /* ---------- Cek Pulang ---------- */
@@ -1502,10 +1503,15 @@ function summaryText(){
 function mark(locs,done,note){
   locs.forEach(function(l){if(done)DONE[l]={pic:MAP[l]||'',note:note||'',t:new Date().toISOString()};else delete DONE[l]});render();
   return ucall('done_set',{day:DK,locs:locs,done:done,note:note||''}).then(function(){say(done?'Laporan tersimpan.':'Laporan dibatalkan.')}).catch(function(e){say(e.message,1);return refresh(1)})}
+function verSet(locs,on){
+  locs.forEach(function(l){if(on)VER[l]={by:A.name,t:new Date().toISOString()};else delete VER[l]});render();
+  return ucall('verify_set',{locs:locs,on:on}).then(function(){say(on?'Verifikasi tersimpan.':'Verifikasi dibatalkan.')}).catch(function(e){say(e.message,1);return refresh(1)})}
 $('kdBody').addEventListener('input',function(e){if(e.target.id==='kdGq'){GQ=e.target.value;render()}});
-$('kdBody').addEventListener('change',function(e){if(e.target.id==='kdSince'){SINCE=e.target.value||'';buildReal();render()}});
+$('kdBody').addEventListener('change',function(e){if(e.target.dataset&&e.target.dataset.ver){verSet([e.target.dataset.ver],e.target.checked);return}
+  if(e.target.id==='kdSince'){SINCE=e.target.value||'';buildReal();render()}});
 $('kdBody').addEventListener('click',function(e){
-  var t=e.target;var c=t.closest('[data-gv]');if(c){GV=c.dataset.gv;render();if(GV==='gate'&&!G)refresh(1);else if(GV==='gate')refresh(1);return}
+  var t=e.target;var c=t.closest('[data-verall]');if(c){var pp=c.dataset.verall,ls=locList().filter(function(k){var x=locStat(k);return MAP[k]===pp&&(REAL?x.real:x.rep)&&!VER[k]});if(!ls.length){say('Tidak ada lokasi baru untuk diverifikasi.');return}verSet(ls,true);return}
+  c=t.closest('[data-gv]');if(c){GV=c.dataset.gv;render();if(GV==='gate'&&!G)refresh(1);else if(GV==='gate')refresh(1);return}
   c=t.closest('[data-gf]');if(c){GF=c.dataset.gf;render();return}
   if(t.id==='kdGts'){var tv=parseInt($('kdGt').value);if(!(tv>=1&&tv<=50)){say('Target harus 1 sampai 50.',1);return}ucall('gate_cfg',{target:tv}).then(function(){say('Target disimpan.');return refresh(1)}).catch(function(x){say(x.message,1)});return}
   c=t.closest('[data-gex]');if(c){var gp=c.closest('[data-gpic]').dataset.gpic;if(c.dataset.gex==='0'){ucall('gate_exempt',{pic:gp,on:false}).then(function(){say('Pengecualian dibatalkan.');return refresh(1)}).catch(function(x){say(x.message,1)});return}
