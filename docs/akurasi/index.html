@@ -696,7 +696,7 @@ document.getElementById('toggleOverDetails').addEventListener('click',()=>{const
 #soPanel .ds{font-size:12px;color:#6d7b88}
 @media(max-width:900px){#soPanel .cc-kpi{grid-template-columns:1fr 1fr}#soPanel .kc.hero{grid-column:1/-1}}
 #soPanel .so-kpi{grid-template-columns:1.8fr 1fr 1fr 1.2fr}#soPanel tr.sf td{background:#e6eef7;border-top:2px solid #c9d8e8}#soPanel tr.sf td b{color:#183153}#soPanel tr.sc.op td{background:#fff7d6}#soPanel td.ind{padding-left:24px}#soPanel .dchip.hot{background:#ffe9a8;color:#7a4b00}#soPanel td.soc{white-space:normal;min-width:200px;font-size:12px;line-height:1.7}#soPanel #soTab td{padding:8px 10px}#soPanel .st.OVER{background:#e1f1e8;color:#1d6b43}#soPanel #soTab td,#soPanel #soTab th{vertical-align:middle}@media(max-width:900px){#soPanel .so-kpi{grid-template-columns:1fr 1fr}}</style><script>(function(){
-var $=function(i){return document.getElementById(i)},KEY='qbig_cc_v1',CC=null,SORT={k:'ad',d:-1},XL_URL='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+var $=function(i){return document.getElementById(i)},KEY='qbig_cc_v1',CC=null,SORT={k:'ad',d:-1},XL_URL='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
 var nf=new Intl.NumberFormat('id-ID',{maximumFractionDigits:2}),nf0=new Intl.NumberFormat('id-ID',{maximumFractionDigits:0});
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 function key(v){var s=String(v==null?'':v).trim();return s?s.replace(/\.0+$/,'').padStart(10,'0'):''}
@@ -704,7 +704,7 @@ function num(v){var n=typeof v==='number'?v:parseFloat(String(v).replace(/,/g,''
 function fq(v){return v===0?'<span class="zero">-</span>':(v>0?'<span class="pos">+'+nf.format(v)+'</span>':'<span class="neg">'+nf.format(v)+'</span>')}
 function fv(v){v=Math.round(v);return v===0?'<span class="zero">-</span>':(v>0?'<span class="pos">+'+nf0.format(v)+'</span>':'<span class="neg">-'+nf0.format(-v)+'</span>')}
 function rp(v){v=Math.round(v);return (v<0?'-':'')+'Rp '+nf0.format(Math.abs(v))}
-function ensureXL(){return new Promise(function(ok,no){if(window.XLSX)return ok();var s=document.createElement('script');s.src=XL_URL;s.onload=function(){ok()};s.onerror=function(){no(new Error('Library Excel gagal dimuat (cek internet).'))};document.head.appendChild(s)})}
+function ensureXL(){return new Promise(function(ok,no){if(window.XLSX)return ok();var s=document.createElement('script');s.integrity='sha384-vtjasyidUo0kW94K5MXDXntzOJpQgBKXmE7e2Ga4LG0skTTLeBi97eFAXsqewJjw';s.crossOrigin='anonymous';s.src=XL_URL;s.onload=function(){ok()};s.onerror=function(){no(new Error('Library Excel gagal dimuat (cek internet).'))};document.head.appendChild(s)})}
 var BK=new WeakMap();function readBook(f){if(BK.has(f))return Promise.resolve(BK.get(f));return ensureXL().then(function(){return f.arrayBuffer()}).then(function(b){var w=XLSX.read(b,{type:'array'});BK.set(f,w);return w})}
 function aoa(wb,pref,need){var names=wb.SheetNames.slice();if(pref&&names.indexOf(pref)>0){names.splice(names.indexOf(pref),1);names.unshift(pref)}
   for(var i=0;i<names.length;i++){var a=XLSX.utils.sheet_to_json(wb.Sheets[names[i]],{header:1,defval:'',raw:true}),h=hdr(a,need);if(h)return {a:a,h:h}}return null}
@@ -1180,13 +1180,13 @@ window.__ccGet=function(){return CC?CC.items.map(calc):null};window.__ccMeta=fun
 window.__qbigX={xInit:xInit,sty:sty,xbuild:xbuild,xsave:xsave,xcol:xcol};window.__qbigMP={build:mpBuild,vals:mpVals,clear:mpClear,sync:mpSync,set:mpSet};
 })();
 </script><script>(function(){
-var $=function(i){return document.getElementById(i)},KEY='qbig_so_v1',XL_URL='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js',R=null;
+var $=function(i){return document.getElementById(i)},KEY='qbig_so_v1',XL_URL='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',R=null;
 var nf=new Intl.NumberFormat('id-ID',{maximumFractionDigits:2}),nf0=new Intl.NumberFormat('id-ID',{maximumFractionDigits:0});
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 function key(v){var s=String(v==null?'':v).trim();return s?s.replace(/\.0+$/,'').padStart(10,'0'):''}
 function num(v){var n=typeof v==='number'?v:parseFloat(String(v).replace(/,/g,''));return isFinite(n)?n:0}
 function say(t,bad){var e=$('soMsg');e.textContent=t;e.style.color=bad?'#a94c4c':''}
-function ensureXL(){return new Promise(function(ok,no){if(window.XLSX)return ok();var s=document.createElement('script');s.src=XL_URL;s.onload=function(){ok()};s.onerror=function(){no(new Error('Library Excel gagal dimuat (cek internet).'))};document.head.appendChild(s)})}
+function ensureXL(){return new Promise(function(ok,no){if(window.XLSX)return ok();var s=document.createElement('script');s.integrity='sha384-vtjasyidUo0kW94K5MXDXntzOJpQgBKXmE7e2Ga4LG0skTTLeBi97eFAXsqewJjw';s.crossOrigin='anonymous';s.src=XL_URL;s.onload=function(){ok()};s.onerror=function(){no(new Error('Library Excel gagal dimuat (cek internet).'))};document.head.appendChild(s)})}
 function readBook(f){return ensureXL().then(function(){return f.arrayBuffer()}).then(function(b){return XLSX.read(b,{type:'array'})})}
 function norm(c){return String(c==null?'':c).trim().toLowerCase()}
 function findSheet(wb,need,pref){var names=wb.SheetNames.slice();if(pref&&names.indexOf(pref)>0){names.splice(names.indexOf(pref),1);names.unshift(pref)}
