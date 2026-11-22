@@ -464,7 +464,7 @@ body.shot .datapanel{display:none!important}
 .shotstage .shh-m{font-size:12px;color:var(--ink3);margin-top:2px}
 .shotstage .shh-f{font-size:12px;color:var(--ink2);margin:0 0 10px}
 .shotstage .tiles{margin-bottom:14px}
-.shotstage .shwa{border-collapse:collapse;font-size:13px;width:100%}.shotstage .shwa th{background:var(--navy);color:#fff;padding:7px 10px;text-align:left;font-weight:700;white-space:nowrap}.shotstage .shwa td{padding:6px 10px;border-bottom:1px solid var(--line);vertical-align:top}.shotstage .shwa tr:nth-child(even) td{background:#f6f8fb}.shotstage .shwa .c{text-align:center}.shotstage .shwa .r{text-align:right}.shotstage .shwa .n{white-space:nowrap}.shotstage .shwa td:nth-child(5){min-width:240px}
+.shotstage .shwa th{position:static!important;top:auto!important}.shotstage .shwa{border-collapse:collapse;font-size:13px;width:100%}.shotstage .shwa th{background:var(--navy);color:#fff;padding:7px 10px;text-align:left;font-weight:700;white-space:nowrap}.shotstage .shwa td{padding:6px 10px;border-bottom:1px solid var(--line);vertical-align:top}.shotstage .shwa tr:nth-child(even) td{background:#f6f8fb}.shotstage .shwa .c{text-align:center}.shotstage .shwa .r{text-align:right}.shotstage .shwa .n{white-space:nowrap}.shotstage .shwa td:nth-child(5){min-width:240px}
 .shotstage .shotfu{max-height:none!important;overflow:visible!important;border:1px solid var(--line)}
 .shotstage .shotfu table{font-size:12.5px}
 .shotstage .shotfu th{font-size:10.5px;padding:8px 8px;line-height:1.25;white-space:normal}
@@ -2069,7 +2069,7 @@ document.addEventListener('click',function(e){var pb=e.target.closest&&e.target.
   if(e.target.closest('td.dnc'))return;
   var t=e.target.closest('button,th,tr.nota,tr.mrow,label');if(!t)return;
   if(t.dataset.wadlg){waDlg('');return}
-  if(t.dataset.wa){var wm=picFind(t.dataset.wa),wp=wm?picPeople(wm):[];if(wp.length===1)waOpen(wp[0].p,t.dataset.wa,wp[0].n);else waDlg(t.dataset.wa);return}
+  if(t.dataset.wa){var wm=picFind(t.dataset.wa),wp=wm?picPeople(wm):[];if(wp.length===1)waSend(wp[0].p,t.dataset.wa,wp[0].n,t);else waDlg(t.dataset.wa);return}
   if(t.dataset.wasend){waSend(t.dataset.wasend,t.dataset.wav,t.dataset.wan,t);return}
   if(t.dataset.wacopy){waCopy(t.dataset.wav,t.dataset.wan,t);return}
   if(t.dataset.waimg){waImg(t.dataset.wav,t);return}
