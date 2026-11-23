@@ -1420,9 +1420,9 @@ function loginView(){
   var go=function(){var n=$('kdN').value.trim(),p=$('kdP').value.trim();if(!n||!p){say('Isi nama dan PIN.',1);return}
     $('kdLg').disabled=true;say('Memeriksa…');call('login',{name:n,pin:p}).then(function(j){A={name:j.name,pin:p,role:j.role};saveAuth();say('');start()}).catch(function(e){say(e.message,1)}).finally(function(){var b=$('kdLg');if(b)b.disabled=false})};
   $('kdLg').addEventListener('click',go);$('kdP').addEventListener('keydown',function(e){if(e.key==='Enter')go()});$('kdN').addEventListener('keydown',function(e){if(e.key==='Enter')$('kdP').focus()})}
-var URLONLY=/[?&]kd(=|&|$)/.test(location.search);
+var KDAPP=!!window.__KDAPP,URLONLY=KDAPP||/[?&]kd(=|&|$)/.test(location.search);
 function onlyMode(){var on=URLONLY||!!(A&&(A.role==='pic'||A.role==='security'));document.body.classList.toggle('kdonly',on);return on}
-function topbar(){onlyMode();$('kdAdmBtn').hidden=!!(A&&(A.role==='pic'||A.role==='security'));var w=$('kdWho'),o=$('kdOut');if(A){w.textContent=A.name+' · '+({pic:'PIC',tl:'Tim Leader',manager:'Manager',security:'Satpam'}[A.role]||A.role);o.hidden=false}else{w.textContent='';o.hidden=true}}
+function topbar(){onlyMode();$('kdAdmBtn').hidden=KDAPP||!!(A&&(A.role==='pic'||A.role==='security'));var w=$('kdWho'),o=$('kdOut');if(A){w.textContent=A.name+' · '+({pic:'PIC',tl:'Tim Leader',manager:'Manager',security:'Satpam'}[A.role]||A.role);o.hidden=false}else{w.textContent='';o.hidden=true}}
 
 /* ---------- muat data ---------- */
 function refresh(quiet){
