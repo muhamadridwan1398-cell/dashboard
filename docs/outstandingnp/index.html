@@ -16,6 +16,26 @@
 .dsl .dslrh{font-family:var(--head);font-weight:700;font-size:13px;color:#3b4656;margin:0 0 6px}.dsl #dslrt{font-size:13px;line-height:1.55;min-height:320px;background:#fff;box-shadow:0 1px 2px rgba(20,40,75,.06)}
 .dsl .dslra{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}.dsl .dslra .btn{min-height:44px;padding:0 18px;display:inline-flex;align-items:center;justify-content:center;text-align:center}.dsl .dslrn{margin-top:14px;border:1px solid #e3eaf4;border-radius:12px;padding:10px 14px;background:#fafcff}.dsl .dslrn summary{cursor:pointer;font-weight:600;font-size:13px}.dsl .dslrn p{margin:8px 0 0;line-height:1.55}
 @media(max-width:640px){.dsl .dslrf{grid-template-columns:1fr}.dsl .dslrf input{font-size:16px}.dsl .dslra .btn{flex:1 1 100%}.dsl .dslrst b{font-size:24px}.dsl .dslsubnav{display:flex;gap:6px;overflow-x:auto}.dsl .dslsubnav button{flex:1 1 auto;padding-left:10px;padding-right:10px;font-size:13px;white-space:nowrap}.dsl #dslrt{min-height:280px}}
+/* tampilan HP DSL */
+.dsl .tablewrap td:first-child:not(.id){font-family:inherit;font-weight:700}
+.dsl .dslah{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:30px 0 6px;border-top:1px solid #e3e8f0}.dsl .dslah h3{border-top:0;margin:0!important;padding-top:16px}.dsl .dslah select{margin-top:14px;padding:8px 10px;border:1px solid #cfd8e6;border-radius:10px;background:#fff;font-size:14px;min-height:38px}
+.dsl .dslring{max-width:100%}.dsl .dslring .dslrc span{font-size:10.5px;max-width:78px;line-height:1.25}.dsl .tablewrap td:not(.id){font-family:inherit;font-variant-numeric:tabular-nums}
+.dsl .dslbr{row-gap:4px}.dsl .dslbl{font-size:13px}
+@media(max-width:640px){
+.dsl div.dslchart svg{min-width:0;width:100%;height:auto}.dsl div.dslchart{overflow:visible}
+.dsl .tablewrap:not(.dtw) table{font-size:12.5px}.dsl .tablewrap:not(.dtw) th,.dsl .tablewrap:not(.dtw) td{padding:9px 7px;white-space:nowrap}
+.dsl .tablewrap:not(.dtw) td:first-child,.dsl .tablewrap:not(.dtw) th:first-child{position:sticky;left:0;background:#fff;z-index:1;box-shadow:2px 0 0 #eef2f8}.dsl .tablewrap:not(.dtw) th:first-child{background:#f3f6fb}
+.dsl .dslbr{grid-template-columns:1fr auto;gap:4px 10px;margin-bottom:6px}.dsl .dslbl{white-space:normal;overflow:visible}.dsl .dslbt{grid-column:1/3;order:3;height:12px}.dsl .dslbv{min-width:0}
+.dsl .dslf input{min-width:0;width:100%;flex:1 1 100%;min-height:44px;font-size:16px;border-radius:10px}.dsl .dslf select{flex:1 1 100%;min-height:44px;font-size:16px;border-radius:10px}
+.dsl .dtw{max-height:none!important;overflow:visible!important;border:0!important;background:none!important}
+.dsl .dtl,.dsl .dtl tbody,.dsl .dtl tr,.dsl .dtl td{display:block;width:100%;box-sizing:border-box}.dsl .dtl thead{display:none}
+.dsl .dtl tr{background:#fff;border:1px solid #e3eaf4;border-radius:14px;padding:12px 14px;margin:0 0 10px;box-shadow:0 1px 2px rgba(20,40,75,.06)}
+.dsl .dtl td{border:0!important;padding:4px 0!important;display:flex;justify-content:space-between;align-items:baseline;gap:14px;text-align:right;font-size:13.5px;white-space:normal;word-break:break-word}
+.dsl .dtl td:empty{display:none}.dsl .dtl td::before{font-family:inherit;content:attr(data-l);flex:none;font-size:12px;font-weight:600;color:#5b6676;text-align:left}
+.dsl .dtl td.id{display:block;text-align:left;font-size:14.5px;font-weight:700;padding:0 0 6px!important;margin-bottom:4px;border-bottom:1px solid #eef2f8!important;color:#1d2735}.dsl .dtl td.id::before{content:none}
+.dsl .dtl td[data-l=Keterangan]{display:block;text-align:left;margin-top:4px;padding-top:8px!important;border-top:1px dashed #e3eaf4!important}.dsl .dtl td[data-l=Keterangan]::before{display:block;margin-bottom:2px}
+.dsl .dtl tr:hover td{background:none}
+}
 .dsl .dslh4{font-family:var(--head);font-size:14px;font-weight:700;margin:16px 0 0;color:var(--navy)}
 .dsl tr.dslsub td{background:#e6e9ee;font-weight:700}.dsl h3{font-size:14px;font-weight:800;color:var(--navy)}.dsl .dslx{font-size:11px;background:#fdecec;color:#a33;border-radius:4px;padding:1px 6px;margin-left:4px;white-space:nowrap}
 .dsl .dslerr{background:#fdf2f2;border:1px solid #efc4c4;color:#8a2d2d;border-radius:8px;padding:10px 12px;font-size:13px;margin:8px 0}
@@ -2663,7 +2683,7 @@ function dAna(){var MA=dMonths().filter(function(t){return t.det}),mons=MA.map(f
   return {mons:mons,G:G,all:G.reduce(function(s,g){return s+g.tot},0)}}
 var DRC={INTERNAL:'#2f4b7c',RESCHEDULE:'#1d8a8a',TBDC:'#c98a1b',TBSPL:'#8e4a8a',TBT:'#6b7b8c'};
 function dLine(M){var P=M.filter(function(t){return t.all}).map(function(t){return {l:monLab(t.pm),a:pc(t.on,t.all),b:pc(t.on+(t.rc||0),t.all)}});if(P.length<1)return '';
-  var W=960,H=250,L=48,R=20,T=26,B=34,PX=44,vals=[];P.forEach(function(o){vals.push(o.a,o.b)});var mn=Math.floor(Math.min.apply(null,vals)/5)*5-5,mx=100;if(mn<0)mn=0;
+  var MB=window.innerWidth<640,W=MB?340:960,H=MB?220:250,L=48,R=20,T=26,B=34,PX=44,vals=[];P.forEach(function(o){vals.push(o.a,o.b)});var mn=Math.floor(Math.min.apply(null,vals)/5)*5-5,mx=100;if(mn<0)mn=0;
   var X=function(i){return P.length===1?(L+W-R)/2:L+PX+i*(W-L-R-2*PX)/(P.length-1)},Y=function(v){return T+(mx-v)/(mx-mn)*(H-T-B)};
   var g='',s=Math.max(5,Math.ceil((mx-mn)/4/5)*5);for(var v=mx;v>=mn;v-=s)g+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(v)+'" y2="'+Y(v)+'" stroke="#d9dee6" stroke-width="1"/><text x="'+(L-6)+'" y="'+(Y(v)+4)+'" text-anchor="end" font-size="11" fill="#6b7686">'+v+'%</text>';
   var pa=P.map(function(o,i){return X(i)+','+Y(o.a)}).join(' '),pb=P.map(function(o,i){return X(i)+','+Y(o.b)}).join(' ');
@@ -2734,8 +2754,8 @@ function dDetailRows(pm){var q=DS.q.trim().toLowerCase();return dLate(pm).map(fu
   return !q||(o.x.np+' '+o.x.cu+' '+o.x.sp+' '+o.x.ty+' '+o.d).toLowerCase().indexOf(q)>=0}).sort(function(a,b){return (dEP(a.x)||0)-(dEP(b.x)||0)})}
 function dds(v){if(v==null)return '–';var d=new Date(v);return d.getUTCDate()+' '+MON[d.getUTCMonth()]+' '+String(d.getUTCFullYear()).slice(2)}
 function dDetailHtml(pm){var L=dDetailRows(pm),all=dLate(pm).length;
-  var h='<p class="sub" style="margin:0 0 8px">'+fmt(L.length)+' dari '+fmt(all)+' NP telat'+(DS.rs||DS.q?' (sesuai filter)':'')+'. Telat = NP tanpa item EARLY/ONTIME.</p><div class="tablewrap" style="max-height:520px;overflow:auto"><table><thead><tr><th>No NP</th><th>Customer</th><th>Tipe NP</th><th>Sales</th><th>PDD</th><th>Close</th><th>Status</th><th>Reason</th><th>Keterangan</th></tr></thead><tbody>';
-  h+=L.length?L.slice(0,DS.shown).map(function(o){var x=o.x;return '<tr><td class="num id">'+esc(x.np)+'</td><td>'+esc(x.cu)+'</td><td>'+esc(x.ty)+'</td><td>'+esc(x.sp)+'</td><td class="num">'+dds(dEP(x))+'</td><td class="num">'+dds(x.cl)+'</td><td>'+esc(x.st)+'</td><td>'+(o.r?'<b>'+esc(o.r)+'</b>':'<em style="color:var(--ink3)">belum diisi</em>')+(o.ex?' <span class="dslx">tidak dihitung</span>':'')+'</td><td>'+esc(o.d)+'</td></tr>'}).join(''):'<tr><td colspan="9" class="empty">Tidak ada NP telat untuk filter ini.</td></tr>';
+  var h='<p class="sub" style="margin:0 0 8px">'+fmt(L.length)+' dari '+fmt(all)+' NP telat'+(DS.rs||DS.q?' (sesuai filter)':'')+'. Telat = NP tanpa item EARLY/ONTIME.</p><div class="tablewrap dtw" style="max-height:520px;overflow:auto"><table class="dtl"><thead><tr><th>No NP</th><th>Customer</th><th>Tipe NP</th><th>Sales</th><th>PDD</th><th>Close</th><th>Status</th><th>Reason</th><th>Keterangan</th></tr></thead><tbody>';
+  h+=L.length?L.slice(0,DS.shown).map(function(o){var x=o.x;return '<tr><td class="num id">'+esc(x.np)+'</td><td data-l="Customer">'+esc(x.cu)+'</td><td data-l="Tipe NP">'+esc(x.ty)+'</td><td data-l="Sales">'+esc(x.sp)+'</td><td class="num" data-l="PDD">'+dds(dEP(x))+'</td><td class="num" data-l="Close">'+dds(x.cl)+'</td><td data-l="Status">'+esc(x.st)+'</td><td data-l="Reason">'+(o.r?'<b>'+esc(o.r)+'</b>':'<em style="color:var(--ink3)">belum diisi</em>')+(o.ex?' <span class="dslx">tidak dihitung</span>':'')+'</td><td data-l="Keterangan">'+esc(o.d)+'</td></tr>'}).join(''):'<tr><td colspan="9" class="empty">Tidak ada NP telat untuk filter ini.</td></tr>';
   h+='</tbody></table></div>';if(L.length>DS.shown)h+='<div style="margin-top:10px"><button type="button" class="btn ghost" data-dsl="more">Tampilkan lebih banyak ('+fmt(L.length-DS.shown)+' lagi)</button></div>';return h}
 function dslPanel(){
   if(D.st==='idle')dLoad();
@@ -2782,7 +2802,7 @@ function dslPanel(){
   if(AN.G.length){var mi=DS.anm==null?-1:AN.mons.indexOf(DS.anm),pick=function(o){return mi<0?o.s:o.m[mi]},F=[];
     AN.G.forEach(function(g){g.L.forEach(function(o){var v=pick(o);if(v)F.push({r:g.r,k:o.k,v:v})})});F.sort(function(a,b){return b.v-a.v});
     var tt=F.reduce(function(s,o){return s+o.v},0),RS=DRS.map(function(r){return {r:r,v:F.filter(function(o){return o.r===r}).reduce(function(s,o){return s+o.v},0)}}).filter(function(o){return o.v}).sort(function(a,b){return b.v-a.v}),lim=DS.anAll?F.length:10;
-    h+='<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:18px 0 6px"><h3 style="margin:0">Analisa reason late</h3><select id="dslan" aria-label="Bulan analisa"><option value="">Semua bulan</option>'+AN.mons.map(function(m){return '<option value="'+m+'"'+(DS.anm===m?' selected':'')+'>'+monLab(m)+'</option>'}).join('')+'</select></div>'
+    h+='<div class="dslah"><h3>Analisa reason late</h3><select id="dslan" aria-label="Bulan analisa"><option value="">Semua bulan</option>'+AN.mons.map(function(m){return '<option value="'+m+'"'+(DS.anm===m?' selected':'')+'>'+monLab(m)+'</option>'}).join('')+'</select></div>'
       +'<div class="dslch">'+RS.map(function(o){return '<span><i class="dslcd" style="background:'+(DRC[o.r]||'#6b7b8c')+'"></i><b>'+o.r+'</b> '+fmt(o.v)+' · '+pf(o.v/tt*100)+'</span>'}).join('')+'</div>'
       +'<div class="dslbars">'+F.slice(0,lim).map(function(o){var pz=o.v/tt*100,mxv=F[0].v;return '<div class="dslbr"><div class="dslbl" title="'+esc(o.k)+'">'+esc(o.k)+'</div><div class="dslbt"><i style="width:'+(o.v/mxv*100).toFixed(1)+'%;background:'+(DRC[o.r]||'#6b7b8c')+'"></i></div><div class="dslbv"><b>'+fmt(o.v)+'</b> · '+pf(pz)+'</div></div>'}).join('')+'<p class="sub" style="margin:6px 0 0">Total '+fmt(tt)+' alasan</p></div>'
       +(F.length>10?'<div style="margin-top:8px"><button type="button" class="btn ghost" data-dsl="anall">'+(DS.anAll?'Ringkas (10 teratas)':'Tampilkan semua ('+F.length+')')+'</button></div>':'')}
