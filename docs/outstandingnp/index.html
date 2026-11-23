@@ -2680,7 +2680,7 @@ function dRep(day){var fl=function(v){return (Math.floor(v*100)/100).toFixed(2)}
   var noScr=0;
   tiers.forEach(function(T,i){if(i&&tiers[i-1].length)L.push('','');L.push('T'+(i+1)+'='+T.length);if(!T.length)return;
     var by={},ks=[];T.forEach(function(o){var c=(o.x.cu||'-').toUpperCase();if(!by[c]){by[c]=[];ks.push(c)}by[c].push(o)});
-    ks.forEach(function(c,ci){L.push(' '+(ci+1)+'. '+c+' ('+by[c].length+'MS)');by[c].forEach(function(o){L.push(o.x.np);var dd=o.z.dd||o.x.dd||'';if(!dd&&o.z.r)dd=o.z.r+(o.z.d?' - '+o.z.d:'');if(dd)L.push(dd);if(!o.z.sc)noScr++})})});
+    ks.forEach(function(c,ci){if(ci)L.push('');L.push(' '+(ci+1)+'. '+c+' ('+by[c].length+'MS)');by[c].forEach(function(o,oi){L.push('    '+(oi+1)+') '+o.x.np);var dd=o.z.dd||o.x.dd||'';if(!dd&&o.z.r)dd=o.z.r+(o.z.d?' - '+o.z.d:'');if(dd)L.push('       '+dd);if(!o.z.sc)noScr++})})});
   L.push('','');var nl=late.length;L.push('Bukti Chat = '+(!nl?'-':(noScr===0?'ADA':(noScr===nl?'TIDAK ADA':'SEBAGIAN ('+(nl-noScr)+' dari '+nl+')'))));
   return {text:L.join('\n'),pd:pd,ot:ot,late:nl,tg:tg}}
 function dRepEmpty(){var mx=null,mn=null;D.np.forEach(function(x){var e=dEP(x);if(!x.k||e==null)return;var dy=Math.floor(e/864e5);if(mx==null||dy>mx)mx=dy;if(mn==null||dy<mn)mn=dy});
