@@ -1052,12 +1052,13 @@ function groupNota(rows){
   var m=new Map();
   rows.forEach(function(r){
     var g=m.get(r.np);
-    if(!g){g={np:r.np,ty:r.ty,cons:0,ret:0,rows:[],pd:r.pdD,late:null,cu:r.cu,sp:r.sp,qty:0,flags:{},res:{}};m.set(r.np,g)}
+    if(!g){g={np:r.np,ty:r.ty,cons:0,ret:0,rows:[],pd:r.pdD,od:r.odD,late:null,cu:r.cu,sp:r.sp,qty:0,flags:{},res:{}};m.set(r.np,g)}
     var wp0=waNorm(r.hp)||waNorm(r.ph);if(wp0){g.wp=g.wp||{};g.wp[wp0]=1;if(!g.wph)g.wph=wp0}
     g.rows.push(r);g.qty+=r.o;
     if(r.cons)g.cons++;else g.ret++;
     if(r.grp==='Delivery Gudang')g.res[catOf(r)]=1;
     if(r.pdD!=null&&(g.pd==null||r.pdD<g.pd))g.pd=r.pdD;
+    if(r.odD!=null&&(g.od==null||r.odD<g.od))g.od=r.odD;
     if(r.late!=null&&(g.late==null||r.late>g.late))g.late=r.late;
     if(r.sw===''&&r.grp==='Delivery Gudang')g.flags['Belum WMS']=1;
     if(r.sw==='Part.Shipment')g.flags['Part.Shipment']=1;
@@ -1076,6 +1077,7 @@ function colsFor(id){
   return c;
 }
 function sortVal(g,k){
+  if(k==='od')return g.od==null?1e9:g.od;
   if(k==='pd')return g.pd==null?1e9:g.pd;
   if(k==='late')return g.late==null?-1e9:g.late;
   if(k==='wa')return ((FN['NP:'+g.np]||{}).k||g.wph)?1:0;
@@ -1624,10 +1626,10 @@ function followup(rows){
 /* ---------- Detail Delivery (gabungan Gudang + Supplier + Another Site/DC) ---------- */
 var DTL={ga:'Gudang · Amsen',gk:'Gudang · Kirim',vs:'Supplier',vd:'Another Site/DC'};
 var DTQ=[['ga','Delivery via Gudang · Amsen'],['gk','Delivery via Gudang · Kirim'],['vs','Delivery via Supplier'],['vd','Delivery via Another Site/DC']];
-var DTC=[['pd','PDD'],['late','Telat'],['np','No. NP'],['cu','Customer Name'],['sp','Salesperson'],['ty','Tipe NP'],['ca','Category'],['dv','Delivery'],['wa','WA customer'],['stk','Stok inventory'],['fup','Status follow up'],['dst','Keterangan follow up'],['eta','Estimasi pengiriman'],['note','Note'],['flags','Perlu perhatian']];
+var DTC=[['od','Order Date'],['pd','PDD'],['late','Telat'],['np','No. NP'],['cu','Customer Name'],['sp','Salesperson'],['ty','Tipe NP'],['ca','Category'],['dv','Delivery'],['wa','WA customer'],['stk','Stok inventory'],['fup','Status follow up'],['dst','Keterangan follow up'],['eta','Estimasi pengiriman'],['note','Note'],['flags','Perlu perhatian']];
 var DTG={fup:'dtg1',dst:'dtg2',eta:'dtg2',note:'dtg3'};
-var DTW={pd:92,late:100,np:172,cu:186,sp:172,dv:134,n:66,qty:82,cons:72,ret:72,flags:214,ty:250,ca:200,wa:104,stk:118,fup:156,dst:168,eta:150,note:200};
-var DTNUM={pd:1,late:-1,n:1,qty:1,cons:1,ret:1};
+var DTW={od:96,pd:92,late:100,np:172,cu:186,sp:172,dv:134,n:66,qty:82,cons:72,ret:72,flags:214,ty:250,ca:200,wa:104,stk:118,fup:156,dst:168,eta:150,note:200};
+var DTNUM={od:1,pd:1,late:-1,n:1,qty:1,cons:1,ret:1};
 function dtKey(r){var s=segOf(r);return s==='gd'?(catOf(r)==='Amsen'?'ga':'gk'):s}
 function dtSegOf(sec,cat){return sec==='gd'?(cat==='Kirim'?['gk']:cat==='Amsen'?['ga']:['ga','gk']):[sec]}
 function dtJnsOf(sec,cat){return sec==='vs'?(cat==='Retail'?['retail']:(cat==='Consi'?['consi']:[])):[]}
@@ -1727,7 +1729,8 @@ function dnWaGo(np,n,ph){
 }
 function dtVals(g,k){
   var v;
-  if(k==='pd')v=[g.pd==null?'':dstr(g.pd)];
+  if(k==='od')v=[g.od==null?'':dstr(g.od)];
+  else if(k==='pd')v=[g.pd==null?'':dstr(g.pd)];
   else if(k==='late')v=[lateTxt(g.late)];
   else if(k==='dv')v=dtLabs(g);
   else if(k==='wa')v=[((FN['NP:'+g.np]||{}).k||g.wph)?((g.wp&&Object.keys(g.wp).length>1&&!(FN['NP:'+g.np]||{}).k)?'Nomor berbeda antar item':'Ada nomor'):'Belum ada nomor'];
@@ -1810,7 +1813,7 @@ function detailAll(rows){
   vis.forEach(function(g,gi){
     var fl=Object.keys(g.flags).map(function(x){return '<span class="flag'+(x==='Tidak ada di NAV'||x==='Cek komentar'||x.indexOf('Belum ada')===0?' warn':'')+'">'+x+'</span>'}).join('');
     var W=function(c){return ' style="min-width:'+DTW[c]+'px;max-width:'+DTW[c]+'px"'};
-    h+='<tr class="nota'+(gi%2?' alt':'')+'" data-np="'+esc(g.np)+'"><td class="c num"'+W('pd')+'>'+dstr(g.pd)+'</td><td class="c"'+W('late')+'>'+latePill(g.late)+'</td><td class="c num id"'+W('np')+'>'+esc(g.np)+'</td><td class="c" title="'+esc(g.cu)+'"'+W('cu')+'>'+esc(g.cu)+'</td><td class="c" title="'+esc(g.sp)+'"'+W('sp')+'>'+esc(g.sp)+'</td><td class="c" title="'+esc(g.ty)+'"'+W('ty')+'>'+esc(g.ty)+'</td><td class="c" title="'+esc(g.ca)+'"'+W('ca')+'>'+esc(g.ca)+'</td><td class="c" title="'+esc(g.dv)+'"'+W('dv')+'>'+esc(g.dv)+'</td>'+dnCells(g,W)+'<td class="c" title="'+esc(Object.keys(g.flags).join(', '))+'"'+W('flags')+'>'+fl+'</td></tr>';
+    h+='<tr class="nota'+(gi%2?' alt':'')+'" data-np="'+esc(g.np)+'"><td class="c num"'+W('od')+'>'+dstr(g.od)+'</td><td class="c num"'+W('pd')+'>'+dstr(g.pd)+'</td><td class="c"'+W('late')+'>'+latePill(g.late)+'</td><td class="c num id"'+W('np')+'>'+esc(g.np)+'</td><td class="c" title="'+esc(g.cu)+'"'+W('cu')+'>'+esc(g.cu)+'</td><td class="c" title="'+esc(g.sp)+'"'+W('sp')+'>'+esc(g.sp)+'</td><td class="c" title="'+esc(g.ty)+'"'+W('ty')+'>'+esc(g.ty)+'</td><td class="c" title="'+esc(g.ca)+'"'+W('ca')+'>'+esc(g.ca)+'</td><td class="c" title="'+esc(g.dv)+'"'+W('dv')+'>'+esc(g.dv)+'</td>'+dnCells(g,W)+'<td class="c" title="'+esc(Object.keys(g.flags).join(', '))+'"'+W('flags')+'>'+fl+'</td></tr>';
     if(S.open[g.np])h+=dtNpItems(g,DTC.length);
   });
   if(!vis.length)h+='<tr><td colspan="'+DTC.length+'" class="empty">Tidak ada NP.</td></tr>';
@@ -1966,7 +1969,7 @@ function exportDelivery(){
   if(!G.length){msg.className='err';msg.textContent='Tidak ada NP untuk diunduh.';return}
   var dt=function(day){return day==null?'':day+25569},iso=function(v){return v?dt(Math.round(Date.parse(v+'T00:00:00Z')/864e5)):''};
   /* t: s teks, n angka, d tanggal, k stok, f status follow up, w teks panjang; g: kolom follow up (header hijau) */
-  var cols=[['PDD','d',11],['Telat (hari)','n',10],['No. NP','s',21],['Customer Name','s',28],['Salesperson','s',24],['Tipe NP','s',34],['Category','s',26],['Delivery','s',18],['No. WA customer','s',16],['Stok inventory','k',14],['Qty stok tersedia','n',12],['Status follow up','f',14,1],['Tanggal follow up','d',14,1],['Keterangan follow up','s',20,1],['Estimasi pengiriman','d',16,1],['Note','w',32,1],['Diisi oleh','s',14,1],['Perlu perhatian','w',36],['Jumlah item','n',10],['Qty OTS','n',10]];
+  var cols=[['Order Date','d',11],['PDD','d',11],['Telat (hari)','n',10],['No. NP','s',21],['Customer Name','s',28],['Salesperson','s',24],['Tipe NP','s',34],['Category','s',26],['Delivery','s',18],['No. WA customer','s',16],['Stok inventory','k',14],['Qty stok tersedia','n',12],['Status follow up','f',14,1],['Tanggal follow up','d',14,1],['Keterangan follow up','s',20,1],['Estimasi pengiriman','d',16,1],['Note','w',32,1],['Diisi oleh','s',14,1],['Perlu perhatian','w',36],['Jumlah item','n',10],['Qty OTS','n',10]];
   var st=function(t,v,z,late){
     if(t==='d')return {v:v,s:z?9:4};if(t==='n')return {v:v,s:late?11:(z?8:3)};
     if(t==='k')return {v:v,s:v==='Ready'?10:(v==='Tidak ready'?11:(z?7:2))};
@@ -1975,8 +1978,8 @@ function exportDelivery(){
   var hdr=cols.map(function(c){return {v:c[0],s:c[3]?12:1}});
   var rowsX=G.map(function(g,ri){
     var n=FN['NP:'+g.np]||{},ph=n.k||g.wph||'',z=ri%2;
-    var vals=[dt(g.pd),g.late==null?'':g.late,g.np,g.cu,g.sp,g.ty,g.ca||'',g.dv,ph?'+'+ph:'',g.stk||'',g.sa==null?'':g.sa,n.f?'Sudah':'Belum',iso(n.f),dnDst(g),iso(n.e),n.m||'',n.by||'',Object.keys(g.flags).join('; '),g.rows.length,g.qty];
-    return vals.map(function(v,ci){return st(cols[ci][1],v,z,ci===1&&typeof v==='number'&&v>0)})
+    var vals=[dt(g.od),dt(g.pd),g.late==null?'':g.late,g.np,g.cu,g.sp,g.ty,g.ca||'',g.dv,ph?'+'+ph:'',g.stk||'',g.sa==null?'':g.sa,n.f?'Sudah':'Belum',iso(n.f),dnDst(g),iso(n.e),n.m||'',n.by||'',Object.keys(g.flags).join('; '),g.rows.length,g.qty];
+    return vals.map(function(v,ci){return st(cols[ci][1],v,z,ci===2&&typeof v==='number'&&v>0)})
   });
   var main={name:'Detail Delivery',rows:[hdr].concat(rowsX),w:cols.map(function(c){return c[2]}),f:true};
   var ih=[['No. NP',21],['Customer Name',28],['Item No',14],['Nama barang',46],['Jenis',9],['Qty OTS',9],['Stok NAV',10],['Stok WMS',10],['UOM',8],['Keterangan follow up',20,1],['Estimasi pengiriman',16,1],['Note',32,1]];
