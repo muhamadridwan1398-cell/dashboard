@@ -222,7 +222,7 @@ table.dd td.n{text-align:right}
     <div class="flt">
       <select id="fc"></select>
       <select id="fl" class="hide"></select>
-      <select id="ft"><option value="">Semua (Assortment + Non)</option><option value="A">Assortment (repsys)</option><option value="N">Non Assortment</option></select>
+      <select id="ft"><option value="">Semua (Repsys + Non Repsys)</option><option value="A">Repsys</option><option value="N">Non Repsys</option></select>
       <select id="fs"><option value="">Semua status</option><option value="nol">Stock = Nol</option><option value="nos">Nol - tidak ada baris di file stok</option><option value="half">Stock &lt; Half Capacity</option><option value="neg">Stok Minus (kemungkinan ada penjualan)</option></select>
       <input id="fq" type="search" placeholder="Cari item no / deskripsi / fixture" style="min-width:220px">
       <button class="x" id="fr">Reset</button>
@@ -382,7 +382,7 @@ function cellsFor(o,g){
 }
 function tableHTML(D,first,title,gk){
   var h='<table class="sm" data-g="'+gk+'"><tr><td class="ttl" colspan="17">'+title+'</td></tr>';
-  h+='<tr><th class="gb" colspan="2">Stockout Planogram</th><th class="ga" colspan="5">Assortment</th><th class="gn" colspan="5">Non Assortment</th><th class="gl" colspan="5">ALL ITEM PLANO</th></tr>';
+  h+='<tr><th class="gb" colspan="2">Stockout Planogram</th><th class="ga" colspan="5">Repsys</th><th class="gn" colspan="5">Non Repsys</th><th class="gl" colspan="5">ALL ITEM PLANO</th></tr>';
   var sub=function(c){return '<th class="'+c+'">Σ Item</th><th class="'+c+'">Stock = Nol</th><th class="'+c+'">%</th><th class="'+c+'">Stock &lt; Half Capacity</th><th class="'+c+'">%</th>'};
   h+='<tr><th class="cat">'+first+'</th><th class="gb" style="font-size:13px!important;font-family:var(--body)!important;font-weight:600!important">Σ Item Planogram</th>'+sub('ha')+sub('hn')+sub('hl')+'</tr>';
   var row=function(r,tot){
@@ -402,7 +402,7 @@ function renderKpi(){
   var T=sumData().tot,k=[],hasInv=!!(S.inv&&S.inv.length&&S.inv[0].length>5&&S.cls);
   if(hasInv){var I=invCat().tot;k.push({l:'Stock Inventory toko',n:rpM(I.v),s:nf(I.n)+' item · Retail + Catalog',x:1})}
   else k.push({l:'Stock Inventory toko',n:'-',s:'Unggah SQV dan Report ABCD Class',x:1});
-  k.push({l:'Stock out Assortment',n:pf(T.A.nol,T.A.n),s:nf(T.A.nol)+' dari '+nf(T.A.n)+' baris',y:1,t:'A',st:'nol'});
+  k.push({l:'Stock out Repsys',n:pf(T.A.nol,T.A.n),s:nf(T.A.nol)+' dari '+nf(T.A.n)+' baris',y:1,t:'A',st:'nol'});
   if(hasInv){var I2=invCat().tot;
     [['A','Inventory Class A'],['D','Inventory Class D'],['-','Inventory Non Class']].forEach(function(x){var e=I2.k[x[0]];k.push({l:x[1],n:pf(e.v,I2.v),s:rpM(e.v)+' · '+nf(e.n)+' item',y:1,x:1})})}
   $('#kpi').style.gridTemplateColumns=k.length>1?'1.5fr repeat('+(k.length-1)+',1fr)':'1fr';
@@ -421,7 +421,7 @@ function renderSum(){
   renderInv();
   if(CLS.length)$('#cap2').innerHTML=tableHTML(sumClass(),'Class','STOCK OUT PLANO PER CLASS (FUNCTION CLASS)','cl');
   var nos=R.filter(function(r){return r.nos}).length,nocl=R.filter(function(r){return r.cl==='-'}).length;
-  $('#notes').innerHTML='Σ Item dihitung per baris lokasi plano (satu item di dua lokasi dihitung dua kali), sama seperti template Excel. <b>Assortment</b> = item ada di Replenishment (repsys); <b>Non Assortment</b> = tidak ada di Replenishment. <b>Stock = Nol</b> mencakup '+nf(nos)+' baris yang tidak punya baris di file stok. <b>Stok minus</b> ('+nf(R.filter(function(r){return r.neg}).length)+' baris) tidak dihitung di Stock = Nol maupun Half Capacity karena kemungkinan ada penjualan; lihat lewat filter status di Detail. <b>Stock &lt; Half Capacity</b> = stok lebih dari nol dan kurang dari Capacity/2 (stok minus tidak ikut). % merah bila Stock=Nol lebih dari 7% (Assortment dan ALL). Klik angka untuk melihat detail item di tab Detail Item.'
+  $('#notes').innerHTML='Σ Item dihitung per baris lokasi plano (satu item di dua lokasi dihitung dua kali), sama seperti template Excel. <b>Repsys</b> = item ada di Replenishment; <b>Non Repsys</b> = tidak ada di Replenishment. <b>Stock = Nol</b> mencakup '+nf(nos)+' baris yang tidak punya baris di file stok. <b>Stok minus</b> ('+nf(R.filter(function(r){return r.neg}).length)+' baris) tidak dihitung di Stock = Nol maupun Half Capacity karena kemungkinan ada penjualan; lihat lewat filter status di Detail. <b>Stock &lt; Half Capacity</b> = stok lebih dari nol dan kurang dari Capacity/2 (stok minus tidak ikut). % merah bila Stock=Nol lebih dari 7% (Repsys dan ALL). Klik angka untuk melihat detail item di tab Detail Item.'
    +(CLS.length?'<br><b>Class</b> memakai kolom Function Class dari Report ABCD Class; '+nf(nocl)+' baris plano tidak ada di file class (Non Class).':'<br>Class belum tampil: unggah Report ABCD Class (.csv) untuk rekap per class.')
    +'<br>Data: '+esc(S.meta.plano||'')+' · '+esc(S.meta.stk||'')+' · '+esc(S.meta.rep||'')+(S.meta.cls?' · '+esc(S.meta.cls):'')+(S.meta.repDate?' (tanggal replenishment '+S.meta.repDate+')':'');
 }
@@ -495,7 +495,7 @@ function stat(r){return r.neg?['Stok Minus','o']:r.nos?['Nol (tidak ada di stok)
 function renderDet(){
   var rows=filtered(),h='';
   rows.slice(0,LIM).forEach(function(r){var s=stat(r);
-    h+='<tr><td>'+esc(r.c)+'</td><td>'+esc(r.n)+' #'+esc(r.fx)+'</td><td>'+esc(r.k)+'</td><td>'+esc(r.d)+'</td><td><span class="tg '+(r.a?'k':'o')+'">'+(r.a?'Assortment':'Non')+'</span></td><td>'+(r.cl&&r.cl!=='-'?esc(r.cl):'-')+'</td><td class="n">'+nf(r.cap)+'</td><td class="n">'+(r.soh===null?'-':nf(r.soh))+'</td><td class="n">'+(r.mn===null?'-':nf(r.mn))+'</td><td class="n">'+(r.rop===null?'-':nf(r.rop))+'</td><td class="n">'+(r.mx===null?'-':nf(r.mx))+'</td><td><span class="tg '+s[1]+'">'+s[0]+'</span></td></tr>';
+    h+='<tr><td>'+esc(r.c)+'</td><td>'+esc(r.n)+' #'+esc(r.fx)+'</td><td>'+esc(r.k)+'</td><td>'+esc(r.d)+'</td><td><span class="tg '+(r.a?'k':'o')+'">'+(r.a?'Repsys':'Non Repsys')+'</span></td><td>'+(r.cl&&r.cl!=='-'?esc(r.cl):'-')+'</td><td class="n">'+nf(r.cap)+'</td><td class="n">'+(r.soh===null?'-':nf(r.soh))+'</td><td class="n">'+(r.mn===null?'-':nf(r.mn))+'</td><td class="n">'+(r.rop===null?'-':nf(r.rop))+'</td><td class="n">'+(r.mx===null?'-':nf(r.mx))+'</td><td><span class="tg '+s[1]+'">'+s[0]+'</span></td></tr>';
   });
   $('#db').innerHTML=h||'<tr><td colspan="12" style="padding:18px;color:var(--mut)">Tidak ada data.</td></tr>';
   $('#dcount').textContent='· '+nf(rows.length)+' baris';
@@ -650,18 +650,18 @@ function renderMv(){
   mvBuildMs(cs);
   document.querySelectorAll('#mth th').forEach(function(th){var k=th.getAttribute('data-ms'),t=th.textContent.replace(/ [▲▼]$/,'');th.textContent=t+(MS.k===k?(MS.d<0?' ▼':' ▲'):'')});
   var rows=mvFiltered(),h='';
-  rows.slice(0,MLIM).forEach(function(i){h+='<tr><td>'+esc(i.k)+'</td><td>'+esc(i.d||'-')+(i.cons?' <small>(konsinyasi)</small>':'')+'</td><td>'+esc(i.c)+'</td><td><b style="color:'+MCL[i.t]+'">'+MTX[i.t]+'</b>'+(i.o?' <small style="color:#b3261e">stock habis</small>':'')+'</td><td>'+(i.nw?'<b style="color:#2f6fb0">Ya</b>':(S.nw?'Tidak':'–'))+'</td><td>'+(S.rep?(i.rs?'Repsys':'<span style="color:#7a5b00">Non repsys</span>'):'–')+'</td><td class="n">'+(i.sa<0?'–':nf(i.sa))+'</td><td class="n">'+(i.ia<0?'–':nf(i.ia))+'</td><td class="n">'+nf(i.st)+'</td><td class="n">'+nf(i.sv)+'</td><td class="n">'+nf(i.q)+'</td><td class="n">'+nf(i.v)+'</td><td class="n">'+(i.q?i.m.toFixed(1).replace('.',','):'–')+'</td><td class="n">'+(i.cv===null?'–':nf(Math.round(i.cv)))+'</td></tr>'});
+  rows.slice(0,MLIM).forEach(function(i){h+='<tr><td>'+esc(i.k)+'</td><td>'+esc(i.d||'-')+(i.cons?' <small>(konsinyasi)</small>':'')+'</td><td>'+esc(i.c)+'</td><td><b style="color:'+MCL[i.t]+'">'+MTX[i.t]+'</b>'+(i.o?' <small style="color:#b3261e">stock habis</small>':'')+'</td><td>'+(i.nw?'<b style="color:#2f6fb0">Ya</b>':(S.nw?'Tidak':'–'))+'</td><td>'+(S.rep?(i.rs?'Repsys':'<span style="color:#7a5b00">Non Repsys</span>'):'–')+'</td><td class="n">'+(i.sa<0?'–':nf(i.sa))+'</td><td class="n">'+(i.ia<0?'–':nf(i.ia))+'</td><td class="n">'+nf(i.st)+'</td><td class="n">'+nf(i.sv)+'</td><td class="n">'+nf(i.q)+'</td><td class="n">'+nf(i.v)+'</td><td class="n">'+(i.q?i.m.toFixed(1).replace('.',','):'–')+'</td><td class="n">'+(i.cv===null?'–':nf(Math.round(i.cv)))+'</td></tr>'});
   $('#mb').innerHTML=h||'<tr><td colspan="14" style="padding:18px;color:var(--mut)">Tidak ada data.</td></tr>';
   $('#mcount').textContent='· '+nf(rows.length)+' item';
   $('#mw').innerHTML=(rows.length>MLIM?'Layar menampilkan '+nf(MLIM)+' item pertama. Unduh Excel untuk semua '+nf(rows.length)+' item sesuai filter.':'')+(MC.noinfo?'<br><b style="color:#b3261e">'+nf(MC.noinfo)+' item ber-stock belum punya nama atau kategori dari SQV. Upload ulang file SQV supaya terbaca.</b>':'')+(!S.cage?'<br><b style="color:#b3261e">Stock age dan New Item belum terbaca. Upload file Report ABCD Class (.csv) lewat kotak Data.</b>':'');
-  $('#mn').innerHTML=''+'<b>Cara membaca.</b> Penjualan dari file '+esc(S.meta.sal||'penjualan')+' dibagi periode '+nf(P.d)+' hari ('+esc(S.meta.salFrom)+' sampai '+esc(S.meta.salTo)+'). Stock dan nilai stock dari SQV. <b>Dead moving</b>: ada stock di SQV tetapi tidak ada penjualan selama periode. <b>Fast moving</b>: item dengan nilai jual terbesar yang bersama-sama mencapai '+P.f+'% dari total nilai jual. <b>Slow moving</b>: bukan fast dan stock cukup lebih dari '+nf(P.s)+' hari dengan laju jual rata-rata. Kolom <b>New item</b>, <b>Stock age</b> (hari sejak barang terakhir masuk), dan <b>Umur item</b> (hari sejak barang pertama masuk) diambil dari file Report ABCD Class. Kolom <b>Repsys</b>: Repsys = item ada di file Replenishment Calculation by Date (assortment toko, dihitung sistem replenishment); Non repsys = tidak ada di file itu. Daftar dead moving diurutkan dari stock age terlama. New item yang belum laku tetap masuk dead moving; pakai filter New item untuk memisahkannya. <b>Normal</b>: sisanya. Stock cukup (hari) = stock ÷ rata-rata jual per hari. Stock minus tidak dihitung sebagai stock. Angka di kartu dan rekap hanya menghitung item yang ada stock di SQV. Fast, stock habis = item fast moving yang stock SQV-nya nol atau minus, kandidat untuk diorder. Item yang pernah laku tetapi tidak ada stock tampil di daftar bawah.'
+  $('#mn').innerHTML=''+'<b>Cara membaca.</b> Penjualan dari file '+esc(S.meta.sal||'penjualan')+' dibagi periode '+nf(P.d)+' hari ('+esc(S.meta.salFrom)+' sampai '+esc(S.meta.salTo)+'). Stock dan nilai stock dari SQV. <b>Dead moving</b>: ada stock di SQV tetapi tidak ada penjualan selama periode. <b>Fast moving</b>: item dengan nilai jual terbesar yang bersama-sama mencapai '+P.f+'% dari total nilai jual. <b>Slow moving</b>: bukan fast dan stock cukup lebih dari '+nf(P.s)+' hari dengan laju jual rata-rata. Kolom <b>New item</b>, <b>Stock age</b> (hari sejak barang terakhir masuk), dan <b>Umur item</b> (hari sejak barang pertama masuk) diambil dari file Report ABCD Class. Kolom <b>Repsys</b>: Repsys = item ada di file Replenishment Calculation by Date (assortment toko, dihitung sistem replenishment); Non Repsys = tidak ada di file itu. Daftar dead moving diurutkan dari stock age terlama. New item yang belum laku tetap masuk dead moving; pakai filter New item untuk memisahkannya. <b>Normal</b>: sisanya. Stock cukup (hari) = stock ÷ rata-rata jual per hari. Stock minus tidak dihitung sebagai stock. Angka di kartu dan rekap hanya menghitung item yang ada stock di SQV. Fast, stock habis = item fast moving yang stock SQV-nya nol atau minus, kandidat untuk diorder. Item yang pernah laku tetapi tidak ada stock tampil di daftar bawah.'
       +(MC.excl?'<br>'+nf(MC.excl)+' item berawalan DI/, STP/, CP/, atau J/ tidak dihitung karena tanggung jawab toko. Centang Sertakan di atas untuk memasukkannya.':'');
 }
 document.addEventListener('click',function(e){var th=e.target.closest&&e.target.closest('#mth th');if(th){var k=th.getAttribute('data-ms');if(MS.k===k)MS.d=-MS.d;else{MS.k=k;MS.d=/^(k|d|c|t)$/.test(k)?1:-1}renderMv();return}var b=e.target.closest&&e.target.closest('#mkpi button[data-ms]');if(b){MF.s=[b.getAttribute('data-ms')];renderMv()}});
 $('#mpx').onchange=function(){var o={};try{o=JSON.parse(localStorage.getItem(MPKEY)||'{}')}catch(e){}o.x=this.checked?1:0;try{localStorage.setItem(MPKEY,JSON.stringify(o))}catch(e){}renderMv()};
 ['#mpf:f','#mps:s'].forEach(function(x){var a=x.split(':');$(a[0]).onchange=function(){var o={};try{o=JSON.parse(localStorage.getItem(MPKEY)||'{}')}catch(e){}var v=parseFloat(this.value);if(v>0)o[a[1]]=v;if(a[1]==='f'&&o.f>100)o.f=100;try{localStorage.setItem(MPKEY,JSON.stringify(o))}catch(e){}renderMv()}});
 var mvPer=function(){S.meta.salFrom=$('#mpa').value;S.meta.salTo=$('#mpb').value;persistMv();persist();renderMv();if(mvDays())shSave()};$('#mpa').onchange=mvPer;$('#mpb').onchange=mvPer;
-var MOPT={s:[['fast','Fast moving'],['norm','Normal'],['slow','Slow moving'],['dead','Dead moving'],['out','Fast moving, stock habis']],a:[['0','0 - 30 hari'],['1','31 - 90 hari'],['2','91 - 180 hari'],['3','181 - 365 hari'],['4','Lebih dari 365 hari'],['x','Tanpa data stock age']],p:[['Y','Repsys'],['N','Non repsys']],n:[['Y','New item'],['N','Bukan new item']],t:[['R','Retail'],['K','Konsinyasi']]},MSIG='';
+var MOPT={s:[['fast','Fast moving'],['norm','Normal'],['slow','Slow moving'],['dead','Dead moving'],['out','Fast moving, stock habis']],a:[['0','0 - 30 hari'],['1','31 - 90 hari'],['2','91 - 180 hari'],['3','181 - 365 hari'],['4','Lebih dari 365 hari'],['x','Tanpa data stock age']],p:[['Y','Repsys'],['N','Non Repsys']],n:[['Y','New item'],['N','Bukan new item']],t:[['R','Retail'],['K','Konsinyasi']]},MSIG='';
 function mvMsText(el){var k=el.getAttribute('data-k'),a=MF[k],o=el.querySelectorAll('input'),nm=[];o.forEach(function(x){if(x.checked)nm.push(x.parentNode.textContent.trim())});
   el.querySelector('summary').textContent=el.getAttribute('data-l')+': '+(!a.length?'Semua':nm.length<=2?nm.join(', '):nm.length+' dipilih')}
 function mvBuildMs(cs){
@@ -680,7 +680,7 @@ $('#mfr').onclick=function(){MS={k:'',d:-1};MF={c:[],s:[],t:[],n:[],a:[],p:[],q:
 $('#mbx').onclick=function(){
   if(!MC)return;var T=function(v,st){return {v:v,s:st}},rows=mvFiltered(),P=MC.P;
   var dr=[['Item No','Deskripsi','Kategori','Status','Stock habis (laku)','Konsinyasi','New item','Repsys','Stock age (hari)','Umur item (hari)','Stock','Nilai stock','Terjual','Nilai jual','Rata-rata per bulan','Stock cukup (hari)'].map(function(t){return T(t,1)})];
-  rows.forEach(function(i){dr.push([T(i.k,2),T(i.d,2),T(i.c,2),T(MTX[i.t],2),T(i.o?'Ya':'',2),T(i.cons?'Ya':'',2),T(i.nw?'Ya':'',2),T(i.rs?'Repsys':'Non repsys',2),i.sa<0?'':T(i.sa,3),i.ia<0?'':T(i.ia,3),T(i.st,3),T(i.sv,3),T(i.q,3),T(i.v,3),i.q?Math.round(i.m*10)/10:'',i.cv===null?'':T(Math.round(i.cv),3)])});
+  rows.forEach(function(i){dr.push([T(i.k,2),T(i.d,2),T(i.c,2),T(MTX[i.t],2),T(i.o?'Ya':'',2),T(i.cons?'Ya':'',2),T(i.nw?'Ya':'',2),T(i.rs?'Repsys':'Non Repsys',2),i.sa<0?'':T(i.sa,3),i.ia<0?'':T(i.ia,3),T(i.st,3),T(i.sv,3),T(i.q,3),T(i.v,3),i.q?Math.round(i.m*10)/10:'',i.cv===null?'':T(Math.round(i.cv),3)])});
   var rc={};MC.items.forEach(function(i){if(i.st>0){var r=rc[i.c]||(rc[i.c]={fast:0,norm:0,slow:0,dead:0,newd:0,n:0,v:0,dv:0});r[i.t]++;r.n++;r.v+=i.sv;if(i.t==='dead')r.dv+=i.sv}});
   var rr=[['Kategori','Fast','Normal','Slow','Dead','Item ber-stock','Nilai stock','Nilai stock dead'].map(function(t){return T(t,1)})];
   Object.keys(rc).sort(function(a,b){return rc[b].v-rc[a].v}).forEach(function(c){var r=rc[c];rr.push([T(c,2),T(r.fast,3),T(r.norm,3),T(r.slow,3),T(r.dead,3),T(r.n,3),T(Math.round(r.v),3),T(Math.round(r.dv),3)])});
@@ -737,7 +737,7 @@ function sumSheet(name,D,first,title){
   rows.push([T(title,4)].concat(blank(16).map(function(){return T('',4)})));
   rows.push(blank(17));
   var g=[T('Stockout Planogram',5),T('',5)];
-  [['Assortment',6],['Non Assortment',7],['ALL ITEM PLANO',8]].forEach(function(x){g.push(T(x[0],x[1]));for(var i=0;i<4;i++)g.push(T('',x[1]))});
+  [['Repsys',6],['Non Repsys',7],['ALL ITEM PLANO',8]].forEach(function(x){g.push(T(x[0],x[1]));for(var i=0;i<4;i++)g.push(T('',x[1]))});
   rows.push(g);
   var hd=[T(first,19),T('Σ Item Planogram',5)];
   [9,10,11].forEach(function(st){['Σ Item','Stock = Nol','%','Stock < Half Capacity','%'].forEach(function(t){hd.push(T(t,st))})});
@@ -750,7 +750,7 @@ function sumSheet(name,D,first,title){
   };
   D.rows.forEach(function(r){rows.push(line(r,0))});rows.push(line(D.tot,1));
   rows.push(blank(17));
-  rows.push([T('Σ Item dihitung per baris lokasi plano. Assortment = item ada di Replenishment (repsys). Stock = Nol termasuk item tanpa baris di file stok. Stock < Half Capacity = stok lebih dari nol dan < Capacity/2 (minus tidak ikut).',18)]);
+  rows.push([T('Σ Item dihitung per baris lokasi plano. Repsys = item ada di Replenishment. Stock = Nol termasuk item tanpa baris di file stok. Stock < Half Capacity = stok lebih dari nol dan < Capacity/2 (minus tidak ikut).',18)]);
   rows.push([T('Data: '+(S.meta.plano||'')+' | '+(S.meta.stk||'')+' | '+(S.meta.rep||'')+(S.meta.cls?' | '+S.meta.cls:'')+(S.meta.repDate?' (replenishment '+S.meta.repDate+')':''),18)]);
   return {name:name,grid:0,w:[26,14,10,11,8,14,8,10,11,8,14,8,10,11,8,14,8],h:{0:34,3:32},rows:rows,m:['A1:Q1','A3:B3','C3:G3','H3:L3','M3:Q3']};
 }
@@ -770,8 +770,8 @@ function exportExcel(){
   if(CLS.length)sheets.push(sumSheet('Stock Out Plano Class',sumClass(),'Class','STOCK OUT PLANO PER CLASS (FUNCTION CLASS)'));
   var fr=filtered().sort(function(a,b){return a.c<b.c?-1:a.c>b.c?1:(a.n+a.fx)<(b.n+b.fx)?-1:1});
   var dr=[['Category','Fixture','Item No','Deskripsi','Tipe','Class','Capacity','Stock','Min Stock','Reorder Point','Max Stock','Status'].map(function(t){return T(t,1)})];
-  fr.forEach(function(r){dr.push([T(r.c,2),T(r.n+' #'+r.fx,2),T(r.k,2),T(r.d,2),T(r.a?'Assortment':'Non Assortment',2),T(r.cl&&r.cl!=='-'?r.cl:'-',2),T(r.cap,3),r.soh===null?T('-',2):T(r.soh,3),r.mn===null?T('-',2):T(r.mn,3),r.rop===null?T('-',2):T(r.rop,3),r.mx===null?T('-',2):T(r.mx,3),T(stat(r)[0],2)])});
-  var fdesc=[F.c||'Semua category',F.l?clName(F.l):'Semua class',F.t==='A'?'Assortment':F.t==='N'?'Non Assortment':'Assortment + Non',F.s==='nol'?'Stock = Nol':F.s==='nos'?'Nol tanpa baris stok':F.s==='half'?'< Half Capacity':F.s==='neg'?'Stok Minus':'Semua status'].join(' · ');
+  fr.forEach(function(r){dr.push([T(r.c,2),T(r.n+' #'+r.fx,2),T(r.k,2),T(r.d,2),T(r.a?'Repsys':'Non Repsys',2),T(r.cl&&r.cl!=='-'?r.cl:'-',2),T(r.cap,3),r.soh===null?T('-',2):T(r.soh,3),r.mn===null?T('-',2):T(r.mn,3),r.rop===null?T('-',2):T(r.rop,3),r.mx===null?T('-',2):T(r.mx,3),T(stat(r)[0],2)])});
+  var fdesc=[F.c||'Semua category',F.l?clName(F.l):'Semua class',F.t==='A'?'Repsys':F.t==='N'?'Non Repsys':'Repsys + Non Repsys',F.s==='nol'?'Stock = Nol':F.s==='nos'?'Nol tanpa baris stok':F.s==='half'?'< Half Capacity':F.s==='neg'?'Stok Minus':'Semua status'].join(' · ');
   if(S.inv&&S.inv.length&&S.cls&&S.inv[0].length>5)sheets.push(invSheet('Stock Inventory',invCat()));
   sheets.push({name:'Detail',w:[24,40,13,46,15,10,10,10,11,13,11,24],fz:1,af:'A1:L'+dr.length,rows:dr,h:{0:30}});
   xsave(xbuild(sheets),'Inventory_StockOutPlano_'+today()+'.xlsx');
