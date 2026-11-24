@@ -724,7 +724,7 @@ $('#mbx').onclick=function(){
 };
 
 /* ---------- stok DC ---------- */
-var DST={kirim:'Kirim ke toko',rep0:'Repsys, belum laku',baru:'Laku, belum repsys',cukup:'Stok toko cukup',skip:'Tidak perlu'},DCL={kirim:'#b3261e',rep0:'#7a5b00',baru:'#2f6fb0',cukup:'#1e7a4a',skip:'#5b6773'};
+var DST={kirim:'Order',rep0:'Repsys, belum laku',baru:'Order, non repsys',cukup:'Stok toko cukup',skip:'Tidak perlu'},DCL={kirim:'#b3261e',rep0:'#7a5b00',baru:'#2f6fb0',cukup:'#1e7a4a',skip:'#5b6773'};
 var DF={c:'',s:'',q:''},DS={k:'',d:1},DC=null,DLIM=500;
 function dcCalc(){
   if(!S.dc)return null;
@@ -754,14 +754,14 @@ function dcFiltered(){
     return (ord[a.t]-ord[b.t])||(b.send-a.send)||(b.mo-a.mo)||(b.tot-a.tot)})
 }
 function dcn2(x){return /^dc/i.test(x)?x:'DC '+x}
-var DCOL=function(){return [['k','Item No'],['d','Deskripsi'],['c','Kategori'],['t','Status'],['rs','Repsys'],['st','Stok toko'],['mo','Jual / bulan'],['cv','Cukup (hari)'],['mn','Min'],['mx','Max'],['tg','Target'],['send','Kirim dari DC']].concat((S.dcs||[]).map(function(x,i){return ['d'+i,dcn2(x)]})).concat([['tot','Total DC']])};
+var DCOL=function(){return [['k','Item No'],['d','Deskripsi'],['c','Kategori'],['t','Status'],['rs','Repsys'],['st','Stok toko'],['mo','Jual / bulan'],['cv','Cukup (hari)'],['mn','Min'],['mx','Max'],['tg','Target'],['send','Qty order']].concat((S.dcs||[]).map(function(x,i){return ['d'+i,dcn2(x)]})).concat([['tot','Total DC']])};
 function renderDc(){
   DC=dcCalc();
   if(!DC){['#dkpi','#dcard'].forEach(function(x){$(x).classList.add('hide')});$('#dmsgc').classList.remove('hide');$('#dmsg').innerHTML='<b>File stok DC belum dimuat.</b> Unggah file <b>Item Banyak di DC</b> (kolom Item No, Site Id, Sum of Available Qty, atau pivot per Site Id) lewat kotak Data di atas.';return}
   $('#dmsgc').classList.add('hide');$('#dkpi').classList.remove('hide');$('#dcard').classList.remove('hide');
   var g={kirim:[0,0],baru:[0,0],rep0:[0,0],cukup:[0,0],skip:[0,0]};DC.items.forEach(function(i){g[i.t][0]++;g[i.t][1]+=i.t==='kirim'?i.send:i.tot});
   var kb=function(l,n,s,c){return '<button type="button" data-ds="'+c+'"><span class="l">'+l+'</span><span class="n'+(c==='kirim'?' y':'')+'">'+nf(n)+'</span><span class="s">'+s+'</span></button>'};
-  $('#dkpi').innerHTML=kb(DST.kirim,g.kirim[0],'kirim '+nf(Math.round(g.kirim[1]))+' qty','kirim')+kb(DST.baru,g.baru[0],'pertimbangkan repsys','baru')+kb(DST.rep0,g.rep0[0],'repsys, tidak ada penjualan','rep0')+kb(DST.cukup,g.cukup[0],'tidak perlu kirim','cukup')+kb(DST.skip,g.skip[0],'tidak repsys, tidak laku','skip');
+  $('#dkpi').innerHTML=kb(DST.kirim,g.kirim[0],'order '+nf(Math.round(g.kirim[1]))+' qty','kirim')+kb(DST.baru,g.baru[0],'pertimbangkan repsys','baru')+kb(DST.rep0,g.rep0[0],'repsys, tidak ada penjualan','rep0')+kb(DST.cukup,g.cukup[0],'tidak perlu order','cukup')+kb(DST.skip,g.skip[0],'tidak repsys, tidak laku','skip');
   var cs=[];DC.items.forEach(function(i){if(cs.indexOf(i.c)<0)cs.push(i.c)});cs.sort();
   $('#dcat').innerHTML='<option value="">Semua kategori</option>'+cs.map(function(c){return '<option'+(c===DF.c?' selected':'')+'>'+esc(c)+'</option>'}).join('');
   $('#dst').innerHTML='<option value="">Semua status</option>'+Object.keys(DST).map(function(k){return '<option value="'+k+'"'+(k===DF.s?' selected':'')+'>'+DST[k]+'</option>'}).join('');
@@ -773,8 +773,8 @@ function renderDc(){
   $('#dccount').textContent='· '+nf(rows.length)+' item';
   var miss=[!S.sal?'file Penjualan per item':'',!S.stk?'SQV':'',!S.rep?'Replenishment':'',!S.plano?'ITEM PLANO':'',S.sal&&!DC.days?'periode penjualan (isi di tab Moving)':''].filter(Boolean);
   $('#dw').innerHTML=(rows.length>DLIM?'Layar menampilkan '+nf(DLIM)+' item pertama. Unduh Excel untuk semua '+nf(rows.length)+' item.':'')+(miss.length?'<br><b style="color:#b3261e">Belum lengkap: '+miss.join(', ')+'. Rekomendasi bisa meleset sampai data ini dimuat.</b>':'');
-  if(miss.length){$('#dmsgc').classList.remove('hide');$('#dmsg').innerHTML='<b style="color:#b3261e">Jual / bulan kosong karena belum ada: '+miss.join(', ')+'.</b> Unggah atau isi lewat kotak Data di atas (periode penjualan diisi di tab Moving), lalu rekomendasi kirim ikut terhitung.'}else $('#dmsgc').classList.add('hide');
-  $('#dcn').innerHTML='<b>Cara membaca.</b> Daftar item dari file '+esc(S.meta.dc||'stok DC')+' (stok tersedia per DC). <b>Stok toko</b> dari SQV, <b>Jual / bulan</b> dari penjualan dibagi periode, <b>Cukup (hari)</b> = stok toko dibagi rata-rata jual per hari. <b>Min</b> dan <b>Max</b> = Minimum Stock dan Maximum Stock dari file Replenishment (kosong bila bukan repsys). <b>Target</b> = yang terbesar antara Max repsys dan total Capacity plano; kalau keduanya kosong, pakai penjualan satu bulan. Stok toko dianggap <b>kurang</b> bila nol, sudah di bawah Reorder Point, di bawah setengah Capacity plano, atau cukup kurang dari 14 hari. <b>Kirim ke toko</b>: item repsys atau ada di plano, laku, dan stok toko kurang. Jumlah kirim = Target dikurangi stok toko, tidak lebih dari total stok DC. <b>Laku, belum repsys</b>: laku dan stok kurang tetapi belum masuk repsys, jadi pertimbangkan dimasukkan. <b>Repsys, belum laku</b>: stok kurang tetapi tidak ada penjualan di periode ini. <b>Tidak perlu</b>: tidak repsys, tidak di plano, tidak laku.';
+  if(miss.length){$('#dmsgc').classList.remove('hide');$('#dmsg').innerHTML='<b style="color:#b3261e">Jual / bulan kosong karena belum ada: '+miss.join(', ')+'.</b> Unggah atau isi lewat kotak Data di atas (periode penjualan diisi di tab Moving), lalu rekomendasi order ikut terhitung.'}else $('#dmsgc').classList.add('hide');
+  $('#dcn').innerHTML='<b>Cara membaca.</b> Daftar item dari file '+esc(S.meta.dc||'stok DC')+' (stok tersedia per DC). <b>Stok toko</b> dari SQV, <b>Jual / bulan</b> dari penjualan dibagi periode, <b>Cukup (hari)</b> = stok toko dibagi rata-rata jual per hari. <b>Min</b> dan <b>Max</b> = Minimum Stock dan Maximum Stock dari file Replenishment (kosong bila bukan repsys). <b>Target</b> = yang terbesar antara Max repsys dan total Capacity plano; kalau keduanya kosong, pakai penjualan satu bulan. Stok toko dianggap <b>kurang</b> bila nol, sudah di bawah Reorder Point, di bawah setengah Capacity plano, atau cukup kurang dari 14 hari. <b>Order</b>: item repsys atau ada di plano, laku, dan stok toko kurang. Qty order = Target dikurangi stok toko, tidak lebih dari total stok DC. <b>Order, non repsys</b>: laku dan stok kurang tetapi belum masuk repsys, jadi pertimbangkan dimasukkan. <b>Repsys, belum laku</b>: stok kurang tetapi tidak ada penjualan di periode ini. <b>Tidak perlu</b>: tidak repsys, tidak di plano, tidak laku.';
 }
 document.addEventListener('click',function(e){var th=e.target.closest&&e.target.closest('#dth th');if(th){var k=th.getAttribute('data-ds');if(DS.k===k)DS.d=-DS.d;else{DS.k=k;DS.d=/^(k|d|c|t)$/.test(k)?1:-1}renderDc();return}var b=e.target.closest&&e.target.closest('#dkpi button[data-ds]');if(b){DF.s=b.getAttribute('data-ds');renderDc()}});
 $('#dcat').onchange=function(){DF.c=this.value;renderDc()};$('#dst').onchange=function(){DF.s=this.value;renderDc()};
