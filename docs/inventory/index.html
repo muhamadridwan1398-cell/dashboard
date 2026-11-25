@@ -304,8 +304,9 @@ table.dd td.n{text-align:right}
     <div class="flt">
       <input id="nq" type="search" placeholder="Cari item no atau nama" style="min-width:220px">
       <details class="dms" id="ncat"></details><details class="dms" id="ncl"></details><details class="dms" id="nst"></details><details class="dms" id="nac"></details><details class="dms" id="npl"></details>
-      <button id="nbx" class="g">⬇️ Unduh Excel</button>
+      <button id="nbx" class="g">⬇️ Unduh Excel</button><button id="nml" class="g" title="Unduh Excel, salin isi email, lalu buka Carbonio">✉️ Siapkan email</button>
     </div>
+    <div class="note" id="nmm" role="status" style="display:none;margin:0 0 10px;padding:10px 12px;border-radius:8px;background:#eaf3ff;color:#16365c"></div>
     <div class="dt"><table class="dd"><thead><tr id="nth"></tr></thead><tbody id="nbd"></tbody></table></div>
     <div class="note" id="nw"></div>
     <details class="ket"><summary><b>Keterangan</b><span class="dtog"></span></summary><div class="kbody"><div class="note" id="nn"></div></div></details>
@@ -924,13 +925,34 @@ document.addEventListener('click',function(e){var th=e.target.closest&&e.target.
   var cl=e.target.closest&&e.target.closest('[data-nclr]');if(cl){NF[cl.getAttribute('data-nclr')]=[];renderMn()}});
 document.addEventListener('change',function(e){var t=e.target;if(t.getAttribute&&t.getAttribute('data-nf')){var k=t.getAttribute('data-nf'),i=NF[k].indexOf(t.value);if(t.checked&&i<0)NF[k].push(t.value);if(!t.checked&&i>=0)NF[k].splice(i,1);renderMn()}});
 var _nq;$('#nq').oninput=function(){var v=this.value;clearTimeout(_nq);_nq=setTimeout(function(){NF.q=v;renderMn();$('#nq').focus()},200)};
-$('#nbx').onclick=function(){
-  if(!NC)return;var T=function(v,st){return {v:v,s:st}},rows=nFiltered(),C=nCols();
+function nBuild(rows){
+  var T=function(v,st){return {v:v,s:st}},C=nCols();
   var dr=[C.map(function(c){return T(c[1],1)})];
   rows.forEach(function(i){var big=i.t!=='aman';dr.push([T(i.k,2),T(i.d,2),T(i.c,2),T(S.cls?(i.cl==='-'?'Non Class':i.cl):'',2),T(S.plano?(i.pl?'Plano':'Non Plano'):'',2),T(NST[i.t].replace(' (sudah Min atau lebih)',''),2),T(i.st,3),S.po?T(i.po,3):'',S.tr?T(i.tr,3):'',T(i.mn,3),T(i.mx,3),T(i.rop,3),big?T(i.kur,3):'',big?T(i.topup,3):'',S.sal&&NC.days?Math.round(i.mo*10)/10:'',i.cv===null?'':T(Math.round(i.cv),3),S.dc?T(i.dt,3):'',T(i.ac==='na'?'':NAC[i.ac],2),big&&S.dc?T(i.od,3):''])});
-  xsave(xbuild([{name:'Repsys di bawah Min',w:[13,46,24,10,11,13,11,13,13,9,9,9,15,17,12,12,10,24,13],fz:1,af:'A1:'+xcol(C.length)+dr.length,rows:dr,h:{0:30}}]),'Inventory_Repsys_Di_Bawah_Min_'+today()+'.xlsx');
-  say('✔ Excel diunduh ('+nf(rows.length)+' item sesuai filter).');
+  return xbuild([{name:'Repsys di bawah Min',w:[13,46,24,10,11,13,11,13,13,9,9,9,15,17,12,12,10,24,13],fz:1,af:'A1:'+xcol(C.length)+dr.length,rows:dr,h:{0:30}}]);
+}
+var MAILURL='https://mail.mitra10.com/carbonio/mails/folder/2';
+$('#nml').onclick=function(){
+  if(!NC)return;
+  var rows=nFiltered().filter(function(i){return i.t!=='aman'&&(i.ac==='dc'||i.ac==='sbg'||i.ac==='po')});
+  if(!rows.length){say('Tidak ada item dengan tindakan Order atau Cek PO pada filter ini.',1);return}
+  var cnt={dc:0,sbg:0,po:0};rows.forEach(function(i){cnt[i.ac]++});
+  var tgl=new Date(Date.now()+7*3600e3).toISOString().slice(0,10),fn='Inventory_Tindakan_Repsys_'+tgl+'.xlsx',sub='Tindakan repsys di bawah Min - Q-BIG - '+tgl;
+  xsave(nBuild(rows),fn);
+  var short=function(d){return String(d||'').split(',')[0]},TOP=40,top=rows.slice(0,TOP);
+  var h='<p><b>'+esc(sub)+'</b></p><p>'+nf(rows.length)+' item repsys di bawah Min yang perlu tindakan: '+nf(cnt.dc)+' order dari DC, '+nf(cnt.sbg)+' order sebagian dari DC, '+nf(cnt.po)+' cek PO. Detail lengkap ada di lampiran Excel.</p>'
+   +'<table border="1" cellpadding="4" cellspacing="0" style="border-collapse:collapse;font-size:12px"><tr style="background:#1b2a49;color:#fff"><th>Item No</th><th>Deskripsi</th><th>Stok toko</th><th>Min</th><th>Max</th><th>PO</th><th>TR</th><th>Stok DC</th><th>Tindakan</th><th>Qty order DC</th></tr>'
+   +top.map(function(i){return '<tr><td>'+esc(i.k)+'</td><td>'+esc(short(i.d))+'</td><td align="right">'+nf(i.st)+'</td><td align="right">'+nf(i.mn)+'</td><td align="right">'+nf(i.mx)+'</td><td align="right">'+(S.po?nf(i.po):'-')+'</td><td align="right">'+(S.tr?nf(i.tr):'-')+'</td><td align="right">'+(S.dc?nf(i.dt):'-')+'</td><td>'+esc(NAC[i.ac])+'</td><td align="right">'+(S.dc&&i.od?nf(i.od):'-')+'</td></tr>'}).join('')+'</table>'
+   +(rows.length>TOP?'<p>Tabel menampilkan '+TOP+' item teratas dari '+nf(rows.length)+'. Selengkapnya di lampiran.</p>':'');
+  var t=sub+'\n'+nf(rows.length)+' item perlu tindakan ('+nf(cnt.dc)+' order dari DC, '+nf(cnt.sbg)+' sebagian, '+nf(cnt.po)+' cek PO). Detail di lampiran Excel.\n\n'+top.map(function(i){return [i.k,short(i.d),'stok '+i.st,'min '+i.mn,'max '+i.mx,NAC[i.ac],S.dc&&i.od?'qty '+i.od:''].join(' | ')}).join('\n');
+  var nmm=function(t,bad){var e=$('#nmm');e.style.display='block';e.style.background=bad?'#fff6e5':'#eaf3ff';e.innerHTML=t};
+  var done=function(ok){nmm((ok?'<b>✔ Excel terunduh</b> ('+esc(fn)+'). <b>Isi email sudah disalin.</b>':'<b>Excel terunduh</b> ('+esc(fn)+'). Isi email gagal disalin otomatis.')+'<br>Di Carbonio: klik <b>NEW</b>, isi Subject: <i>'+esc(sub)+'</i>, tempel isi email (Ctrl+V), lalu lampirkan file Excel dengan ikon klip.',!ok);say((ok?'✔ ':'')+'Excel terunduh ('+fn+'). '+(ok?'Isi email sudah disalin. ':'Isi email gagal disalin otomatis. ')+'Di Carbonio klik NEW, isi Subject: "'+sub+'", tempel isi email (Ctrl+V), lalu lampirkan file Excel dengan ikon klip.',!ok)};
+  var copied=false;
+  try{if(navigator.clipboard&&window.ClipboardItem){navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([h],{type:'text/html'}),'text/plain':new Blob([t],{type:'text/plain'})})]).then(function(){done(true)},function(){done(false)});copied=true}}catch(e){}
+  if(!copied)done(false);
+  window.open(MAILURL,'_blank','noopener');
 };
+$('#nbx').onclick=function(){if(!NC)return;var rows=nFiltered();xsave(nBuild(rows),'Inventory_Repsys_Di_Bawah_Min_'+today()+'.xlsx');say('✔ Excel diunduh ('+nf(rows.length)+' item sesuai filter).')};
 /* ---------- Excel berstyle ---------- */
 function u8(s){return new TextEncoder().encode(s)}
 function xe(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
