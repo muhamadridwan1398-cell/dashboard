@@ -168,7 +168,7 @@ table.dd td.n{text-align:right}
     <div class="brand"><h1>Inventory</h1><p>MITRA10 Q-BIG · Toko 10038</p></div>
     <div class="bar-r"><div id="sbpill"></div><a class="back" href="../">Menu dashboard</a></div>
   </div>
-  <div class="tabs" role="tablist"><button class="tab on" role="tab" aria-selected="true" data-tab="plano">Plano Stock</button><button class="tab" role="tab" aria-selected="false" data-tab="detail">Detail Item</button><button class="tab" role="tab" aria-selected="false" data-tab="capacity">Capacity</button><button class="tab" role="tab" aria-selected="false" data-tab="moving">Moving</button><button class="tab" role="tab" aria-selected="false" data-tab="dc">Stok DC</button><button class="tab" role="tab" aria-selected="false" data-tab="min">Kontrol Min</button></div>
+  <div class="tabs" role="tablist"><button class="tab on" role="tab" aria-selected="true" data-tab="plano">Plano Stock</button><button class="tab" role="tab" aria-selected="false" data-tab="detail">Detail Item</button><button class="tab" role="tab" aria-selected="false" data-tab="capacity">Capacity</button><button class="tab" role="tab" aria-selected="false" data-tab="moving">Moving</button><button class="tab" role="tab" aria-selected="false" data-tab="dc">Cek Stock</button><button class="tab" role="tab" aria-selected="false" data-tab="min">Kontrol Min</button></div>
 </header>
 <div class="wrap">
   <details class="data" id="dataBox" open>
@@ -795,7 +795,7 @@ function dcStamp(){
   if(!$('#tab-dc').classList.contains('hide'))try{localStorage.setItem('qbig_dc_seen',at)}catch(e){}
   dcDot();
 }
-function dcDot(){var b=document.querySelector('.tab[data-tab=dc]');if(!b)return;var at=S.meta&&S.meta.dcAt,nw=at&&at>dcSeen()&&$('#tab-dc').classList.contains('hide');b.innerHTML='Stok DC'+(nw?' <span class="dcdot" title="Data stok DC diperbarui"></span>':'')}
+function dcDot(){var b=document.querySelector('.tab[data-tab=dc]');if(!b)return;var at=S.meta&&S.meta.dcAt,nw=at&&at>dcSeen()&&$('#tab-dc').classList.contains('hide');b.innerHTML='Cek Stock'+(nw?' <span class="dcdot" title="Data stok DC diperbarui"></span>':'')}
 function dcMs(id,lbl,key,opts){
   var el=$('#'+id),sel=DF[key],o=el.open;
   el.innerHTML='<summary>'+lbl+(sel.length?' <b>('+sel.length+')</b>':'')+'</summary><div class="msb">'+opts.map(function(x){return '<label><input type="checkbox" data-mf="'+key+'" value="'+esc(x[0])+'"'+(sel.indexOf(x[0])>=0?' checked':'')+'> '+esc(x[1])+'</label>'}).join('')+(sel.length?'<button type="button" data-mclr="'+key+'">Hapus pilihan</button>':'')+'</div>';
