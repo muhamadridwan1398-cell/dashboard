@@ -2716,8 +2716,8 @@ function dRepHtml(){var day=DR.d!=null?DR.d:dRepDefault();if(day==null)return '<
   var iso=new Date(day*864e5).toISOString().slice(0,10),R=dRep(day);
   return '<div class="dslrep"><div class="dslrf"><label>Tanggal PDD<input type="date" id="dslrd" value="'+iso+'"></label><label>Sapaan (baris pertama)<input type="text" id="dslrn" placeholder="mis. Bu Novi Octarina SM" value="'+esc(DR.n)+'"></label><label>Nama toko<input type="text" id="dslrs" value="'+esc(DR.s)+'"></label></div>'
     +'<div class="dslrst"><div><b>'+R.pd+'</b><span>PD</span></div><div class="ok"><b>'+R.ot+'</b><span>OT</span></div><div class="'+(R.late?'bad':'ok')+'"><b>'+R.late+'</b><span>Telat</span></div></div>'
-    +(R.pd?'':dRepEmpty())+'<div class="dslrh">Teks report</div><textarea id="dslrt" readonly rows="20" aria-label="Teks report">'+esc(R.text)+'</textarea>'
-    +'<div class="dslra"><button type="button" class="btn" data-dsl="copy">Salin teks</button><button type="button" class="btn ghost" data-dsl="wa">Kirim lewat WhatsApp</button><span class="sub" id="dslrm" style="margin:0"></span></div>'
+    +(R.pd?'':dRepEmpty())+'<div class="dslrh">Teks report <span style="font-weight:400;color:#6b7686">· bisa diedit</span></div><textarea id="dslrt" rows="20" spellcheck="false" aria-label="Teks report">'+esc(R.text)+'</textarea>'
+    +'<div class="dslra"><button type="button" class="btn" data-dsl="copy">Salin teks</button><button type="button" class="btn ghost" data-dsl="wa">Kirim lewat WhatsApp</button><button type="button" class="btn ghost" data-dsl="reset" title="Buat ulang teks otomatis">Reset teks</button><span class="sub" id="dslrm" style="margin:0"></span></div>'
     +'<details class="dslrn"><summary>Cara hitung</summary><p class="sub">T1/T2/T3 = telat 1 hari / 2 hari / 3 hari atau lebih dari PDD (sampai tanggal close, atau hari ini kalau belum close). Teks di bawah nomor NP diambil dari kolom <b>Delivery Detail</b> di REASON LATE (atau NP NAV); kalau kosong, dipakai <b>Reason Late Customer</b> beserta Keterangan Detailnya. NP berstatus Exclude = Y dihitung OT. Persen Sameday dan seterusnya adalah porsi dari NP yang OT.</p></details></div>'}
 function dDiff(pm){var mp={};D.np.forEach(function(x){mp[x.np]=x});var late=dLate(pm),ls={};late.forEach(function(x){ls[x.np]=1});
   var noRs=late.filter(function(x){var z=D.rs[x.np];return !(z&&z.r)}),extra=[];
@@ -2853,6 +2853,7 @@ document.addEventListener('input',function(e){var t=e.target;if(t&&t.id==='dslq'
 function dRepRefresh(){var ta=document.getElementById('dslrt');if(ta&&DR.d!=null){var R=dRep(DR.d);ta.value=R.text}}
 function dDet(){var el=document.getElementById('dsldet');if(el&&DS.mon!=null)el.innerHTML=dDetailHtml(DS.mon)}
 document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-dsl]');if(!b)return;var k=b.dataset.dsl;
+  if(k==='reset'){dRepRefresh();var mr=document.getElementById('dslrm');if(mr)mr.textContent='Teks dikembalikan.';return}
   if(k==='wa'){var tw=document.getElementById('dslrt');if(tw)window.open('https://wa.me/?text='+encodeURIComponent(tw.value),'_blank','noopener');return}
   if(k==='copy'){var ta=document.getElementById('dslrt'),m=document.getElementById('dslrm'),ok=function(){if(m)m.textContent='Tersalin.'};if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(ta.value).then(ok,function(){ta.select();document.execCommand('copy');ok()});else{ta.select();document.execCommand('copy');ok()}}
   else if(k==='sub'){DS.sub=b.dataset.v;render()}
