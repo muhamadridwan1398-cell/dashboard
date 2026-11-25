@@ -75,7 +75,7 @@
 .dsl .dslsrc{margin:12px 0 4px;padding:12px 14px;border:1px solid #e3e8f0;border-radius:12px;background:#f8fafd}
 .dsl .dslsl{margin:0 0 10px;font-size:13px;color:var(--ink2,#3b4a63)}.dsl .dslsl b{color:var(--navy)}
 .dsl .dslup{display:flex;gap:8px;flex-wrap:wrap}.dsl .dslup .btn{cursor:pointer;display:inline-flex;align-items:center;gap:6px}
-.dsl .dslum{margin:8px 0 0;font-size:12px;color:var(--ink3)}
+.dsl .dslrepl{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--ink2);cursor:pointer;padding:0 4px}.dsl .dslum{margin:8px 0 0;font-size:12px;color:var(--ink3)}
 .dsl .dslset{margin:8px 2px}
 .dsl .tablewrap td:first-child,.dsl .tablewrap th:first-child{position:sticky;left:0;z-index:1}
 .dsl .tablewrap td:first-child{background:#fff;white-space:nowrap}.dsl .tablewrap th:first-child{background:#f3f6fb;z-index:2}
@@ -2637,6 +2637,17 @@ function dRsMonth(r,mcols,pdj,yj){
   if(pd!=null){var t=new Date(pd);return [t.getUTCMonth()+1,t.getUTCFullYear()]}
   return [null,y]}
 function dScr(r,hs){for(var j=0;j<hs.length;j++)if(/^screenshoot|^screenshot/.test(hs[j]))return String(r[j]==null?'':r[j]).trim();return ''}
+/* gabung data lama + upload baru per nomor NP: NP yang ada di file baru menggantikan baris lamanya, NP lain tetap */
+function dMerge(oldR,newR,need,keyName){
+  var Ho=oldR&&dHdr(oldR,need),Hn=dHdr(newR,need);if(!Ho||!Hn)return {rows:newR,n:0,upd:0,old:0};
+  var idx=function(hs){var c={},o={};hs.forEach(function(x,j){if(!x)return;c[x]=(c[x]||0)+1;o[x+'#'+c[x]]=j});return o},io=idx(Ho.hs),inw=idx(Hn.hs),kN=Hn.m[keyName],kO=Ho.m[keyName],seen={};
+  for(var i=Hn.r+1;i<newR.length;i++){var np=String(newR[i][kN]||'').trim();if(np)seen[np]=1}
+  var keep=[],upd=0,old={};
+  for(var j=Ho.r+1;j<oldR.length;j++){var r=oldR[j],np2=String(r[kO]||'').trim();if(!np2)continue;old[np2]=1;if(seen[np2]){continue}
+    var a=new Array(Hn.hs.length);for(var q=0;q<a.length;q++)a[q]='';Object.keys(inw).forEach(function(k){var jo=io[k];if(jo!==undefined)a[inw[k]]=r[jo]==null?'':r[jo]});keep.push(a)}
+  Object.keys(seen).forEach(function(k){if(old[k])upd++});
+  var nNew=Object.keys(seen).length-upd;
+  return {rows:newR.slice(0,Hn.r+1).concat(keep,newR.slice(Hn.r+1)),n:nNew,upd:upd,old:Object.keys(old).length}}
 function dParseRs(rows){
   var H=dHdr(rows,['no nota penjualan','reason late customer']);if(!H)throw new Error('Tab REASON LATE: kolom "No Nota Penjualan" dan "Reason Late Customer" tidak ditemukan.');
   var M=H.m,g=function(r,n){var j=M[n];return j===undefined?'':String(r[j]==null?'':r[j]).trim()},out={},mj=-1,yj=M['year'];
@@ -2659,9 +2670,9 @@ function dLoad(){
     var d=sh&&sh.d,np=d&&d.np?dParseNp(d.np):null,rs=d&&d.rs?dParseRs(d.rs):null,need=[],src=[];
     if(np)src.push('NP NAV upload '+((d.npMeta&&d.npMeta.name)||'')+' ('+fmtStamp((d.npMeta&&d.npMeta.at)||'')+')');else need.push(dFetch(u1).then(function(r){np=dParseNp(r)}));
     if(rs)src.push('REASON LATE upload '+((d.rsMeta&&d.rsMeta.name)||'')+' ('+fmtStamp((d.rsMeta&&d.rsMeta.at)||'')+')');else need.push(dFetch(u2).then(function(r){rs=dParseRs(r)}));
-    return Promise.all(need).then(function(){D.shared=!!d;dApply(np,rs,d?'Tersimpan online: '+src.join(' + ')+(need.length?' · sisanya dari Google Sheets':''):'Google Sheets')})
+    return Promise.all(need).then(function(){D.shared=!!d;D.npRaw=d&&d.np||null;D.rsRaw=d&&d.rs||null;dApply(np,rs,d?'Tersimpan online: '+src.join(' + ')+(need.length?' · sisanya dari Google Sheets':''):'Google Sheets')})
   }).catch(function(e){D.st='err';D.err=(e&&e.message)||String(e);render()})}
-function dShMsg(t,err){DS.msg=t;DS.msgErr=!!err;var el=document.getElementById('dslum');if(el){el.textContent=t;el.style.color=err?'#b42318':''}}
+function dShMsg(t,err){t=(DS.note?DS.note+'. ':'')+t;DS.msg=t;DS.msgErr=!!err;var el=document.getElementById('dslum');if(el){el.textContent=t;el.style.color=err?'#b42318':''}}
 function dShSave(p){
   if(location.protocol==='file:'){dShMsg('Data hanya dimuat di browser ini. Buka dari alamat website agar tersimpan online.',true);return}
   if(typeof CompressionStream==='undefined'){dShMsg('Browser belum mendukung simpan online. Pakai Chrome atau Edge terbaru.',true);return}
@@ -2763,7 +2774,7 @@ function dslPanel(){
   var h='<section class="panel full dsl" id="dslpanel"><div class="mph"><div><h2 style="font-size:16px;font-weight:800;margin:0">Delivery Service Level (DSL)</h2><details class="dslinfo"><summary aria-label="Keterangan" title="Keterangan">ⓘ</summary><p class="sub" style="margin:2px 0 0">Per nota unik, per bulan Promise Delivery Date, khusus NP Kirim (titip/Amsen tidak dihitung). Ach % = (Early + Ontime) ÷ semua NP.</p></details></div>'
     +'<div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn ghost" data-dsl="reload">Muat ulang</button>'+(D.shared?'<button type="button" class="btn ghost" data-dsl="gs" title="Abaikan data upload tersimpan, baca langsung dari Google Sheets (hanya di browser ini)">Pakai Google Sheets</button>':'')+(D.st==='ok'?'<button type="button" class="btn ghost" data-dsl="xl">Unduh Excel</button>':'')+'</div></div>';
   var srcTxt=D.st==='ok'?'<span title="'+esc(D.src)+'"><b>'+fmt(D.np.length)+' NP</b> · diperbarui '+esc(fmtStamp(D.at).replace(' pukul ',', '))+'</span>'+(D.rep?' · <span title="NP yang diposting lebih dari sekali dibaca dari posting terakhir saja (PDD dan status)">'+fmt(D.rep)+' diposting ulang</span>':''):D.st==='loading'?'Memuat data dari Google Sheets…':'';
-  h+='<div class="dslsrc"><p class="dslsl">'+(srcTxt||'Belum ada data.')+'</p><div class="dslup"><label class="btn" title="File tab NP NAV (kolom NPNo, STATUS DSL, Promised Delivery Date), .xlsx atau .csv">⬆ Upload NP NAV<input type="file" id="dslf1" accept=".csv,.xlsx,.xls" hidden></label><label class="btn ghost" title="Opsional: file tab REASON LATE. Kalau 1 file berisi 2 tab, NP NAV dan REASON LATE dikenali otomatis.">⬆ Upload REASON LATE<input type="file" id="dslf2" accept=".csv,.xlsx,.xls" hidden></label></div><p class="dslum" id="dslum"'+(DS.msgErr?' style="color:#b42318"':'')+'>'+esc(DS.msg||'')+'</p></div>';
+  h+='<div class="dslsrc"><p class="dslsl">'+(srcTxt||'Belum ada data.')+'</p><div class="dslup"><label class="btn" title="File tab NP NAV (kolom NPNo, STATUS DSL, Promised Delivery Date), .xlsx atau .csv">⬆ Upload NP NAV<input type="file" id="dslf1" accept=".csv,.xlsx,.xls" hidden></label><label class="btn ghost" title="Opsional: file tab REASON LATE. Kalau 1 file berisi 2 tab, NP NAV dan REASON LATE dikenali otomatis.">⬆ Upload REASON LATE<input type="file" id="dslf2" accept=".csv,.xlsx,.xls" hidden></label><label class="dslrepl" title="Centang kalau file yang diupload adalah tarikan penuh dari awal bulan. Data lama dihapus dan diganti file ini."><input type="checkbox" id="dslrall"'+(DS.replaceAll?' checked':'')+'> Ganti semua data (jangan gabung)</label></div><p class="dslum" id="dslum"'+(DS.msgErr?' style="color:#b42318"':'')+'>'+esc(DS.msg||'')+'</p></div>';
   if(D.st==='err')h+='<div class="dslerr"><b>Data belum bisa dimuat.</b> '+esc(D.err)+'<br>Pastikan spreadsheet bisa dilihat siapa saja yang punya link, atau pakai link "Publikasikan ke web" / upload file di bawah.</div>';
   h+='<details class="dslset"'+(D.st==='err'?' open':'')+'><summary>Atur sumber data</summary><div class="dslgrid">'
     +'<label>Link CSV tab NP NAV (opsional)<input type="url" id="dslu1" placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?gid=467539596&single=true&output=csv" value="'+esc(DS.cfg.u1)+'"></label>'
@@ -2838,13 +2849,18 @@ document.addEventListener('change',function(e){var t=e.target;if(!t||!t.id)retur
     dFileAll(f).then(function(sh){var pn=null,pr=null;sh.forEach(function(x){if(!pn&&dHdr(x.rows,['npno','status dsl','promised delivery date']))pn=x.rows;if(!pr&&dHdr(x.rows,['no nota penjualan','reason late customer']))pr=x.rows});
       if(which==='dslf1'&&!pn)throw new Error('File '+f.name+': kolom NPNo, STATUS DSL, dan Promised Delivery Date tidak ditemukan. Pakai file tab NP NAV.');
       if(which==='dslf2'&&!pr)throw new Error('File '+f.name+': kolom "No Nota Penjualan" dan "Reason Late Customer" tidak ditemukan. Pakai file tab REASON LATE.');
+      var note='';if(!DS.replaceAll){var mg=[];
+        if(pn&&D.npRaw){var m1=dMerge(D.npRaw,pn,['npno','status dsl','promised delivery date'],'npno');pn=m1.rows;mg.push('NP NAV: '+m1.n+' NP baru, '+m1.upd+' diperbarui, '+(m1.old-m1.upd)+' NP lama tetap')}
+        if(pr&&D.rsRaw){var m2=dMerge(D.rsRaw,pr,['no nota penjualan','reason late customer'],'no nota penjualan');pr=m2.rows;mg.push('REASON LATE: '+m2.n+' baru, '+m2.upd+' diperbarui')}
+        if(mg.length)note=' · digabung dengan data tersimpan ('+mg.join('; ')+')'}
       var np=pn?dParseNp(pn):(D.np&&D.np.length?{list:D.np,hist:D.hist,rep:D.rep}:null),rs=pr?dParseRs(pr):(D.rs&&Object.keys(D.rs).length?D.rs:null),need=[];
       if(!np)need.push(dFetch(DS.cfg.u1||dGviz(DSL_GNP)).then(function(r){np=dParseNp(r)}));
       if(!rs)need.push(dFetch(DS.cfg.u2||dGviz(DSL_GRS)).then(function(r){rs=dParseRs(r)}).catch(function(){rs={}}));
-      return Promise.all(need).then(function(){if(!np)throw new Error('Data NP NAV belum ada. Upload file NP NAV dulu.');dApply(np,rs||{},'File upload: '+f.name);dShSave({np:pn?{rows:pn,name:f.name}:null,rs:pr?{rows:pr,name:f.name}:null})})
+      return Promise.all(need).then(function(){if(!np)throw new Error('Data NP NAV belum ada. Upload file NP NAV dulu.');DS.note=note.replace(/^ · /,'').replace(/^digabung/,'Digabung');if(pn)D.npRaw=pn;if(pr)D.rsRaw=pr;dApply(np,rs||{},'File upload: '+f.name+note);dShSave({np:pn?{rows:pn,name:f.name}:null,rs:pr?{rows:pr,name:f.name}:null})})
     }).catch(function(er){D.st='err';D.err=(er&&er.message)||'File tidak bisa dibaca.';render()});return}
   if(t.id==='dslu1'||t.id==='dslu2'){var u1=document.getElementById('dslu1'),u2=document.getElementById('dslu2');DS.cfg.u1=((u1&&u1.value)||'').trim();DS.cfg.u2=((u2&&u2.value)||'').trim();try{localStorage.setItem(DSL_KEY,JSON.stringify(DS.cfg))}catch(er){}D.st='idle';setTimeout(render,0);return}
   if(t.id==='dslrd'){var q=String(t.value||'').split('-');if(q.length===3){DR.d=Math.floor(Date.UTC(+q[0],+q[1]-1,+q[2])/864e5);render()}return}
+  if(t.id==='dslrall'){DS.replaceAll=t.checked;return}
   if(t.id==='dslorig'){DS.useOrig=t.checked;DS._o=null;DS.mon=null;DS.shown=100;render();return}
   if(t.id==='dslan'){DS.anm=t.value===''?null:+t.value;render();return}
   if(t.id==='dslrs'){DS.rs=t.value;DS.shown=100;dDet()}});
