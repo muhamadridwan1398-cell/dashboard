@@ -743,7 +743,7 @@ function dcCalc(){
     else if(!rs&&!cp&&hasS&&q>0&&low)t='baru';
     else if(rs||cp>0||q>0)t='cukup';else t='skip';
     var mi=0;e[3].forEach(function(v,i){if(v>e[3][mi])mi=i});
-    return {k:k,d:e[0],c:e[1],sf:e[2],dq:e[3],tot:tot,st:st,q:q,mo:mo,cv:cv,cl:S.cls?(S.cls[k]||'-'):'',sd:sd,rs:rs,mn:rp?rp[0]:null,mx:rp?rp[1]:null,cp:cp,tg:tg,need:need,send:send,t:t,from:S.dcs[mi]||''}});
+    return {k:k,d:e[0],c:e[1],sf:e[2],dq:e[3],tot:tot,st:st,q:q,mo:mo,cv:cv,cl:S.cls?(S.cls[k]||'-'):'',sd:sd,pl:cnt[k]?1:0,rs:rs,mn:rp?rp[0]:null,mx:rp?rp[1]:null,cp:cp,tg:tg,need:need,send:send,t:t,from:S.dcs[mi]||''}});
   return {items:items,days:days,hasS:hasS}
 }
 function dcFiltered(){
@@ -754,7 +754,7 @@ function dcFiltered(){
     return (ord[a.t]-ord[b.t])||(b.send-a.send)||(b.mo-a.mo)||(b.tot-a.tot)})
 }
 function dcn2(x){return /^dc/i.test(x)?x:'DC '+x}
-var DCOL=function(){return [['k','Item No'],['d','Deskripsi'],['c','Kategori'],['cl','Class'],['t','Status'],['rs','Repsys'],['st','Stok toko'],['mo','Jual / bulan'],['cv','Cukup (hari)'],['cp','Capacity plano'],['sd','Safety stock (hari)'],['mn','Min'],['mx','Max'],['tg','Target'],['send','Qty order']].concat((S.dcs||[]).map(function(x,i){return ['d'+i,dcn2(x)]})).concat([['tot','Total DC']])};
+var DCOL=function(){return [['k','Item No'],['d','Deskripsi'],['c','Kategori'],['cl','Class'],['t','Status'],['rs','Repsys'],['pl','Plano'],['st','Stok toko'],['mo','Jual / bulan'],['cv','Cukup (hari)'],['cp','Capacity plano'],['sd','Safety stock (hari)'],['mn','Min'],['mx','Max'],['tg','Target'],['send','Qty order']].concat((S.dcs||[]).map(function(x,i){return ['d'+i,dcn2(x)]})).concat([['tot','Total DC']])};
 function renderDc(){
   DC=dcCalc();
   if(!DC){['#dkpi','#dcard'].forEach(function(x){$(x).classList.add('hide')});$('#dmsgc').classList.remove('hide');$('#dmsg').innerHTML='<b>File stok DC belum dimuat.</b> Unggah file <b>Item Banyak di DC</b> (kolom Item No, Site Id, Sum of Available Qty, atau pivot per Site Id) lewat kotak Data di atas.';return}
@@ -768,7 +768,7 @@ function renderDc(){
   $('#dq').value=DF.q;
   $('#dth').innerHTML=DCOL().map(function(c){var n=/^(st|mo|cv|cp|sd|mn|mx|tg|send|tot|d\d+)$/.test(c[0]);return '<th data-ds="'+c[0]+'"'+(n?' style="text-align:right"':'')+'>'+c[1]+(DS.k===c[0]?(DS.d<0?' ▼':' ▲'):'')+'</th>'}).join('');
   var rows=dcFiltered(),h='';
-  rows.slice(0,DLIM).forEach(function(i){h+='<tr><td>'+esc(i.k)+'</td><td>'+esc(i.d||'-')+'</td><td>'+esc(i.c)+'</td><td>'+(S.cls?(i.cl==='-'?'Non Class':esc(i.cl)):'–')+'</td><td><b style="color:'+DCL[i.t]+'">'+DST[i.t]+'</b></td><td>'+(S.rep?(i.rs?'Repsys':'<span style="color:#7a5b00">Non Repsys</span>'):'–')+'</td><td class="n">'+(S.stk?nf(i.st):'–')+'</td><td class="n">'+(DC.hasS?(i.q?(DC.days?nf(Math.round(i.mo*10)/10):'–'):'0'):'–')+'</td><td class="n">'+(i.cv===null?'–':nf(Math.round(i.cv)))+'</td><td class="n">'+(i.cp?nf(i.cp):'–')+'</td><td class="n">'+(i.sd===null?'–':nf(Math.round(i.sd)))+'</td><td class="n">'+(i.mn===null?'–':nf(i.mn))+'</td><td class="n">'+(i.mx===null?'–':nf(i.mx))+'</td><td class="n">'+(i.tg?nf(i.tg):'–')+'</td><td class="n">'+(i.t==='kirim'?'<b>'+nf(i.send)+'</b>':'–')+'</td>'+i.dq.map(function(v){return '<td class="n">'+(v?nf(v):'–')+'</td>'}).join('')+'<td class="n"><b>'+nf(i.tot)+'</b></td></tr>'});
+  rows.slice(0,DLIM).forEach(function(i){h+='<tr><td>'+esc(i.k)+'</td><td>'+esc(i.d||'-')+'</td><td>'+esc(i.c)+'</td><td>'+(S.cls?(i.cl==='-'?'Non Class':esc(i.cl)):'–')+'</td><td><b style="color:'+DCL[i.t]+'">'+DST[i.t]+'</b></td><td>'+(S.rep?(i.rs?'Repsys':'<span style="color:#7a5b00">Non Repsys</span>'):'–')+'</td><td>'+(S.plano?(i.pl?'Plano':'<span style="color:#7a5b00">Non Plano</span>'):'–')+'</td><td class="n">'+(S.stk?nf(i.st):'–')+'</td><td class="n">'+(DC.hasS?(i.q?(DC.days?nf(Math.round(i.mo*10)/10):'–'):'0'):'–')+'</td><td class="n">'+(i.cv===null?'–':nf(Math.round(i.cv)))+'</td><td class="n">'+(i.cp?nf(i.cp):'–')+'</td><td class="n">'+(i.sd===null?'–':nf(Math.round(i.sd)))+'</td><td class="n">'+(i.mn===null?'–':nf(i.mn))+'</td><td class="n">'+(i.mx===null?'–':nf(i.mx))+'</td><td class="n">'+(i.tg?nf(i.tg):'–')+'</td><td class="n">'+(i.t==='kirim'?'<b>'+nf(i.send)+'</b>':'–')+'</td>'+i.dq.map(function(v){return '<td class="n">'+(v?nf(v):'–')+'</td>'}).join('')+'<td class="n"><b>'+nf(i.tot)+'</b></td></tr>'});
   $('#dcb').innerHTML=h||'<tr><td colspan="'+(DCOL().length)+'" style="padding:18px;color:var(--mut)">Tidak ada data.</td></tr>';
   $('#dccount').textContent='· '+nf(rows.length)+' item';
   var miss=[!S.sal?'file Penjualan per item':'',!S.stk?'SQV':'',!S.rep?'Replenishment':'',!S.plano?'ITEM PLANO':'',S.sal&&!DC.days?'periode penjualan (isi di tab Moving)':''].filter(Boolean);
@@ -782,8 +782,8 @@ var _dq;$('#dq').oninput=function(){var v=this.value;clearTimeout(_dq);_dq=setTi
 $('#dbx').onclick=function(){
   if(!DC)return;var T=function(v,st){return {v:v,s:st}},rows=dcFiltered(),cols=DCOL();
   var dr=[cols.map(function(c){return T(c[1],1)})];
-  rows.forEach(function(i){dr.push([T(i.k,2),T(i.d,2),T(i.c,2),T(S.cls?(i.cl==='-'?'Non Class':i.cl):'',2),T(DST[i.t],2),T(S.rep?(i.rs?'Repsys':'Non Repsys'):'',2),T(i.st,3),i.q&&DC.days?Math.round(i.mo*10)/10:'',i.cv===null?'':T(Math.round(i.cv),3),i.cp?T(i.cp,3):'',i.sd===null?'':T(Math.round(i.sd),3),i.mn===null?'':T(i.mn,3),i.mx===null?'':T(i.mx,3),i.tg?T(i.tg,3):'',i.t==='kirim'?T(i.send,3):''].concat(i.dq.map(function(v){return v?T(v,3):''})).concat([T(i.tot,3)]))});
-  xsave(xbuild([{name:'Kebutuhan dari DC',w:[13,46,24,10,20,12,11,11,12,13,14,9,9,10,14].concat((S.dcs||[]).map(function(){return 12})).concat([12]),fz:1,af:'A1:'+xcol(cols.length)+dr.length,rows:dr,h:{0:30}}]),'Inventory_Stok_DC_'+today()+'.xlsx');
+  rows.forEach(function(i){dr.push([T(i.k,2),T(i.d,2),T(i.c,2),T(S.cls?(i.cl==='-'?'Non Class':i.cl):'',2),T(DST[i.t],2),T(S.rep?(i.rs?'Repsys':'Non Repsys'):'',2),T(S.plano?(i.pl?'Plano':'Non Plano'):'',2),T(i.st,3),i.q&&DC.days?Math.round(i.mo*10)/10:'',i.cv===null?'':T(Math.round(i.cv),3),i.cp?T(i.cp,3):'',i.sd===null?'':T(Math.round(i.sd),3),i.mn===null?'':T(i.mn,3),i.mx===null?'':T(i.mx,3),i.tg?T(i.tg,3):'',i.t==='kirim'?T(i.send,3):''].concat(i.dq.map(function(v){return v?T(v,3):''})).concat([T(i.tot,3)]))});
+  xsave(xbuild([{name:'Kebutuhan dari DC',w:[13,46,24,10,20,12,11,11,11,12,13,14,9,9,10,14].concat((S.dcs||[]).map(function(){return 12})).concat([12]),fz:1,af:'A1:'+xcol(cols.length)+dr.length,rows:dr,h:{0:30}}]),'Inventory_Stok_DC_'+today()+'.xlsx');
   say('✔ Excel diunduh ('+nf(rows.length)+' item sesuai filter).');
 };
 /* ---------- Excel berstyle ---------- */
