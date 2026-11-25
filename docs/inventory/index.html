@@ -8,7 +8,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
-.ms{position:relative;display:inline-block}.ms>summary{list-style:none;cursor:pointer;border:1px solid var(--line,#cfd6df);border-radius:10px;padding:10px 14px;background:#fff;min-width:130px;font:inherit}.ms>summary::-webkit-details-marker{display:none}.ms>summary::after{content:' ▾';color:#5b6773}.ms[open]>summary{border-color:#1b2a49}.ms .msb{position:absolute;z-index:30;top:calc(100% + 4px);left:0;min-width:210px;max-height:300px;overflow:auto;background:#fff;border:1px solid #cfd6df;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.14);padding:6px}.ms .msb label{display:flex;gap:8px;align-items:center;padding:7px 8px;border-radius:6px;cursor:pointer;white-space:nowrap}.ms .msb label:hover{background:#eef2f7}.ms .msb button{width:100%;margin-top:4px}
+.dcnew{background:#f2b705;color:#1b2a49;font-weight:700;font-size:11px;padding:2px 7px;border-radius:99px;margin-left:6px}.dcdot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#f2b705;margin-left:6px;vertical-align:middle}
+.dms{position:relative;display:inline-block}.dms>summary{list-style:none;cursor:pointer;border:1px solid var(--line,#cfd6df);border-radius:10px;padding:10px 14px;background:#fff;min-width:130px;font:inherit}.dms>summary::-webkit-details-marker{display:none}.dms>summary::after{content:' ▾';color:#5b6773}.dms[open]>summary{border-color:#1b2a49}.dms .dmsb{position:absolute;z-index:30;top:calc(100% + 4px);left:0;min-width:210px;max-height:300px;overflow:auto;background:#fff;border:1px solid #cfd6df;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.14);padding:6px}.dms .dmsb label{display:flex;gap:8px;align-items:center;padding:7px 8px;border-radius:6px;cursor:pointer;white-space:nowrap}.dms .dmsb label:hover{background:#eef2f7}.dms .dmsb button{width:100%;margin-top:4px}
 :root{--navy:#0f2b46;--navy2:#1b4468;--paper:#edf0f3;--panel:#fff;--ink:#14212e;--mut:#5a6978;--line:#d3dae2;--sig:#f5b800;--red:#b3261e;--ok:#1e7a4a;
  --body:"Barlow","Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;--cond:"Barlow Condensed","Arial Narrow","Roboto Condensed",var(--body)}
 *{box-sizing:border-box}
@@ -277,12 +278,13 @@ table.dd td.n{text-align:right}
   </div>
   <div id="tab-dc" class="hide">
   <div class="card" id="dmsgc"><div class="note" id="dmsg"></div></div>
+  <div class="note" id="dcstamp" style="margin:0 0 10px"></div>
   <div class="kpi hide" id="dkpi" aria-label="Ringkasan stok DC"></div>
   <div class="card hide" id="dcard">
     <h2>Barang yang dibutuhkan dari DC <span id="dccount" style="font-weight:400;color:var(--mut)"></span></h2>
     <div class="flt">
       <input id="dq" type="search" placeholder="Cari item no atau nama" style="min-width:220px">
-      <details class="ms" id="dcat"></details><details class="ms" id="dcl"></details><details class="ms" id="dst"></details><details class="ms" id="drp"></details><details class="ms" id="dpl"></details>
+      <details class="dms" id="dcat"></details><details class="dms" id="dcl"></details><details class="dms" id="dst"></details><details class="dms" id="drp"></details><details class="dms" id="dpl"></details>
       <button id="dbx" class="g">⬇️ Unduh Excel</button>
     </div>
     <div class="note" id="dhid"></div>
@@ -341,7 +343,7 @@ function ingest(name,buf){
   if(/\.csv$/i.test(name)){S.cls=parseClassCsv(buf);S.meta.cls=name;return 'cls'}
   var r=readSheet(buf),k=kind(r.cols);
   if(!k)throw new Error('Jenis file tidak dikenali: '+name);
-  if(k==='dc'){dcFrom(r)}else if(k==='sal'){mvFromSales(r,name)}else if(k==='plano'){
+  if(k==='dc'){dcFrom(r);S.meta.dcAt=new Date().toISOString();DCNEW=true}else if(k==='sal'){mvFromSales(r,name)}else if(k==='plano'){
     S.plano=r.rows.map(function(o){return {c:String(o['Category']||'').trim(),n:String(o['Name']||'').replace(/^Name:\s*(\d+_)?/,''),fx:String(o['Fixture No.']||''),k:key(o['Item No']),d:String(o['Description']||''),cap:num(o['Capacity'])}}).filter(function(x){return x.c});
   }else if(k==='stk'){
     var m={};r.rows.forEach(function(o){var q=num(o['Quantity']),kk=key(o['Item No']);m[kk]=(m[kk]||0)+q});S.stk=m;var dc=r.cols.filter(function(c){return /^(item description|description|item name|desc)/i.test(c)})[0],ds={};if(dc)r.rows.forEach(function(o){var t=String(o[dc]||''),kk=key(o['Item No']),ct=String(o['Category Name']||'').trim().toUpperCase();if(kk&&!ds[kk]&&/FLOOR/.test(ct)&&(/\d{2,3}\s*[xX*]\s*\d{2,3}/.test(t)||/^(GRANITE|CERAMIC) TILE$/i.test(String(o['Sub Category Name']||'').trim())))ds[kk]=[t,String(o['UoM']||o['UOM']||'').trim().toUpperCase(),ct,String(o['Sub Category Name']||'').trim().toUpperCase(),String(o['Function Name']||'').trim().toUpperCase(),String(o['Type']||'').trim().toUpperCase()]});S.dsc=dc?ds:null;mvFromSqv(r,m);S.meta.dscCol=dc||'';S.meta.sqvCols=r.cols.join(', ');S.meta.sqvDone=1;var vc=r.cols.filter(function(c){return c.indexOf('Value')===0})[0],inv=[];r.rows.forEach(function(o){inv.push([key(o['Item No']),(function(t){return t==='RETAIL'?'R':t==='CATALOG'?'G':'K'})(String(o['Type']||'').trim().toUpperCase()),num(o['Quantity']),vc?num(o[vc]):0,'-',String(o['Category Name']||'').trim().toUpperCase()])});S.inv=inv;
@@ -365,11 +367,11 @@ function dcFrom(r){
   if(!sites.length||!Object.keys(m).length)throw new Error('File stok DC tidak berisi item dengan stok.');
   S.dc=m;S.dcs=sites;
 }
-function labelFiles(){
+function labelFiles(){try{dcDot()}catch(e){}
   setTimeout(function(){try{dataSummary()}catch(e){}},0);
   [['dc','dc','Stok DC'],['plano','plano','ITEM PLANO'],['stk','stk','SQV'],['rep','rep','Replenishment'],['sal','sal','Penjualan'],['cls','cls','Class']].forEach(function(x){
     var ok=!!S[x[0]];$('#u-'+x[1]).className='up'+(ok?' ok':'');
-    $('#n-'+x[1]).textContent=ok?('✓ '+(S.meta[x[0]]||'tersimpan')+(x[0]==='rep'&&S.meta.repDate?' · tanggal '+S.meta.repDate:'')):(x[0]==='cls'||x[0]==='sal'||x[0]==='dc'?'Belum ada file (opsional)':'Belum ada file');
+    $('#n-'+x[1]).textContent=ok?('✓ '+(S.meta[x[0]]||'tersimpan')+(x[0]==='rep'&&S.meta.repDate?' · tanggal '+S.meta.repDate:'')+(x[0]==='dc'&&S.meta.dcAt?' · diperbarui '+shStamp(S.meta.dcAt):'')):(x[0]==='cls'||x[0]==='sal'||x[0]==='dc'?'Belum ada file (opsional)':'Belum ada file');
   });
 }
 function onFiles(files){
@@ -748,6 +750,17 @@ function dcCalc(){
     return {k:k,d:e[0],c:e[1],sf:e[2],dq:e[3],tot:tot,st:st,q:q,mo:mo,cv:cv,cl:S.cls?(S.cls[k]||'-'):'',sd:sd,pl:cnt[k]?1:0,rs:rs,mn:rp?rp[0]:null,mx:rp?rp[1]:null,cp:cp,tg:tg,need:need,send:send,t:t,from:S.dcs[mi]||''}});
   return {items:items,days:days,hasS:hasS}
 }
+var DCNEW=null;
+function dcSeen(){try{return localStorage.getItem('qbig_dc_seen')||''}catch(e){return ''}}
+function dcStamp(){
+  var at=S.meta&&S.meta.dcAt,el=$('#dcstamp');if(!el)return;
+  if(!at){el.innerHTML='';return}
+  if(DCNEW===null)DCNEW=at>dcSeen();
+  el.innerHTML='Data stok DC diperbarui <b>'+esc(shStamp(at))+'</b>'+(S.meta.dc?' · '+esc(S.meta.dc):'')+(DCNEW?' <span class="dcnew">BARU</span>':'');
+  if(!$('#tab-dc').classList.contains('hide'))try{localStorage.setItem('qbig_dc_seen',at)}catch(e){}
+  dcDot();
+}
+function dcDot(){var b=document.querySelector('.tab[data-tab=dc]');if(!b)return;var at=S.meta&&S.meta.dcAt,nw=at&&at>dcSeen()&&$('#tab-dc').classList.contains('hide');b.innerHTML='Stok DC'+(nw?' <span class="dcdot" title="Data stok DC diperbarui"></span>':'')}
 function dcMs(id,lbl,key,opts){
   var el=$('#'+id),sel=DF[key],o=el.open;
   el.innerHTML='<summary>'+lbl+(sel.length?' <b>('+sel.length+')</b>':'')+'</summary><div class="msb">'+opts.map(function(x){return '<label><input type="checkbox" data-mf="'+key+'" value="'+esc(x[0])+'"'+(sel.indexOf(x[0])>=0?' checked':'')+'> '+esc(x[1])+'</label>'}).join('')+(sel.length?'<button type="button" data-mclr="'+key+'">Hapus pilihan</button>':'')+'</div>';
@@ -765,7 +778,7 @@ var DCOL=function(){return [['k','Item No'],['d','Deskripsi'],['c','Kategori'],[
 function renderDc(){
   DC=dcCalc();
   if(!DC){['#dkpi','#dcard'].forEach(function(x){$(x).classList.add('hide')});$('#dmsgc').classList.remove('hide');$('#dmsg').innerHTML='<b>File stok DC belum dimuat.</b> Unggah file <b>Item Banyak di DC</b> (kolom Item No, Site Id, Sum of Available Qty, atau pivot per Site Id) lewat kotak Data di atas.';return}
-  $('#dmsgc').classList.add('hide');$('#dkpi').classList.remove('hide');$('#dcard').classList.remove('hide');
+  $('#dmsgc').classList.add('hide');dcStamp();$('#dkpi').classList.remove('hide');$('#dcard').classList.remove('hide');
   var g={kirim:[0,0],baru:[0,0],rep0:[0,0],cukup:[0,0],skip:[0,0]};DC.items.forEach(function(i){g[i.t][0]++;g[i.t][1]+=i.t==='kirim'?i.send:i.tot});
   var kb=function(l,n,s,c){return '<button type="button" data-ds="'+c+'"><span class="l">'+l+'</span><span class="n'+(c==='kirim'?' y':'')+'">'+nf(n)+'</span><span class="s">'+s+'</span></button>'};
   $('#dkpi').innerHTML=kb(DST.kirim,g.kirim[0],'order '+nf(Math.round(g.kirim[1]))+' qty','kirim')+kb(DST.baru,g.baru[0],'pertimbangkan repsys','baru')+kb(DST.rep0,g.rep0[0],'repsys, tidak ada penjualan','rep0')+kb(DST.cukup,g.cukup[0],'tidak perlu order','cukup')+kb(DST.skip,g.skip[0],'tidak repsys, tidak laku','skip');
@@ -791,7 +804,7 @@ function renderDc(){
 }
 document.addEventListener('click',function(e){var th=e.target.closest&&e.target.closest('#dth th');if(th){var k=th.getAttribute('data-ds'),nw=Date.now();if(DLC.k===k&&nw-DLC.t<500){DLC={k:'',t:0};if(DH.indexOf(k)<0)DH.push(k);DS=DSB;renderDc();return}DLC={k:k,t:nw};DSB={k:DS.k,d:DS.d};if(DS.k===k)DS.d=-DS.d;else{DS.k=k;DS.d=/^(k|d|c|cl|t)$/.test(k)?1:-1}renderDc();return}var b=e.target.closest&&e.target.closest('#dkpi button[data-ds]');if(b){DF.s=[b.getAttribute('data-ds')];renderDc()}});
 document.addEventListener('change',function(e){var t=e.target;if(t.getAttribute&&t.getAttribute('data-mf')){var k=t.getAttribute('data-mf'),i=DF[k].indexOf(t.value);if(t.checked&&i<0)DF[k].push(t.value);if(!t.checked&&i>=0)DF[k].splice(i,1);renderDc()}});
-document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-mclr]');if(b){DF[b.getAttribute('data-mclr')]=[];renderDc();return}var cur=e.target.closest&&e.target.closest('details.ms');document.querySelectorAll('details.ms[open]').forEach(function(d){if(d!==cur)d.open=false})});
+document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-mclr]');if(b){DF[b.getAttribute('data-mclr')]=[];renderDc();return}var cur=e.target.closest&&e.target.closest('details.dms');document.querySelectorAll('details.dms[open]').forEach(function(d){if(d!==cur)d.open=false})});
 document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-dshow]');if(!b)return;var k=b.getAttribute('data-dshow');if(k==='*')DH=[];else DH=DH.filter(function(x){return x!==k});renderDc()});
 var _dq;$('#dq').oninput=function(){var v=this.value;clearTimeout(_dq);_dq=setTimeout(function(){DF.q=v;renderDc();$('#dq').focus()},200)};
 $('#dbx').onclick=function(){
@@ -1001,7 +1014,7 @@ function shSave(){
   sbAsk(run,function(){say('Data hanya tampil di perangkat ini (belum disimpan untuk semua pengguna). Login Editor untuk menyimpan.',1)});
 }
 sbPill();sbRefresh();
-restoreMv();restore();shLoad();
+restoreMv();restore();shLoad();setTimeout(dcDot,1500);setTimeout(dcDot,4000);
 try{var _t=sessionStorage.getItem('qbig_inv_tab');if(_t==='detail'||_t==='capacity'||_t==='moving'||_t==='dc')showTab(_t)}catch(e){}
 </script>
 <script src="../pwa.js" defer></script>
