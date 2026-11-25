@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
+.ms{position:relative;display:inline-block}.ms>summary{list-style:none;cursor:pointer;border:1px solid var(--line,#cfd6df);border-radius:10px;padding:10px 14px;background:#fff;min-width:130px;font:inherit}.ms>summary::-webkit-details-marker{display:none}.ms>summary::after{content:' ▾';color:#5b6773}.ms[open]>summary{border-color:#1b2a49}.ms .msb{position:absolute;z-index:30;top:calc(100% + 4px);left:0;min-width:210px;max-height:300px;overflow:auto;background:#fff;border:1px solid #cfd6df;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.14);padding:6px}.ms .msb label{display:flex;gap:8px;align-items:center;padding:7px 8px;border-radius:6px;cursor:pointer;white-space:nowrap}.ms .msb label:hover{background:#eef2f7}.ms .msb button{width:100%;margin-top:4px}
 :root{--navy:#0f2b46;--navy2:#1b4468;--paper:#edf0f3;--panel:#fff;--ink:#14212e;--mut:#5a6978;--line:#d3dae2;--sig:#f5b800;--red:#b3261e;--ok:#1e7a4a;
  --body:"Barlow","Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;--cond:"Barlow Condensed","Arial Narrow","Roboto Condensed",var(--body)}
 *{box-sizing:border-box}
@@ -281,8 +282,7 @@ table.dd td.n{text-align:right}
     <h2>Barang yang dibutuhkan dari DC <span id="dccount" style="font-weight:400;color:var(--mut)"></span></h2>
     <div class="flt">
       <input id="dq" type="search" placeholder="Cari item no atau nama" style="min-width:220px">
-      <select id="dcat"></select>
-      <select id="dst"></select>
+      <details class="ms" id="dcat"></details><details class="ms" id="dcl"></details><details class="ms" id="dst"></details><details class="ms" id="drp"></details><details class="ms" id="dpl"></details>
       <button id="dbx" class="g">⬇️ Unduh Excel</button>
     </div>
     <div class="dt"><table class="dd"><thead><tr id="dth"></tr></thead><tbody id="dcb"></tbody></table></div>
@@ -725,7 +725,7 @@ $('#mbx').onclick=function(){
 
 /* ---------- stok DC ---------- */
 var DST={kirim:'Order',rep0:'Repsys, belum laku',baru:'Order, non repsys',cukup:'Stok toko cukup',skip:'Tidak perlu'},DCL={kirim:'#b3261e',rep0:'#7a5b00',baru:'#2f6fb0',cukup:'#1e7a4a',skip:'#5b6773'};
-var DF={c:'',s:'',q:''},DS={k:'',d:1},DC=null,DLIM=500;
+var DF={c:[],cl:[],s:[],r:[],p:[],q:''},DS={k:'',d:1},DC=null,DLIM=500;
 function dcCalc(){
   if(!S.dc)return null;
   var days=mvDays(),hasS=!!S.sal,cap={},cnt={};
@@ -746,9 +746,14 @@ function dcCalc(){
     return {k:k,d:e[0],c:e[1],sf:e[2],dq:e[3],tot:tot,st:st,q:q,mo:mo,cv:cv,cl:S.cls?(S.cls[k]||'-'):'',sd:sd,pl:cnt[k]?1:0,rs:rs,mn:rp?rp[0]:null,mx:rp?rp[1]:null,cp:cp,tg:tg,need:need,send:send,t:t,from:S.dcs[mi]||''}});
   return {items:items,days:days,hasS:hasS}
 }
+function dcMs(id,lbl,key,opts){
+  var el=$('#'+id),sel=DF[key],o=el.open;
+  el.innerHTML='<summary>'+lbl+(sel.length?' <b>('+sel.length+')</b>':'')+'</summary><div class="msb">'+opts.map(function(x){return '<label><input type="checkbox" data-mf="'+key+'" value="'+esc(x[0])+'"'+(sel.indexOf(x[0])>=0?' checked':'')+'> '+esc(x[1])+'</label>'}).join('')+(sel.length?'<button type="button" data-mclr="'+key+'">Hapus pilihan</button>':'')+'</div>';
+  el.open=o;
+}
 function dcFiltered(){
   if(!DC)return [];var q=DF.q.toLowerCase();
-  var r=DC.items.filter(function(i){if(DF.c&&i.c!==DF.c)return false;if(DF.s&&i.t!==DF.s)return false;if(q&&(i.k+' '+i.d).toLowerCase().indexOf(q)<0)return false;return true});
+  var r=DC.items.filter(function(i){var rv=i.rs?'Repsys':'Non Repsys',pv=i.pl?'Plano':'Non Plano',cv2=i.cl==='-'?'Non Class':i.cl;if(DF.c.length&&DF.c.indexOf(i.c)<0)return false;if(DF.cl.length&&DF.cl.indexOf(cv2)<0)return false;if(DF.s.length&&DF.s.indexOf(i.t)<0)return false;if(DF.r.length&&DF.r.indexOf(rv)<0)return false;if(DF.p.length&&DF.p.indexOf(pv)<0)return false;if(q&&(i.k+' '+i.d).toLowerCase().indexOf(q)<0)return false;return true});
   var ord={kirim:0,baru:1,rep0:2,cukup:3,skip:4};
   return r.sort(function(a,b){if(DS.k){var x=a[DS.k],y=b[DS.k];if(DS.k==='t'){x=ord[a.t];y=ord[b.t]}if(x===null)x=-1;if(y===null)y=-1;var c=typeof x==='string'?x.localeCompare(y):x-y;return c*DS.d}
     return (ord[a.t]-ord[b.t])||(b.send-a.send)||(b.mo-a.mo)||(b.tot-a.tot)})
@@ -763,8 +768,12 @@ function renderDc(){
   var kb=function(l,n,s,c){return '<button type="button" data-ds="'+c+'"><span class="l">'+l+'</span><span class="n'+(c==='kirim'?' y':'')+'">'+nf(n)+'</span><span class="s">'+s+'</span></button>'};
   $('#dkpi').innerHTML=kb(DST.kirim,g.kirim[0],'order '+nf(Math.round(g.kirim[1]))+' qty','kirim')+kb(DST.baru,g.baru[0],'pertimbangkan repsys','baru')+kb(DST.rep0,g.rep0[0],'repsys, tidak ada penjualan','rep0')+kb(DST.cukup,g.cukup[0],'tidak perlu order','cukup')+kb(DST.skip,g.skip[0],'tidak repsys, tidak laku','skip');
   var cs=[];DC.items.forEach(function(i){if(cs.indexOf(i.c)<0)cs.push(i.c)});cs.sort();
-  $('#dcat').innerHTML='<option value="">Semua kategori</option>'+cs.map(function(c){return '<option'+(c===DF.c?' selected':'')+'>'+esc(c)+'</option>'}).join('');
-  $('#dst').innerHTML='<option value="">Semua status</option>'+Object.keys(DST).map(function(k){return '<option value="'+k+'"'+(k===DF.s?' selected':'')+'>'+DST[k]+'</option>'}).join('');
+  var cls=[];DC.items.forEach(function(i){var v=i.cl==='-'?'Non Class':i.cl;if(v&&cls.indexOf(v)<0)cls.push(v)});cls.sort();
+  dcMs('dcat','Kategori','c',cs.map(function(c){return [c,c]}));
+  dcMs('dcl','Class','cl',cls.map(function(c){return [c,c]}));
+  dcMs('dst','Status','s',Object.keys(DST).map(function(k){return [k,DST[k]]}));
+  dcMs('drp','Repsys','r',[['Repsys','Repsys'],['Non Repsys','Non Repsys']]);
+  dcMs('dpl','Plano','p',[['Plano','Plano'],['Non Plano','Non Plano']]);
   $('#dq').value=DF.q;
   $('#dth').innerHTML=DCOL().map(function(c){var n=/^(st|mo|cv|cp|sd|mn|mx|tg|send|tot|d\d+)$/.test(c[0]);return '<th data-ds="'+c[0]+'"'+(n?' style="text-align:right"':'')+'>'+c[1]+(DS.k===c[0]?(DS.d<0?' ▼':' ▲'):'')+'</th>'}).join('');
   var rows=dcFiltered(),h='';
@@ -776,8 +785,9 @@ function renderDc(){
   if(miss.length){$('#dmsgc').classList.remove('hide');$('#dmsg').innerHTML='<b style="color:#b3261e">Jual / bulan kosong karena belum ada: '+miss.join(', ')+'.</b> Unggah atau isi lewat kotak Data di atas (periode penjualan diisi di tab Moving), lalu rekomendasi order ikut terhitung.'}else $('#dmsgc').classList.add('hide');
   $('#dcn').innerHTML='<b>Cara membaca.</b> Daftar item dari file '+esc(S.meta.dc||'stok DC')+' (stok tersedia per DC). <b>Stok toko</b> dari SQV, <b>Jual / bulan</b> dari penjualan dibagi periode, <b>Cukup (hari)</b> = stok toko dibagi rata-rata jual per hari. <b>Capacity plano</b> = total Capacity item di semua lokasi plano. <b>Safety stock (hari)</b> = Capacity plano dibagi rata-rata jual per hari. <b>Min</b> dan <b>Max</b> = Minimum Stock dan Maximum Stock dari file Replenishment (kosong bila bukan repsys). <b>Target</b> = yang terbesar antara Max repsys dan total Capacity plano; kalau keduanya kosong, pakai penjualan satu bulan. Stok toko dianggap <b>kurang</b> bila nol, sudah di bawah Reorder Point, di bawah setengah Capacity plano, atau cukup kurang dari 14 hari. <b>Order</b>: item repsys atau ada di plano, laku, dan stok toko kurang. Qty order = Target dikurangi stok toko, tidak lebih dari total stok DC. <b>Order, non repsys</b>: laku dan stok kurang tetapi belum masuk repsys, jadi pertimbangkan dimasukkan. <b>Repsys, belum laku</b>: stok kurang tetapi tidak ada penjualan di periode ini. <b>Tidak perlu</b>: tidak repsys, tidak di plano, tidak laku.';
 }
-document.addEventListener('click',function(e){var th=e.target.closest&&e.target.closest('#dth th');if(th){var k=th.getAttribute('data-ds');if(DS.k===k)DS.d=-DS.d;else{DS.k=k;DS.d=/^(k|d|c|cl|t)$/.test(k)?1:-1}renderDc();return}var b=e.target.closest&&e.target.closest('#dkpi button[data-ds]');if(b){DF.s=b.getAttribute('data-ds');renderDc()}});
-$('#dcat').onchange=function(){DF.c=this.value;renderDc()};$('#dst').onchange=function(){DF.s=this.value;renderDc()};
+document.addEventListener('click',function(e){var th=e.target.closest&&e.target.closest('#dth th');if(th){var k=th.getAttribute('data-ds');if(DS.k===k)DS.d=-DS.d;else{DS.k=k;DS.d=/^(k|d|c|cl|t)$/.test(k)?1:-1}renderDc();return}var b=e.target.closest&&e.target.closest('#dkpi button[data-ds]');if(b){DF.s=[b.getAttribute('data-ds')];renderDc()}});
+document.addEventListener('change',function(e){var t=e.target;if(t.getAttribute&&t.getAttribute('data-mf')){var k=t.getAttribute('data-mf'),i=DF[k].indexOf(t.value);if(t.checked&&i<0)DF[k].push(t.value);if(!t.checked&&i>=0)DF[k].splice(i,1);renderDc()}});
+document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-mclr]');if(b){DF[b.getAttribute('data-mclr')]=[];renderDc();return}var cur=e.target.closest&&e.target.closest('details.ms');document.querySelectorAll('details.ms[open]').forEach(function(d){if(d!==cur)d.open=false})});
 var _dq;$('#dq').oninput=function(){var v=this.value;clearTimeout(_dq);_dq=setTimeout(function(){DF.q=v;renderDc();$('#dq').focus()},200)};
 $('#dbx').onclick=function(){
   if(!DC)return;var T=function(v,st){return {v:v,s:st}},rows=dcFiltered(),cols=DCOL();
