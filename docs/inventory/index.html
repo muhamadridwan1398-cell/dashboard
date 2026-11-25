@@ -182,6 +182,7 @@ table.dd td.n{text-align:right}
         <label class="up" id="u-dc"><b>Stok DC (Item banyak di DC)</b><small id="n-dc">Belum ada file (opsional)</small><input type="file" multiple accept=".xlsx,.xls,.csv" data-kind="dc"></label>
         <label class="up" id="u-cls"><b>Report ABCD Class (.csv)</b><small id="n-cls">Belum ada file (opsional)</small><input type="file" multiple accept=".xlsx,.xls,.csv" data-kind="cls"></label>
       </div>
+      <div class="genrow" style="display:flex;gap:12px;align-items:center;margin:12px 0 4px"><button type="button" id="genBtn" class="g" disabled>⚙️ Generate</button><span id="genInfo" style="color:var(--mut)">Pilih file, lalu klik Generate.</span></div>
       <div class="msg" id="msg">Pilih semua file sekaligus. File Penjualan per item (kolom Item Code dan Base Sales Qty) dipakai untuk tab Moving. Jenis file dikenali dari kolomnya. Plano, SQV, dan Replenishment wajib; Report ABCD Class dipakai untuk class.</div>
     </div>
   </details>
@@ -382,7 +383,10 @@ function onFiles(files){
   chain.then(function(){labelFiles();if(!$('#tab-moving').classList.contains('hide'))renderMv();if(!$('#tab-dc').classList.contains('hide'))renderDc();if(S.plano&&S.stk&&S.rep){build();persist();say('✔ Data dihitung: '+nf(R.length)+' baris plano.');$('#dataBox').open=false;shSave()}else say('Tersimpan. Masih menunggu: '+[!S.plano?'ITEM PLANO':'',!S.stk?'SQV':'',!S.rep?'Replenishment':''].filter(Boolean).join(', ')+'.')})
    .catch(function(e){say(e.message||String(e),1)});
 }
-document.querySelectorAll('input[type=file]').forEach(function(i){i.addEventListener('change',function(){onFiles(i.files);i.value=''})});
+var PEND=[];
+function genInfo(){var n=PEND.length;$('#genBtn').disabled=!n;$('#genInfo').innerHTML=n?'<b>'+n+' file siap:</b> '+PEND.map(function(f){return esc(f.name)}).join(', ')+'. Klik Generate untuk memproses.':'Pilih file, lalu klik Generate.'}
+document.querySelectorAll('input[type=file]').forEach(function(i){i.addEventListener('change',function(){Array.prototype.slice.call(i.files).forEach(function(f){PEND=PEND.filter(function(p){return p.name!==f.name});PEND.push(f)});i.value='';genInfo()})});
+$('#genBtn').onclick=function(){if(!PEND.length)return;var l=PEND;PEND=[];genInfo();onFiles(l)};
 
 function persist(){try{localStorage.setItem(KEY,JSON.stringify({plano:S.plano,stk:S.stk,rep:S.rep,cls:S.cls,inv:S.inv,dsc:S.dsc,dc:S.dc,dcs:S.dcs,meta:S.meta}))}catch(e){say('Data tidak muat di penyimpanan browser (penuh). Simpan online dengan Login Editor supaya tidak hilang saat halaman ditutup.',1)}}
 function restore(){try{var d=JSON.parse(localStorage.getItem(KEY)||'null');if(d&&d.plano&&d.stk&&d.rep){S.plano=d.plano;S.stk=d.stk;S.rep=d.rep;S.cls=d.cls||null;S.inv=d.inv||null;S.dsc=d.dsc||null;S.dc=d.dc||null;S.dcs=d.dcs||[];S.meta=d.meta||{};restoreMv();labelFiles();build();say('Memakai data terakhir yang Anda unggah.');$('#dataBox').open=false}}catch(e){}}
