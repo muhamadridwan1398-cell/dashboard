@@ -405,15 +405,15 @@ function dcFrom(r){
   S.dc=m;S.dcs=sites;
 }
 function trFrom(r){
-  var g={},m={},ms={},n=0,ns=0,dd={},mb=S.mb||{};
+  var g={},m={},ms={},n=0,ns=0,nx=0,qx=0,dd={},mb=S.mb||{};
   r.rows.forEach(function(o){var bk=key(o['Item Code']),bn=String(o['Master Brand Name']||o['Master Brand']||'').trim();if(bk&&bn)mb[bk]=bn;if(String(o['Status']||'').trim().toUpperCase()!=='RELEASED')return;var k=key(o['Item Code']),tr=String(o['Original TR No']||'').trim();if(!k||!tr)return;
     var id=tr+'|'+k,e=g[id]||(g[id]={k:k,tr:tr,q:num(o['TR Quantity']),to:{},sold:false,dt:parseDate(o['Sent Request Date']),ex:parseDate(o['Expired']),ds:String(o['Transfer To Name']||'').trim(),np:''}),tn=String(o['TO No']||'').trim();if(tn)e.to[tn+'|'+String(o['GI No']||'')]=num(o['TO Quantity']);if(String(o['Transfer To NP No']||'').trim()){e.sold=true;e.np=String(o['Transfer To NP No']).trim()}});
-  Object.keys(g).forEach(function(id){var e=g[id],t=0;Object.keys(e.to).forEach(function(x){t+=e.to[x]});var o=Math.max(0,e.q-t);if(o>0){(dd[e.k]||(dd[e.k]=[])).push([e.tr,e.dt,e.ds,e.np,e.q,t,o,e.ex]);if(e.sold){ms[e.k]=(ms[e.k]||0)+o;ns++}else{m[e.k]=(m[e.k]||0)+o;n++}}});
-  S.tr=m;S.trt=ms;S.trd=dd;S.mb=mb;S.meta.trN=n;S.meta.trtN=ns;
+  Object.keys(g).forEach(function(id){var e=g[id],t=0;Object.keys(e.to).forEach(function(x){t+=e.to[x]});var o=Math.max(0,e.q-t);if(o>0&&e.ex&&e.ex<new Date().toISOString().slice(0,10)){nx++;qx+=o;o=0}if(o>0){(dd[e.k]||(dd[e.k]=[])).push([e.tr,e.dt,e.ds,e.np,e.q,t,o,e.ex]);if(e.sold){ms[e.k]=(ms[e.k]||0)+o;ns++}else{m[e.k]=(m[e.k]||0)+o;n++}}});
+  S.tr=m;S.trt=ms;S.trd=dd;S.meta.trX=qx;S.mb=mb;S.meta.trN=n;S.meta.trtN=ns;
 }
 function poFrom(r){
   var m={},ms={},n=0,ns=0,dd={},mb=S.mb||{};
-  r.rows.forEach(function(o){var bk=key(o['Item No']),bn=String(o['Master Brand']||'').trim();if(bk&&bn)mb[bk]=bn;if(String(o['Status']||'').trim().toUpperCase()!=='RELEASED')return;var ex=/^y/i.test(String(o['Expired']||'').trim()),k=key(o['Item No']),q=num(o['Outstanding Quantity']);if(!k||q<=0)return;if(ex)return;(dd[k]||(dd[k]=[])).push([String(o['PO No']||'').trim(),parseDate(o['Order Date']),String(o['Buy from Vendor Name']||'').trim(),String(o['NP No']||'').trim(),num(o['Ordered Qty']),num(o['Received Qty']),q,0,parseDate(o['Expired PO Date'])]);if(String(o['NP No']||'').trim()){ms[k]=(ms[k]||0)+q;ns++}else{m[k]=(m[k]||0)+q;n++}});
+  r.rows.forEach(function(o){var bk=key(o['Item No']),bn=String(o['Master Brand']||'').trim();if(bk&&bn)mb[bk]=bn;if(String(o['Status']||'').trim().toUpperCase()!=='RELEASED')return;var epd=parseDate(o['Expired PO Date']),ex=/^y/i.test(String(o['Expired']||'').trim())||(epd&&epd<new Date().toISOString().slice(0,10)),k=key(o['Item No']),q=num(o['Outstanding Quantity']);if(!k||q<=0)return;if(ex)return;(dd[k]||(dd[k]=[])).push([String(o['PO No']||'').trim(),parseDate(o['Order Date']),String(o['Buy from Vendor Name']||'').trim(),String(o['NP No']||'').trim(),num(o['Ordered Qty']),num(o['Received Qty']),q,0,epd]);if(String(o['NP No']||'').trim()){ms[k]=(ms[k]||0)+q;ns++}else{m[k]=(m[k]||0)+q;n++}});
   S.po=m;S.pot=ms;S.pod=dd;S.mb=mb;S.meta.poN=n;S.meta.poNs=ns;
 }
 function labelFiles(){try{dcDot();if(!$('#tab-dc').classList.contains('hide'))renderDc();if(!$('#tab-min').classList.contains('hide'))renderMn();if(!$('#tab-ots').classList.contains('hide'))renderOts()}catch(e){}
