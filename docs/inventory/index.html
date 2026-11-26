@@ -1073,12 +1073,12 @@ $('#obx').onclick=function(){
   if(!OC)return;var T=function(v,st){return {v:v,s:st}},rows=oFiltered(),C=oCols();
   var dr=[C.map(function(c){return T(c[1],1)})];
   rows.forEach(function(i){dr.push([T(i.k,2),T(i.d,2),T(i.c,2),T(i.mb,2),T(S.cls?(i.cl==='-'?'Non Class':i.cl):'',2),T(S.rep?(i.rs?'Repsys':'Non Repsys'):'',2),T(S.plano?(i.pl?'Plano':'Non Plano'):'',2),T(OST[i.t],2),T(i.st,3),S.po?T(i.po,3):'',S.tr?T(i.tr,3):'',T(i.ots,3),S.pot?T(i.pot,3):'',S.trt?T(i.trt,3):'',T(i.pe?dLeft(i.pe):'',2),T(i.te?dLeft(i.te):'',2),T(i.tot,3),i.mx===null?'':T(i.mx,3),i.t==='lebih'?T(i.over,3):'',i.t==='lebih'?T(i.cut,3):'',S.sal&&OC.days?Math.round(i.mo*10)/10:'',i.cv===null?'':T(Math.round(i.cv),3)])});
-  var pr=[['Item No','Deskripsi','Master Brand','Status item','No PO','Tgl order','Vendor','Jenis','No NP (terjual)','Tgl expired','Sisa hari','Qty base (ordered)','Sudah diterima','Sisa OTS'].map(function(x){return T(x,1)})],tr2=[['Item No','Deskripsi','Master Brand','Status item','No TR','Tgl request','Tujuan','Jenis','No NP (terjual)','Tgl expired','Sisa hari','Qty base (TR)','Sudah dikirim (TO)','Sisa OTS'].map(function(x){return T(x,1)})];
+  var pr=[['Item No','Deskripsi','Master Brand','Status item','No PO','Tgl order','Tgl expired','Sisa hari','Vendor','Jenis','No NP (terjual)','Qty base (ordered)','Sudah diterima','Sisa OTS'].map(function(x){return T(x,1)})],tr2=[['Item No','Deskripsi','Master Brand','Status item','No TR','Tgl request','Tgl expired','Sisa hari','Tujuan','Jenis','No NP (terjual)','Qty base (TR)','Sudah dikirim (TO)','Sisa OTS'].map(function(x){return T(x,1)})];
   var dl=function(d){return d?Math.round((new Date(d+'T00:00:00')-new Date(new Date().toISOString().slice(0,10)+'T00:00:00'))/864e5):''};
   rows.forEach(function(i){var h0=[T(i.k,2),T(i.d,2),T(i.mb,2),T(OST[i.t],2)];
-    ((S.pod&&S.pod[i.k])||[]).forEach(function(p){pr.push(h0.concat([T(p[0],2),T(p[1],2),T(p[2],2),T(p[3]?'Terjual':'Stock',2),T(p[3],2),T(p[8]||'',2),dl(p[8])===''?'':T(dl(p[8]),3),T(p[4],3),T(p[5],3),T(p[6],3)]))});
-    ((S.trd&&S.trd[i.k])||[]).forEach(function(p){tr2.push(h0.concat([T(p[0],2),T(p[1],2),T(p[2],2),T(p[3]?'Terjual':'Stock',2),T(p[3],2),T(p[7]||'',2),dl(p[7])===''?'':T(dl(p[7]),3),T(p[4],3),T(p[5],3),T(p[6],3)]))})});
-  var dw=[13,46,18,14,24,12,30,10,22,12,10,16,14,12];
+    ((S.pod&&S.pod[i.k])||[]).forEach(function(p){pr.push(h0.concat([T(p[0],2),T(p[1],2),T(p[8]||'',2),dl(p[8])===''?'':T(dl(p[8]),3),T(p[2],2),T(p[3]?'Terjual':'Stock',2),T(p[3],2),T(p[4],3),T(p[5],3),T(p[6],3)]))});
+    ((S.trd&&S.trd[i.k])||[]).forEach(function(p){tr2.push(h0.concat([T(p[0],2),T(p[1],2),T(p[7]||'',2),dl(p[7])===''?'':T(dl(p[7]),3),T(p[2],2),T(p[3]?'Terjual':'Stock',2),T(p[3],2),T(p[4],3),T(p[5],3),T(p[6],3)]))})});
+  var dw=[13,46,18,14,24,12,12,10,30,10,22,16,14,12];
   var sh=[{name:'Kontrol OTS PO TR',w:[13,46,24,18,10,12,12,22,11,11,11,13,12,12,22,22,12,12,14,17,12,17],fz:1,af:'A1:'+xcol(C.length)+dr.length,rows:dr,h:{0:30}}];
   if(S.pod)sh.push({name:'Detail PO',w:dw,fz:1,af:'A1:N'+pr.length,rows:pr,h:{0:30}});
   if(S.trd)sh.push({name:'Detail TR',w:dw,fz:1,af:'A1:N'+tr2.length,rows:tr2,h:{0:30}});
