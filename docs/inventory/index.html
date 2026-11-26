@@ -168,7 +168,7 @@ table.dd td.n{text-align:right}
     <div class="brand"><h1>Inventory</h1><p>MITRA10 Q-BIG · Toko 10038</p></div>
     <div class="bar-r"><div id="sbpill"></div><a class="back" href="../">Menu dashboard</a></div>
   </div>
-  <div class="tabs" role="tablist"><button class="tab on" role="tab" aria-selected="true" data-tab="plano">Plano Stock</button><button class="tab" role="tab" aria-selected="false" data-tab="detail">Detail Item</button><button class="tab" role="tab" aria-selected="false" data-tab="capacity">Capacity</button><button class="tab" role="tab" aria-selected="false" data-tab="moving">Moving</button><button class="tab" role="tab" aria-selected="false" data-tab="dc">Cek Stock</button><button class="tab" role="tab" aria-selected="false" data-tab="min">Kontrol Min</button></div>
+  <div class="tabs" role="tablist"><button class="tab on" role="tab" aria-selected="true" data-tab="plano">Plano Stock</button><button class="tab" role="tab" aria-selected="false" data-tab="detail">Detail Item</button><button class="tab" role="tab" aria-selected="false" data-tab="capacity">Capacity</button><button class="tab" role="tab" aria-selected="false" data-tab="moving">Moving</button><button class="tab" role="tab" aria-selected="false" data-tab="dc">Cek Stock</button><button class="tab" role="tab" aria-selected="false" data-tab="min">Kontrol Min</button><button class="tab" role="tab" aria-selected="false" data-tab="ots">Kontrol OTS</button></div>
 </header>
 <div class="wrap">
   <details class="data" id="dataBox" open>
@@ -312,6 +312,21 @@ table.dd td.n{text-align:right}
     <details class="ket"><summary><b>Keterangan</b><span class="dtog"></span></summary><div class="kbody"><div class="note" id="nn"></div></div></details>
   </div>
   </div>
+  <div id="tab-ots" class="hide">
+  <div class="card" id="omsgc"><div class="note" id="omsg"></div></div>
+  <div class="kpi hide" id="okpi" aria-label="Ringkasan OTS PO dan TR"></div>
+  <div class="card hide" id="ocard">
+    <h2>Kontrol OTS PO dan TR <span id="ocount" style="font-weight:400;color:var(--mut)"></span></h2>
+    <div class="flt">
+      <input id="oq" type="search" placeholder="Cari item no atau nama" style="min-width:220px">
+      <details class="dms" id="ocat"></details><details class="dms" id="ocl"></details><details class="dms" id="ost"></details><details class="dms" id="orp"></details><details class="dms" id="opl"></details>
+      <button id="obx" class="g">⬇️ Unduh Excel</button>
+    </div>
+    <div class="dt"><table class="dd"><thead><tr id="oth"></tr></thead><tbody id="obd"></tbody></table></div>
+    <div class="note" id="ow"></div>
+    <details class="ket"><summary><b>Keterangan</b><span class="dtog"></span></summary><div class="kbody"><div class="note" id="on"></div></div></details>
+  </div>
+  </div>
   <div class="foot">Created Ridwan</div>
 </div>
 
@@ -401,7 +416,7 @@ function poFrom(r){
   r.rows.forEach(function(o){if(String(o['Status']||'').trim().toUpperCase()!=='RELEASED'||/^y/i.test(String(o['Expired']||'').trim()))return;var k=key(o['Item No']),q=num(o['Outstanding Quantity']);if(!k||q<=0)return;m[k]=(m[k]||0)+q;n++});
   S.po=m;S.meta.poN=n;
 }
-function labelFiles(){try{dcDot();if(!$('#tab-dc').classList.contains('hide'))renderDc();if(!$('#tab-min').classList.contains('hide'))renderMn()}catch(e){}
+function labelFiles(){try{dcDot();if(!$('#tab-dc').classList.contains('hide'))renderDc();if(!$('#tab-min').classList.contains('hide'))renderMn();if(!$('#tab-ots').classList.contains('hide'))renderOts()}catch(e){}
   setTimeout(function(){try{dataSummary()}catch(e){}},0);
   [['dc','dc','Stok DC'],['po','po','PO'],['tr','tr','TR'],['plano','plano','ITEM PLANO'],['stk','stk','SQV'],['rep','rep','Replenishment'],['sal','sal','Penjualan'],['cls','cls','Class']].forEach(function(x){
     var ok=!!S[x[0]];$('#u-'+x[1]).className='up'+(ok?' ok':'');
@@ -413,7 +428,7 @@ function onFiles(files){
   say('Membaca '+list.length+' file...');
   var chain=Promise.resolve(),done=[];
   list.forEach(function(f){chain=chain.then(function(){return f.arrayBuffer()}).then(function(b){return new Promise(function(res){setTimeout(function(){res(ingest(f.name,b))},20)})}).then(function(k){done.push(k)})});
-  chain.then(function(){labelFiles();if(!$('#tab-moving').classList.contains('hide'))renderMv();if(!$('#tab-dc').classList.contains('hide'))renderDc();if(!$('#tab-min').classList.contains('hide'))renderMn();if(S.plano&&S.stk&&S.rep){build();persist();say('✔ Data dihitung: '+nf(R.length)+' baris plano.');$('#dataBox').open=false;shSave()}else say('Tersimpan. Masih menunggu: '+[!S.plano?'ITEM PLANO':'',!S.stk?'SQV':'',!S.rep?'Replenishment':''].filter(Boolean).join(', ')+'.')})
+  chain.then(function(){labelFiles();if(!$('#tab-moving').classList.contains('hide'))renderMv();if(!$('#tab-dc').classList.contains('hide'))renderDc();if(!$('#tab-min').classList.contains('hide'))renderMn();if(!$('#tab-ots').classList.contains('hide'))renderOts();if(S.plano&&S.stk&&S.rep){build();persist();say('✔ Data dihitung: '+nf(R.length)+' baris plano.');$('#dataBox').open=false;shSave()}else say('Tersimpan. Masih menunggu: '+[!S.plano?'ITEM PLANO':'',!S.stk?'SQV':'',!S.rep?'Replenishment':''].filter(Boolean).join(', ')+'.')})
    .catch(function(e){say(e.message||String(e),1)});
 }
 var PEND=[];
@@ -548,7 +563,7 @@ function fitTables(){
 var _fitT;window.addEventListener('resize',function(){clearTimeout(_fitT);_fitT=setTimeout(fitTables,120)});
 function showTab(t){
   document.querySelectorAll('.tab').forEach(function(b){var on=b.getAttribute('data-tab')===t;b.classList.toggle('on',on);b.setAttribute('aria-selected',on?'true':'false')});
-  $('#tab-plano').classList.toggle('hide',t!=='plano');$('#tab-detail').classList.toggle('hide',t!=='detail');$('#tab-capacity').classList.toggle('hide',t!=='capacity');$('#tab-moving').classList.toggle('hide',t!=='moving');$('#tab-dc').classList.toggle('hide',t!=='dc');$('#tab-min').classList.toggle('hide',t!=='min');if(t==='dc')renderDc();if(t==='min')renderMn();if(t==='capacity')renderCap();if(t==='moving')renderMv();
+  $('#tab-plano').classList.toggle('hide',t!=='plano');$('#tab-detail').classList.toggle('hide',t!=='detail');$('#tab-capacity').classList.toggle('hide',t!=='capacity');$('#tab-moving').classList.toggle('hide',t!=='moving');$('#tab-dc').classList.toggle('hide',t!=='dc');$('#tab-min').classList.toggle('hide',t!=='min');$('#tab-ots').classList.toggle('hide',t!=='ots');if(t==='dc')renderDc();if(t==='min')renderMn();if(t==='ots')renderOts();if(t==='capacity')renderCap();if(t==='moving')renderMv();
   try{sessionStorage.setItem('qbig_inv_tab',t)}catch(e){}
   if(t==='plano')fitTables();
 }
@@ -955,6 +970,87 @@ $('#nml').onclick=function(){
   window.open(MAILURL,'_blank','noopener');
 };
 $('#nbx').onclick=function(){if(!NC)return;var rows=nFiltered();xsave(nBuild(rows),'Inventory_Repsys_Di_Bawah_Min_'+today()+'.xlsx');say('✔ Excel diunduh ('+nf(rows.length)+' item sesuai filter).')};
+
+/* ---------- kontrol OTS PO dan TR terhadap Max repsys ---------- */
+var OST={lebih:'Melebihi Max',ok:'Sesuai Max',non:'Non Repsys (tanpa Max)'},OCL={lebih:'#b3261e',ok:'#1e7a4a',non:'#7a5b00'};
+var OF={c:[],cl:[],s:[],r:[],p:[],q:''},OS={k:'',d:1},OC=null,OLIM=500;
+function oCalc(){
+  if(!S.po&&!S.tr)return null;
+  var days=S.sal?mvDays():0,pn={},pc={},pcnt={},ks={};
+  Object.keys(S.po||{}).forEach(function(k){ks[k]=1});Object.keys(S.tr||{}).forEach(function(k){ks[k]=1});
+  (S.plano||[]).forEach(function(x){if(x.k){if(x.d&&!pn[x.k])pn[x.k]=x.d;if(x.c&&!pc[x.k])pc[x.k]=x.c;pcnt[x.k]=1}});
+  var dn=function(i){return S.dict&&i>=0&&S.dict[i]!==undefined?S.dict[i]:''},kc={};(S.dict||[]).forEach(function(v){if(v)kc[String(v).toUpperCase()]=1});(S.plano||[]).forEach(function(x){if(x.c)kc[x.c.toUpperCase()]=1});
+  var fromD=function(d){var p=String(d||'').toUpperCase().split(',');for(var j=p.length-1;j>=0;j--){var t=p[j].trim();if(kc[t])return t}return ''};
+  var items=Object.keys(ks).map(function(k){
+    var rp=S.rep&&S.rep[k],rs=!!rp,mx=rp?(rp[1]||0):0,mn=rp?(rp[0]||0):0,po=S.po&&S.po[k]||0,tr=S.tr&&S.tr[k]||0,ots=po+tr,st=S.stk&&S.stk[k]>0?S.stk[k]:0,
+      sl=S.sal&&S.sal[k],sv=S.sv&&S.sv[k],q=sl?sl[0]:0,dcE=S.dc&&S.dc[k],dsc=(S.dsc&&S.dsc[k])||(S.nm&&S.nm[k])||pn[k]||(dcE?dcE[0]:'')||'';
+    var cat=(sv?dn(sv[1]):'')||pc[k]||(dcE?dcE[1]:'')||fromD(dsc)||'(tanpa info kategori)';
+    var tot=st+ots,over=rs?Math.max(0,tot-mx):0,t=!rs?'non':(tot>mx?'lebih':'ok'),cut=t==='lebih'?Math.min(ots,over):0;
+    var mo=days&&q>0?q/days*30:0,cv=days&&q>0?tot/(q/days):null;
+    return {k:k,d:dsc,c:String(cat).toUpperCase(),cl:S.cls?(S.cls[k]||'-'):'',rs:rs,pl:pcnt[k]?1:0,st:st,po:po,tr:tr,ots:ots,mx:rs?mx:null,mn:rs?mn:null,tot:tot,over:over,cut:cut,t:t,mo:mo,q:q,cv:cv}});
+  return {items:items,days:days}
+}
+function oFiltered(){
+  if(!OC)return [];var q=OF.q.toLowerCase();
+  var r=OC.items.filter(function(i){var cl=i.cl==='-'?'Non Class':i.cl,rv=i.rs?'Repsys':'Non Repsys',pv=i.pl?'Plano':'Non Plano';if(OF.c.length&&OF.c.indexOf(i.c)<0)return false;if(OF.cl.length&&OF.cl.indexOf(cl)<0)return false;if(OF.s.length&&OF.s.indexOf(i.t)<0)return false;if(OF.r.length&&OF.r.indexOf(rv)<0)return false;if(OF.p.length&&OF.p.indexOf(pv)<0)return false;if(q&&(i.k+' '+i.d).toLowerCase().indexOf(q)<0)return false;return true});
+  var ord={lebih:0,ok:1,non:2};
+  return r.sort(function(a,b){if(OS.k){var x=a[OS.k],y=b[OS.k];if(OS.k==='t'){x=ord[a.t];y=ord[b.t]}if(x===null)x=-1;if(y===null)y=-1;if(typeof x==='boolean'){x=+x;y=+y}return (typeof x==='string'?x.localeCompare(y):x-y)*OS.d}
+    return (ord[a.t]-ord[b.t])||(b.cut-a.cut)||(b.ots-a.ots)})
+}
+function oCols(){return [['k','Item No'],['d','Deskripsi'],['c','Kategori'],['cl','Class'],['rs','Repsys'],['pl','Plano'],['t','Status'],['st','Stok toko'],['po','OTS PO'],['tr','OTS TR'],['ots','Total OTS'],['tot','Stok + OTS'],['mx','Max repsys'],['over','Lebih dari Max'],['cut','OTS bisa dikurangi'],['mo','Jual / bulan'],['cv','Cukup + OTS (hari)']]}
+function oMs(id,lbl,key,opts){
+  var el=$('#'+id),sel=OF[key],o=el.open;
+  el.innerHTML='<summary>'+lbl+(sel.length?' <b>('+sel.length+')</b>':'')+'</summary><div class="msb">'+opts.map(function(x){return '<label><input type="checkbox" data-of="'+key+'" value="'+esc(x[0])+'"'+(sel.indexOf(x[0])>=0?' checked':'')+'> '+esc(x[1])+'</label>'}).join('')+(sel.length?'<button type="button" data-oclr="'+key+'">Hapus pilihan</button>':'')+'</div>';
+  el.open=o;
+}
+function oCell(i,c){switch(c){
+  case 'k':return '<td>'+esc(i.k)+'</td>';case 'd':return '<td>'+esc(i.d||'-')+'</td>';case 'c':return '<td>'+esc(i.c)+'</td>';
+  case 'cl':return '<td>'+(S.cls?(i.cl==='-'?'Non Class':esc(i.cl)):'–')+'</td>';
+  case 'rs':return '<td>'+(S.rep?(i.rs?'Repsys':'<span style="color:#7a5b00">Non Repsys</span>'):'–')+'</td>';
+  case 'pl':return '<td>'+(S.plano?(i.pl?'Plano':'<span style="color:#7a5b00">Non Plano</span>'):'–')+'</td>';
+  case 't':return '<td><b style="color:'+OCL[i.t]+'">'+OST[i.t]+'</b></td>';
+  case 'st':return '<td class="n">'+(S.stk?nf(i.st):'–')+'</td>';
+  case 'po':return '<td class="n">'+(S.po?(i.po?nf(i.po):'0'):'–')+'</td>';
+  case 'tr':return '<td class="n">'+(S.tr?(i.tr?nf(i.tr):'0'):'–')+'</td>';
+  case 'ots':case 'tot':return '<td class="n"><b>'+nf(i[c])+'</b></td>';
+  case 'mx':return '<td class="n">'+(i.mx===null?'–':nf(i.mx))+'</td>';
+  case 'over':return '<td class="n">'+(i.t==='lebih'?'<b style="color:#b3261e">'+nf(i.over)+'</b>':'–')+'</td>';
+  case 'cut':return '<td class="n">'+(i.t==='lebih'?'<b>'+nf(i.cut)+'</b>':'–')+'</td>';
+  case 'mo':return '<td class="n">'+(S.sal?(i.q?(OC.days?nf(Math.round(i.mo*10)/10):'–'):'0'):'–')+'</td>';
+  case 'cv':return '<td class="n">'+(i.cv===null?'–':nf(Math.round(i.cv)))+'</td>'}return '<td></td>'}
+function renderOts(){
+  OC=oCalc();
+  if(!OC){['#okpi','#ocard'].forEach(function(x){$(x).classList.add('hide')});$('#omsgc').classList.remove('hide');$('#omsg').innerHTML='<b>File Outstanding PO atau TR belum dimuat.</b> Unggah file Outstanding PO dan/atau Outstanding TR (dan Replenishment untuk Max) lewat kotak Data di atas, lalu klik Generate.';return}
+  $('#omsgc').classList.add('hide');$('#okpi').classList.remove('hide');$('#ocard').classList.remove('hide');
+  var g={lebih:0,ok:0,non:0},ex=0,cut=0,po=0,tr=0;OC.items.forEach(function(i){g[i.t]++;ex+=i.over;cut+=i.cut;po+=i.po;tr+=i.tr});
+  var kb=function(l,n,s,c,y){return '<button type="button" data-os="'+c+'"><span class="l">'+l+'</span><span class="n'+(y?' y':'')+'">'+nf(n)+'</span><span class="s">'+s+'</span></button>'};
+  $('#okpi').innerHTML=kb('Item ber-OTS',OC.items.length,'OTS PO '+nf(po)+' · OTS TR '+nf(tr),'all')+kb(OST.lebih,g.lebih,'OTS bisa dikurangi '+nf(cut)+' qty','lebih',1)+kb(OST.ok,g.ok,'stok + OTS tidak lebih dari Max','ok')+kb(OST.non,g.non,'tidak ada Max untuk dibandingkan','non');
+  var cs=[],cls=[];OC.items.forEach(function(i){if(cs.indexOf(i.c)<0)cs.push(i.c);var v=i.cl==='-'?'Non Class':i.cl;if(v&&cls.indexOf(v)<0)cls.push(v)});cs.sort();cls.sort();
+  oMs('ocat','Kategori','c',cs.map(function(c){return [c,c]}));oMs('ocl','Class','cl',cls.map(function(c){return [c,c]}));
+  oMs('ost','Status','s',Object.keys(OST).map(function(k){return [k,OST[k]]}));
+  oMs('orp','Repsys','r',[['Repsys','Repsys'],['Non Repsys','Non Repsys']]);oMs('opl','Plano','p',[['Plano','Plano'],['Non Plano','Non Plano']]);
+  $('#oq').value=OF.q;var C=oCols();
+  $('#oth').innerHTML=C.map(function(c){var n=/^(st|po|tr|ots|tot|mx|over|cut|mo|cv)$/.test(c[0]);return '<th data-os="'+c[0]+'" style="user-select:none'+(n?';text-align:right':'')+'">'+c[1]+(OS.k===c[0]?(OS.d<0?' ▼':' ▲'):'')+'</th>'}).join('');
+  var rows=oFiltered(),h='';
+  rows.slice(0,OLIM).forEach(function(i){h+='<tr>'+C.map(function(c){return oCell(i,c[0])}).join('')+'</tr>'});
+  $('#obd').innerHTML=h||'<tr><td colspan="'+C.length+'" style="padding:18px;color:var(--mut)">Tidak ada item.</td></tr>';
+  $('#ocount').textContent='· '+nf(rows.length)+' item';
+  var miss=[!S.po?'file Outstanding PO':'',!S.tr?'file Outstanding TR':'',!S.rep?'Replenishment (Max)':'',!S.stk?'SQV (stok toko)':'',!S.sal?'file Penjualan per item':'',S.sal&&!OC.days?'periode penjualan (isi di tab Moving)':''].filter(Boolean);
+  $('#ow').innerHTML=(rows.length>OLIM?'Layar menampilkan '+nf(OLIM)+' item pertama. Unduh Excel untuk semua '+nf(rows.length)+' item.':'')+(miss.length?'<br>Belum dimuat: '+miss.join(', ')+'. Kolom terkait menampilkan "–".':'');
+  $('#on').innerHTML='<b>Cara membaca.</b> Daftar item yang punya OTS PO (sisa PO Released yang belum expired) dan/atau OTS TR (qty TR Released dikurangi TO yang sudah dikirim). <b>Stok + OTS</b> = stok toko + OTS PO + OTS TR. <b>Max repsys</b> dari file Replenishment. <b>Melebihi Max</b>: Stok + OTS lebih besar dari Max repsys. <b>Lebih dari Max</b> = Stok + OTS dikurangi Max. <b>OTS bisa dikurangi</b> = bagian kelebihan itu yang berasal dari OTS (paling besar sebesar total OTS), yaitu qty PO atau TR yang bisa dibatalkan atau dikurangi. <b>Sesuai Max</b>: Stok + OTS tidak melebihi Max. <b>Non Repsys</b>: tidak ada Max untuk dibandingkan. <b>Plano</b> berarti item ada di file Item Plano.';
+}
+document.addEventListener('click',function(e){var th=e.target.closest&&e.target.closest('#oth th');if(th){var k=th.getAttribute('data-os');if(OS.k===k)OS.d=-OS.d;else{OS.k=k;OS.d=/^(k|d|c|cl|rs|pl|t)$/.test(k)?1:-1}renderOts();return}
+  var b=e.target.closest&&e.target.closest('#okpi button[data-os]');if(b){var v=b.getAttribute('data-os');OF.s=v==='all'?[]:[v];renderOts();return}
+  var cl=e.target.closest&&e.target.closest('[data-oclr]');if(cl){OF[cl.getAttribute('data-oclr')]=[];renderOts()}});
+document.addEventListener('change',function(e){var t=e.target;if(t.getAttribute&&t.getAttribute('data-of')){var k=t.getAttribute('data-of'),i=OF[k].indexOf(t.value);if(t.checked&&i<0)OF[k].push(t.value);if(!t.checked&&i>=0)OF[k].splice(i,1);renderOts()}});
+var _oq;$('#oq').oninput=function(){var v=this.value;clearTimeout(_oq);_oq=setTimeout(function(){OF.q=v;renderOts();$('#oq').focus()},200)};
+$('#obx').onclick=function(){
+  if(!OC)return;var T=function(v,st){return {v:v,s:st}},rows=oFiltered(),C=oCols();
+  var dr=[C.map(function(c){return T(c[1],1)})];
+  rows.forEach(function(i){dr.push([T(i.k,2),T(i.d,2),T(i.c,2),T(S.cls?(i.cl==='-'?'Non Class':i.cl):'',2),T(S.rep?(i.rs?'Repsys':'Non Repsys'):'',2),T(S.plano?(i.pl?'Plano':'Non Plano'):'',2),T(OST[i.t],2),T(i.st,3),S.po?T(i.po,3):'',S.tr?T(i.tr,3):'',T(i.ots,3),T(i.tot,3),i.mx===null?'':T(i.mx,3),i.t==='lebih'?T(i.over,3):'',i.t==='lebih'?T(i.cut,3):'',S.sal&&OC.days?Math.round(i.mo*10)/10:'',i.cv===null?'':T(Math.round(i.cv),3)])});
+  xsave(xbuild([{name:'Kontrol OTS PO TR',w:[13,46,24,10,12,12,22,11,11,11,11,12,12,14,17,12,17],fz:1,af:'A1:'+xcol(C.length)+dr.length,rows:dr,h:{0:30}}]),'Inventory_Kontrol_OTS_PO_TR_'+today()+'.xlsx');
+  say('✔ Excel diunduh ('+nf(rows.length)+' item sesuai filter).');
+};
 /* ---------- Excel berstyle ---------- */
 function u8(s){return new TextEncoder().encode(s)}
 function xe(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
@@ -1156,7 +1252,7 @@ function shSave(){
 }
 sbPill();sbRefresh();
 restoreMv();restore();shLoad();setTimeout(dcDot,1500);setTimeout(dcDot,4000);
-try{var _t=sessionStorage.getItem('qbig_inv_tab');if(_t==='detail'||_t==='capacity'||_t==='moving'||_t==='dc'||_t==='min')showTab(_t)}catch(e){}
+try{var _t=sessionStorage.getItem('qbig_inv_tab');if(_t==='detail'||_t==='capacity'||_t==='moving'||_t==='dc'||_t==='min'||_t==='ots')showTab(_t)}catch(e){}
 </script>
 <script src="../pwa.js" defer></script>
 </body>
