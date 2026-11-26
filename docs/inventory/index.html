@@ -1015,7 +1015,7 @@ function oFiltered(){
   return r.sort(function(a,b){if(OS.k){var x=a[OS.k],y=b[OS.k];if(OS.k==='t'){x=ord[a.t];y=ord[b.t]}if(x===null)x=-1;if(y===null)y=-1;if(typeof x==='boolean'){x=+x;y=+y}return (typeof x==='string'?x.localeCompare(y):x-y)*OS.d}
     return (ord[a.t]-ord[b.t])||(b.cut-a.cut)||(b.ots-a.ots)})
 }
-function oCols(){return [['k','Item No'],['d','Deskripsi'],['c','Kategori'],['mb','Master Brand'],['cl','Class'],['rs','Repsys'],['pl','Plano'],['t','Status'],['st','Stok toko'],['po','OTS PO'],['tr','OTS TR'],['ots','Total OTS stock'],['pot','PO terjual'],['trt','TR terjual'],['pe','PO expired terdekat'],['te','TR expired terdekat'],['tot','Stok + OTS'],['mx','Max repsys'],['over','Lebih dari Max'],['cut','OTS bisa dikurangi'],['mo','Jual / bulan'],['cv','Cukup + OTS (hari)']]}
+function oCols(){return [['k','Item No'],['d','Deskripsi'],['c','Kategori'],['mb','Master Brand'],['cl','Class'],['rs','Repsys'],['pl','Plano'],['t','Status'],['st','Stok toko'],['po','OTS PO'],['tr','OTS TR'],['ots','Total OTS stock'],['pot','PO terjual'],['trt','TR terjual'],['pe','PO expired terdekat'],['te','TR expired terdekat'],['tot','Stok + OTS'],['mx','Max repsys'],['over','Lebih dari Max'],['cut','OTS bisa dikurangi'],['mo','Jual / bulan'],['cv','SOH + OTS (hari)']]}
 function oMs(id,lbl,key,opts){
   var el=$('#'+id),sel=OF[key],o=el.open;el.classList.toggle('on',sel.length>0);
   el.innerHTML='<summary>'+lbl+(sel.length?' <b>('+sel.length+')</b>':'')+'</summary><div class="dmsb">'+opts.map(function(x){return '<label><input type="checkbox" data-of="'+key+'" value="'+esc(x[0])+'"'+(sel.indexOf(x[0])>=0?' checked':'')+'> '+esc(x[1])+'</label>'}).join('')+(sel.length?'<button type="button" data-oclr="'+key+'">Hapus pilihan</button>':'')+'</div>';
@@ -1039,7 +1039,7 @@ function oCell(i,c){switch(c){
   case 'over':return '<td class="n">'+(i.t==='lebih'?'<b style="color:#b3261e">'+nf(i.over)+'</b>':'–')+'</td>';
   case 'cut':return '<td class="n">'+(i.t==='lebih'?'<b>'+nf(i.cut)+'</b>':'–')+'</td>';
   case 'mo':return '<td class="n">'+(S.sal?(i.q?(OC.days?nf(Math.round(i.mo*10)/10):'–'):'0'):'–')+'</td>';
-  case 'cv':return '<td class="n">'+(i.cv===null?'–':nf(Math.round(i.cv)))+'</td>'}return '<td></td>'}
+  case 'cv':return '<td class="n">'+(i.cv===null?'–':nf(Math.round(i.cv))+' hari')+'</td>'}return '<td></td>'}
 function renderOts(){
   OC=oCalc();
   if(!OC){['#okpi','#ocard'].forEach(function(x){$(x).classList.add('hide')});$('#omsgc').classList.remove('hide');$('#omsg').innerHTML='<b>File Outstanding PO atau TR belum dimuat.</b> Unggah file Outstanding PO dan/atau Outstanding TR (dan Replenishment untuk Max) lewat kotak Data di atas, lalu klik Generate.';return}
