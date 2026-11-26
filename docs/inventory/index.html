@@ -321,9 +321,10 @@ table.dd td.n{text-align:right}
     <div class="oflt">
       <input id="oq" type="search" placeholder="Cari item no atau nama">
       <details class="dms" id="ocat"></details><details class="dms" id="omb"></details><details class="dms" id="ocl"></details><details class="dms" id="ost"></details><details class="dms" id="orp"></details><details class="dms" id="opl"></details><details class="dms" id="ojn"></details><details class="dms" id="oex"></details><details class="dms" id="onw"></details><details class="dms" id="oag"></details>
-      <button id="orst" type="button" class="oreset">Reset filter</button>
+      <button id="orst" type="button" class="oreset">Reset filter</button><button id="oml" type="button" class="oreset" title="Unduh Excel, salin isi email follow up cancel, lalu buka Carbonio">✉️ Email cancel PO/TR</button>
       <button id="obx" class="g">⬇️ Unduh Excel</button>
     </div>
+    <div class="note" id="omm" role="status" style="display:none;margin:0 0 10px;padding:10px 12px;border-radius:8px;background:#eaf3ff;color:#16365c"></div>
     <div class="dt"><table class="dd"><thead><tr id="oth"></tr></thead><tbody id="obd"></tbody></table></div>
     <div class="note" id="ow"></div>
     <details class="ket"><summary><b>Keterangan</b><span class="dtog"></span></summary><div class="kbody"><div class="note" id="on"></div></div></details>
@@ -1091,6 +1092,57 @@ $('#obx').onclick=function(){
   xsave(xbuild(sh),'Inventory_Kontrol_OTS_PO_TR_'+today()+'.xlsx');
   say('✔ Excel diunduh ('+nf(rows.length)+' item sesuai filter).');
 };
+
+/* ---------- email follow up cancel PO/TR ---------- */
+function oCancelPlan(rows){
+  var lines=[],tot={po:0,tr:0,np:0,nt:0,items:0};
+  rows.forEach(function(i){
+    if(i.t!=='lebih'||!(i.cut>0))return;
+    var cand=[];
+    ((S.pod&&S.pod[i.k])||[]).forEach(function(p){if(!p[3])cand.push({ty:'PO',no:p[0],tg:p[1],who:p[2],ex:p[8]||'',ots:p[6],base:p[4],rcv:p[5],cm:p[9]||''})});
+    ((S.trd&&S.trd[i.k])||[]).forEach(function(p){if(!p[3])cand.push({ty:'TR',no:p[0],tg:p[1],who:p[2],ex:p[7]||'',ots:p[6],base:p[4],rcv:p[5],cm:p[8]||''})});
+    cand.sort(function(a,b){return (b.tg||'').localeCompare(a.tg||'')});
+    var rest=i.cut,used=false;
+    cand.forEach(function(c){var q=Math.min(c.ots,rest);c.q=q;rest-=q;if(q>0){lines.push({i:i,c:c});used=true;if(c.ty==='PO'){tot.po+=q;tot.np++}else{tot.tr+=q;tot.nt++}}});
+    if(used)tot.items++;
+  });
+  return {lines:lines,tot:tot};
+}
+function oMailBuild(rows,plan){
+  var T=function(v,st){return {v:v,s:st}},H=['Item No','Deskripsi','Master Brand','Class','Stok toko','Max repsys','Stok + OTS','Lebih dari Max','Jual / bulan','SOH + OTS (hari)','PO/TR','No PO/TR','Vendor / Tujuan','Tgl order','Tgl expired','Qty base','Sisa OTS','Saran qty cancel','Comment'];
+  var dr=[H.map(function(x){return T(x,1)})];
+  plan.lines.forEach(function(l){var i=l.i,c=l.c;dr.push([T(i.k,2),T(i.d,2),T(i.mb,2),T(S.cls?(i.cl==='-'?'Non Class':i.cl):'',2),T(i.st,3),T(i.mx,3),T(i.tot,3),T(i.over,3),S.sal&&OC.days?T(Math.round(i.mo*10)/10,3):'',i.cv===null?'':T(Math.round(i.cv),3),T(c.ty,2),T(c.no,2),T(c.who,2),T(c.tg||'',2),T(c.ex,2),T(c.base,3),T(c.ots,3),T(c.q,3),T(c.cm,2)])});
+  return xbuild([{name:'Follow up cancel',w:[13,46,18,10,11,11,11,13,12,15,8,24,28,12,12,11,11,15,40],fz:1,af:'A1:S'+dr.length,rows:dr,h:{0:30}}]);
+}
+$('#oml').onclick=function(){
+  if(!OC)return;
+  var omm=function(t,bad){var e=$('#omm');e.style.display='block';e.style.background=bad?'#fff6e5':'#eaf3ff';e.innerHTML=t};
+  if(!S.pod&&!S.trd){omm('<b>Detail PO/TR belum ada.</b> Upload ulang file Outstanding PO dan TR (lalu Generate) supaya nomor PO/TR yang akan di-cancel bisa dicantumkan.',1);return}
+  var rows=oFiltered(),plan=oCancelPlan(rows),tt=plan.tot;
+  if(!plan.lines.length){omm('Tidak ada PO/TR stock yang disarankan di-cancel pada filter ini. Email hanya dibuat untuk item berstatus <b>Melebihi Max</b>.',1);return}
+  var tgl=new Date(Date.now()+7*3600e3).toISOString().slice(0,10),fn='Follow_Up_Cancel_PO_TR_'+tgl+'.xlsx',sub='Follow up cancel PO/TR - OTS melebihi Max repsys - Q-BIG - '+tgl;
+  xsave(oMailBuild(rows,plan),fn);
+  var short=function(d){return String(d||'').split(',')[0]},TOP=30,top=plan.lines.slice(0,TOP),tq=tt.po+tt.tr;
+  var bm={};plan.lines.forEach(function(l){var b=l.i.mb||'(tanpa brand)';bm[b]=(bm[b]||0)+l.c.q});
+  var bl=Object.keys(bm).sort(function(a,b){return bm[b]-bm[a]}).slice(0,5).map(function(b){return b+' '+nf(bm[b])}).join(', ');
+  var intro='Selamat siang,',
+   a1='Dari kontrol OTS terhadap Max repsys di Q-BIG, ada '+nf(tt.items)+' item repsys yang stok toko ditambah OTS PO/TR stock-nya sudah melebihi Max. Kelebihan ini bisa dikurangi dengan men-cancel sebagian PO/TR yang belum diterima, total saran cancel '+nf(tq)+' qty: PO '+nf(tt.po)+' qty ('+nf(tt.np)+' baris PO) dan TR '+nf(tt.tr)+' qty ('+nf(tt.nt)+' baris TR).',
+   a2='Brand dengan saran cancel terbesar: '+bl+'.',
+   a3='PO/TR yang terhubung ke Nota Penjualan (terjual) tidak termasuk. Saran cancel diambil dari PO/TR dengan tanggal order paling baru terlebih dahulu, dan PO/TR yang sudah expired tidak dihitung.',
+   rq='Mohon bantuannya untuk follow up dan konfirmasi cancel PO/TR berikut. Jika ada yang sudah tidak bisa di-cancel (sudah diproses atau dikirim), mohon info alasannya agar kami bisa sesuaikan. Detail lengkap ada di lampiran Excel.',
+   ty='Terima kasih.';
+  var h='<p>'+intro+'</p><p>'+esc(a1)+'</p><p>'+esc(a2)+'</p><p>'+esc(a3)+'</p><p>'+esc(rq)+'</p>'
+   +'<table border="1" cellpadding="4" cellspacing="0" style="border-collapse:collapse;font-size:12px"><tr style="background:#1b2a49;color:#fff"><th>Item No</th><th>Deskripsi</th><th>PO/TR</th><th>No PO/TR</th><th>Vendor / Tujuan</th><th>Tgl order</th><th>Sisa OTS</th><th>Saran cancel</th><th>Stok toko</th><th>Max</th></tr>'
+   +top.map(function(l){return '<tr><td>'+esc(l.i.k)+'</td><td>'+esc(short(l.i.d))+'</td><td>'+l.c.ty+'</td><td>'+esc(l.c.no)+'</td><td>'+esc(l.c.who)+'</td><td>'+esc(l.c.tg||'')+'</td><td align="right">'+nf(l.c.ots)+'</td><td align="right"><b>'+nf(l.c.q)+'</b></td><td align="right">'+nf(l.i.st)+'</td><td align="right">'+nf(l.i.mx)+'</td></tr>'}).join('')+'</table>'
+   +(plan.lines.length>TOP?'<p>Tabel menampilkan '+TOP+' baris teratas dari '+nf(plan.lines.length)+'. Selengkapnya di lampiran.</p>':'')+'<p>'+ty+'</p><p>Salam,<br>Ridwan</p>';
+  var t=intro+'\n\n'+a1+'\n'+a2+'\n'+a3+'\n\n'+rq+'\n\n'+top.map(function(l){return [l.i.k,short(l.i.d),l.c.ty+' '+l.c.no,l.c.who,'sisa '+l.c.ots,'cancel '+l.c.q].join(' | ')}).join('\n')+(plan.lines.length>TOP?'\n(dan '+nf(plan.lines.length-TOP)+' baris lainnya di lampiran)':'')+'\n\n'+ty+'\nSalam,\nRidwan';
+  var done=function(ok){omm((ok?'<b>✔ Excel terunduh</b> ('+esc(fn)+'). <b>Isi email sudah disalin.</b>':'<b>Excel terunduh</b> ('+esc(fn)+'). Isi email gagal disalin otomatis.')+'<br>Di Carbonio: klik <b>NEW</b>, isi penerima (To) dan Subject: <i>'+esc(sub)+'</i>, tempel isi email (Ctrl+V), lalu lampirkan file Excel dengan ikon klip.',!ok)};
+  var copied=false;
+  try{if(navigator.clipboard&&window.ClipboardItem){navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([h],{type:'text/html'}),'text/plain':new Blob([t],{type:'text/plain'})})]).then(function(){done(true)},function(){done(false)});copied=true}}catch(e){}
+  if(!copied)done(false);
+  window.open(MAILURL,'_blank','noopener');
+};
+
 /* ---------- Excel berstyle ---------- */
 function u8(s){return new TextEncoder().encode(s)}
 function xe(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
