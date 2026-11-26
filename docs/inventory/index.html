@@ -413,7 +413,7 @@ function trFrom(r){
 }
 function poFrom(r){
   var m={},ms={},n=0,ns=0,dd={},mb=S.mb||{};
-  r.rows.forEach(function(o){var bk=key(o['Item No']),bn=String(o['Master Brand']||'').trim();if(bk&&bn)mb[bk]=bn;if(String(o['Status']||'').trim().toUpperCase()!=='RELEASED')return;var ex=/^y/i.test(String(o['Expired']||'').trim()),k=key(o['Item No']),q=num(o['Outstanding Quantity']);if(!k||q<=0)return;(dd[k]||(dd[k]=[])).push([String(o['PO No']||'').trim(),parseDate(o['Order Date']),String(o['Buy from Vendor Name']||'').trim(),String(o['NP No']||'').trim(),num(o['Ordered Qty']),num(o['Received Qty']),q,ex?1:0,parseDate(o['Expired PO Date'])]);if(ex)return;if(String(o['NP No']||'').trim()){ms[k]=(ms[k]||0)+q;ns++}else{m[k]=(m[k]||0)+q;n++}});
+  r.rows.forEach(function(o){var bk=key(o['Item No']),bn=String(o['Master Brand']||'').trim();if(bk&&bn)mb[bk]=bn;if(String(o['Status']||'').trim().toUpperCase()!=='RELEASED')return;var ex=/^y/i.test(String(o['Expired']||'').trim()),k=key(o['Item No']),q=num(o['Outstanding Quantity']);if(!k||q<=0)return;if(ex)return;(dd[k]||(dd[k]=[])).push([String(o['PO No']||'').trim(),parseDate(o['Order Date']),String(o['Buy from Vendor Name']||'').trim(),String(o['NP No']||'').trim(),num(o['Ordered Qty']),num(o['Received Qty']),q,0,parseDate(o['Expired PO Date'])]);if(String(o['NP No']||'').trim()){ms[k]=(ms[k]||0)+q;ns++}else{m[k]=(m[k]||0)+q;n++}});
   S.po=m;S.pot=ms;S.pod=dd;S.mb=mb;S.meta.poN=n;S.meta.poNs=ns;
 }
 function labelFiles(){try{dcDot();if(!$('#tab-dc').classList.contains('hide'))renderDc();if(!$('#tab-min').classList.contains('hide'))renderMn();if(!$('#tab-ots').classList.contains('hide'))renderOts()}catch(e){}
@@ -973,13 +973,15 @@ $('#nbx').onclick=function(){if(!NC)return;var rows=nFiltered();xsave(nBuild(row
 
 /* ---------- kontrol OTS PO dan TR terhadap Max repsys ---------- */
 var OST={lebih:'Melebihi Max',ok:'Sesuai Max',non:'Non Repsys (tanpa Max)'},OCL={lebih:'#b3261e',ok:'#1e7a4a',non:'#7a5b00'};
+function dLeft(d){if(!d)return '–';var n=Math.round((new Date(d+'T00:00:00')-new Date(new Date().toISOString().slice(0,10)+'T00:00:00'))/864e5);return d+' ('+(n<0?'lewat '+(-n)+' hr':n===0?'hari ini':n+' hr lagi')+')'}
+function dMin(a,ix){var m='';(a||[]).forEach(function(p){if(p[ix]&&(!m||p[ix]<m))m=p[ix]});return m}
 var OX={};function oDetail(k){var th='<th style="text-align:left;padding:4px 10px">',tn='<th style="text-align:right;padding:4px 10px">',td='<td style="padding:4px 10px">',tr_='<td class="n" style="padding:4px 10px">',o='';
   var P=(S.pod&&S.pod[k])||[],T=(S.trd&&S.trd[k])||[];
   var tag=function(np){return np?'<span style="color:#7a5b00">Terjual (NP '+esc(np)+')</span>':'Stock'};
-  o+='<div style="font-weight:600;margin-bottom:4px">Outstanding PO <span style="font-weight:400;color:var(--mut)">(baris merah = PO Released yang sudah expired, tidak dihitung ke OTS)</span>'+(S.pod?'':' <span style="font-weight:400;color:var(--mut)">(upload ulang file PO untuk melihat detail)</span>')+'</div>';
-  if(P.length){o+='<table class="dd" style="margin-bottom:10px"><thead><tr>'+th+'No PO</th>'+th+'Tgl order</th>'+th+'Vendor</th>'+th+'Jenis</th>'+th+'Expired</th>'+tn+'Qty base (ordered)</th>'+tn+'Sudah diterima</th>'+tn+'Sisa OTS</th></tr></thead><tbody>';P.forEach(function(p){o+='<tr'+(p[7]?' style="color:#a33;background:#fdf1f1"':'')+'>'+td+esc(p[0])+'</td>'+td+esc(p[1])+'</td>'+td+esc(p[2])+'</td>'+td+tag(p[3])+'</td>'+td+(p[7]?'<b>Expired</b> '+esc(p[8]||''):(p[8]?'s/d '+esc(p[8]):'–'))+'</td>'+tr_+nf(p[4])+'</td>'+tr_+nf(p[5])+'</td>'+tr_+'<b>'+nf(p[6])+'</b>'+(p[7]?' <small>(tidak dihitung)</small>':'')+'</td></tr>'});o+='</tbody></table>'}else if(S.pod)o+='<div style="color:var(--mut);margin-bottom:10px">Tidak ada PO outstanding.</div>';
+  o+='<div style="font-weight:600;margin-bottom:4px">Outstanding PO <span style="font-weight:400;color:var(--mut)">(hanya PO Released yang belum expired)</span>'+(S.pod?'':' <span style="font-weight:400;color:var(--mut)">(upload ulang file PO untuk melihat detail)</span>')+'</div>';
+  if(P.length){o+='<table class="dd" style="margin-bottom:10px"><thead><tr>'+th+'No PO</th>'+th+'Tgl order</th>'+th+'Vendor</th>'+th+'Jenis</th>'+th+'Expired</th>'+tn+'Qty base (ordered)</th>'+tn+'Sudah diterima</th>'+tn+'Sisa OTS</th></tr></thead><tbody>';P.forEach(function(p){o+='<tr>'+td+esc(p[0])+'</td>'+td+esc(p[1])+'</td>'+td+esc(p[2])+'</td>'+td+tag(p[3])+'</td>'+td+esc(dLeft(p[8]))+'</td>'+tr_+nf(p[4])+'</td>'+tr_+nf(p[5])+'</td>'+tr_+'<b>'+nf(p[6])+'</b></td></tr>'});o+='</tbody></table>'}else if(S.pod)o+='<div style="color:var(--mut);margin-bottom:10px">Tidak ada PO outstanding.</div>';
   o+='<div style="font-weight:600;margin-bottom:4px">Outstanding TR'+(S.trd?'':' <span style="font-weight:400;color:var(--mut)">(upload ulang file TR untuk melihat detail)</span>')+'</div>';
-  if(T.length){o+='<table class="dd"><thead><tr>'+th+'No TR</th>'+th+'Tgl request</th>'+th+'Tujuan</th>'+th+'Jenis</th>'+th+'Expired</th>'+tn+'Qty base (TR)</th>'+tn+'Sudah dikirim (TO)</th>'+tn+'Sisa OTS</th></tr></thead><tbody>';T.forEach(function(p){o+='<tr>'+td+esc(p[0])+'</td>'+td+esc(p[1])+'</td>'+td+esc(p[2])+'</td>'+td+tag(p[3])+'</td>'+td+(p[7]?(p[7]<new Date().toISOString().slice(0,10)?'<span style="color:#a33">'+esc(p[7])+' (lewat)</span>':esc(p[7])):'–')+'</td>'+tr_+nf(p[4])+'</td>'+tr_+nf(p[5])+'</td>'+tr_+'<b>'+nf(p[6])+'</b></td></tr>'});o+='</tbody></table>'}else if(S.trd)o+='<div style="color:var(--mut)">Tidak ada TR outstanding.</div>';
+  if(T.length){o+='<table class="dd"><thead><tr>'+th+'No TR</th>'+th+'Tgl request</th>'+th+'Tujuan</th>'+th+'Jenis</th>'+th+'Expired</th>'+tn+'Qty base (TR)</th>'+tn+'Sudah dikirim (TO)</th>'+tn+'Sisa OTS</th></tr></thead><tbody>';T.forEach(function(p){o+='<tr>'+td+esc(p[0])+'</td>'+td+esc(p[1])+'</td>'+td+esc(p[2])+'</td>'+td+tag(p[3])+'</td>'+td+(p[7]?(p[7]<new Date().toISOString().slice(0,10)?'<span style="color:#a33">'+esc(dLeft(p[7]))+'</span>':esc(dLeft(p[7]))):'–')+'</td>'+tr_+nf(p[4])+'</td>'+tr_+nf(p[5])+'</td>'+tr_+'<b>'+nf(p[6])+'</b></td></tr>'});o+='</tbody></table>'}else if(S.trd)o+='<div style="color:var(--mut)">Tidak ada TR outstanding.</div>';
   return o}
 var OF={c:[],cl:[],s:[],r:[],p:[],q:''},OS={k:'',d:1},OC=null,OLIM=500;
 function oCalc(){
@@ -995,7 +997,7 @@ function oCalc(){
     var cat=(sv?dn(sv[1]):'')||pc[k]||(dcE?dcE[1]:'')||fromD(dsc)||'(tanpa info kategori)';
     var tot=st+ots,over=rs?Math.max(0,tot-mx):0,t=!rs?'non':(tot>mx?'lebih':'ok'),cut=t==='lebih'?Math.min(ots,over):0;
     var mo=days&&q>0?q/days*30:0,cv=days&&q>0?tot/(q/days):null;
-    return {k:k,d:dsc,c:String(cat).toUpperCase(),mb:(S.mb&&S.mb[k])||'',cl:S.cls?(S.cls[k]||'-'):'',rs:rs,pl:pcnt[k]?1:0,st:st,po:po,tr:tr,pot:pot,trt:trt,ots:ots,mx:rs?mx:null,mn:rs?mn:null,tot:tot,over:over,cut:cut,t:t,mo:mo,q:q,cv:cv}});
+    return {k:k,d:dsc,c:String(cat).toUpperCase(),mb:(S.mb&&S.mb[k])||'',pe:dMin(S.pod&&S.pod[k],8),te:dMin(S.trd&&S.trd[k],7),cl:S.cls?(S.cls[k]||'-'):'',rs:rs,pl:pcnt[k]?1:0,st:st,po:po,tr:tr,pot:pot,trt:trt,ots:ots,mx:rs?mx:null,mn:rs?mn:null,tot:tot,over:over,cut:cut,t:t,mo:mo,q:q,cv:cv}});
   return {items:items,days:days}
 }
 function oFiltered(){
@@ -1005,7 +1007,7 @@ function oFiltered(){
   return r.sort(function(a,b){if(OS.k){var x=a[OS.k],y=b[OS.k];if(OS.k==='t'){x=ord[a.t];y=ord[b.t]}if(x===null)x=-1;if(y===null)y=-1;if(typeof x==='boolean'){x=+x;y=+y}return (typeof x==='string'?x.localeCompare(y):x-y)*OS.d}
     return (ord[a.t]-ord[b.t])||(b.cut-a.cut)||(b.ots-a.ots)})
 }
-function oCols(){return [['k','Item No'],['d','Deskripsi'],['c','Kategori'],['mb','Master Brand'],['cl','Class'],['rs','Repsys'],['pl','Plano'],['t','Status'],['st','Stok toko'],['po','OTS PO'],['tr','OTS TR'],['ots','Total OTS stock'],['pot','PO terjual'],['trt','TR terjual'],['tot','Stok + OTS'],['mx','Max repsys'],['over','Lebih dari Max'],['cut','OTS bisa dikurangi'],['mo','Jual / bulan'],['cv','Cukup + OTS (hari)']]}
+function oCols(){return [['k','Item No'],['d','Deskripsi'],['c','Kategori'],['mb','Master Brand'],['cl','Class'],['rs','Repsys'],['pl','Plano'],['t','Status'],['st','Stok toko'],['po','OTS PO'],['tr','OTS TR'],['ots','Total OTS stock'],['pot','PO terjual'],['trt','TR terjual'],['pe','PO expired terdekat'],['te','TR expired terdekat'],['tot','Stok + OTS'],['mx','Max repsys'],['over','Lebih dari Max'],['cut','OTS bisa dikurangi'],['mo','Jual / bulan'],['cv','Cukup + OTS (hari)']]}
 function oMs(id,lbl,key,opts){
   var el=$('#'+id),sel=OF[key],o=el.open;
   el.innerHTML='<summary>'+lbl+(sel.length?' <b>('+sel.length+')</b>':'')+'</summary><div class="msb">'+opts.map(function(x){return '<label><input type="checkbox" data-of="'+key+'" value="'+esc(x[0])+'"'+(sel.indexOf(x[0])>=0?' checked':'')+'> '+esc(x[1])+'</label>'}).join('')+(sel.length?'<button type="button" data-oclr="'+key+'">Hapus pilihan</button>':'')+'</div>';
@@ -1020,6 +1022,8 @@ function oCell(i,c){switch(c){
   case 'st':return '<td class="n">'+(S.stk?nf(i.st):'–')+'</td>';
   case 'po':return '<td class="n">'+(S.po?(i.po?nf(i.po):'0'):'–')+'</td>';
   case 'tr':return '<td class="n">'+(S.tr?(i.tr?nf(i.tr):'0'):'–')+'</td>';
+  case 'pe':return '<td>'+(S.pod?(i.pe?(i.pe<new Date().toISOString().slice(0,10)?'<span style="color:#a33">'+esc(dLeft(i.pe))+'</span>':esc(dLeft(i.pe))):'–'):'–')+'</td>';
+  case 'te':return '<td>'+(S.trd?(i.te?(i.te<new Date().toISOString().slice(0,10)?'<span style="color:#a33">'+esc(dLeft(i.te))+'</span>':esc(dLeft(i.te))):'–'):'–')+'</td>';
   case 'pot':return '<td class="n" style="color:var(--mut)">'+(S.pot?(i.pot?nf(i.pot):'0'):'–')+'</td>';
   case 'trt':return '<td class="n" style="color:var(--mut)">'+(S.trt?(i.trt?nf(i.trt):'0'):'–')+'</td>';
   case 'ots':case 'tot':return '<td class="n"><b>'+nf(i[c])+'</b></td>';
@@ -1049,7 +1053,7 @@ function renderOts(){
   $('#ow').innerHTML=(rows.length>OLIM?'Layar menampilkan '+nf(OLIM)+' item pertama. Unduh Excel untuk semua '+nf(rows.length)+' item.':'')+(miss.length?'<br>Belum dimuat: '+miss.join(', ')+'. Kolom terkait menampilkan "–".':'');
   $('#on').innerHTML='<b>Cara membaca.</b> Daftar item yang punya OTS PO (sisa PO Released yang belum expired) dan/atau OTS TR (qty TR Released dikurangi TO yang sudah dikirim). <b>OTS PO dan OTS TR hanya yang untuk stock</b> (tidak terhubung ke Nota Penjualan). PO atau TR yang terhubung ke Nota Penjualan dianggap <b>terjual</b> (untuk pesanan customer), dipisah di kolom <b>PO terjual</b> dan <b>TR terjual</b>, dan tidak dihitung ke Stok + OTS maupun ke tindakan di tab lain. <b>Stok + OTS</b> = stok toko + OTS PO stock + OTS TR stock. <b>Max repsys</b> dari file Replenishment. <b>Melebihi Max</b>: Stok + OTS lebih besar dari Max repsys. <b>Lebih dari Max</b> = Stok + OTS dikurangi Max. <b>OTS bisa dikurangi</b> = bagian kelebihan itu yang berasal dari OTS (paling besar sebesar total OTS), yaitu qty PO atau TR yang bisa dibatalkan atau dikurangi. <b>Sesuai Max</b>: Stok + OTS tidak melebihi Max. <b>Non Repsys</b>: tidak ada Max untuk dibandingkan. <b>Plano</b> berarti item ada di file Item Plano.';
 }
-document.addEventListener('click',function(e){var th=e.target.closest&&e.target.closest('#oth th');if(th){var k=th.getAttribute('data-os');if(OS.k===k)OS.d=-OS.d;else{OS.k=k;OS.d=/^(k|d|c|mb|cl|rs|pl|t)$/.test(k)?1:-1}renderOts();return}
+document.addEventListener('click',function(e){var th=e.target.closest&&e.target.closest('#oth th');if(th){var k=th.getAttribute('data-os');if(OS.k===k)OS.d=-OS.d;else{OS.k=k;OS.d=/^(k|d|c|mb|cl|rs|pl|t|pe|te)$/.test(k)?1:-1}renderOts();return}
   var orw=e.target.closest&&e.target.closest('#obd tr[data-ok]');if(orw&&!e.target.closest('a,button,input')){var ok=orw.getAttribute('data-ok');if(OX[ok])delete OX[ok];else OX[ok]=1;renderOts();return}
   var b=e.target.closest&&e.target.closest('#okpi button[data-os]');if(b){var v=b.getAttribute('data-os');OF.s=v==='all'?[]:[v];renderOts();return}
   var cl=e.target.closest&&e.target.closest('[data-oclr]');if(cl){OF[cl.getAttribute('data-oclr')]=[];renderOts()}});
@@ -1058,8 +1062,8 @@ var _oq;$('#oq').oninput=function(){var v=this.value;clearTimeout(_oq);_oq=setTi
 $('#obx').onclick=function(){
   if(!OC)return;var T=function(v,st){return {v:v,s:st}},rows=oFiltered(),C=oCols();
   var dr=[C.map(function(c){return T(c[1],1)})];
-  rows.forEach(function(i){dr.push([T(i.k,2),T(i.d,2),T(i.c,2),T(i.mb,2),T(S.cls?(i.cl==='-'?'Non Class':i.cl):'',2),T(S.rep?(i.rs?'Repsys':'Non Repsys'):'',2),T(S.plano?(i.pl?'Plano':'Non Plano'):'',2),T(OST[i.t],2),T(i.st,3),S.po?T(i.po,3):'',S.tr?T(i.tr,3):'',T(i.ots,3),S.pot?T(i.pot,3):'',S.trt?T(i.trt,3):'',T(i.tot,3),i.mx===null?'':T(i.mx,3),i.t==='lebih'?T(i.over,3):'',i.t==='lebih'?T(i.cut,3):'',S.sal&&OC.days?Math.round(i.mo*10)/10:'',i.cv===null?'':T(Math.round(i.cv),3)])});
-  xsave(xbuild([{name:'Kontrol OTS PO TR',w:[13,46,24,18,10,12,12,22,11,11,11,13,12,12,12,12,14,17,12,17],fz:1,af:'A1:'+xcol(C.length)+dr.length,rows:dr,h:{0:30}}]),'Inventory_Kontrol_OTS_PO_TR_'+today()+'.xlsx');
+  rows.forEach(function(i){dr.push([T(i.k,2),T(i.d,2),T(i.c,2),T(i.mb,2),T(S.cls?(i.cl==='-'?'Non Class':i.cl):'',2),T(S.rep?(i.rs?'Repsys':'Non Repsys'):'',2),T(S.plano?(i.pl?'Plano':'Non Plano'):'',2),T(OST[i.t],2),T(i.st,3),S.po?T(i.po,3):'',S.tr?T(i.tr,3):'',T(i.ots,3),S.pot?T(i.pot,3):'',S.trt?T(i.trt,3):'',T(i.pe?dLeft(i.pe):'',2),T(i.te?dLeft(i.te):'',2),T(i.tot,3),i.mx===null?'':T(i.mx,3),i.t==='lebih'?T(i.over,3):'',i.t==='lebih'?T(i.cut,3):'',S.sal&&OC.days?Math.round(i.mo*10)/10:'',i.cv===null?'':T(Math.round(i.cv),3)])});
+  xsave(xbuild([{name:'Kontrol OTS PO TR',w:[13,46,24,18,10,12,12,22,11,11,11,13,12,12,22,22,12,12,14,17,12,17],fz:1,af:'A1:'+xcol(C.length)+dr.length,rows:dr,h:{0:30}}]),'Inventory_Kontrol_OTS_PO_TR_'+today()+'.xlsx');
   say('✔ Excel diunduh ('+nf(rows.length)+' item sesuai filter).');
 };
 /* ---------- Excel berstyle ---------- */
