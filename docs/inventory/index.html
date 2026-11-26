@@ -332,7 +332,7 @@ table.dd td.n{text-align:right}
 
 <script>
 var KEY='qbig_inv_v1',H2C_URL='https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
-var S={po:null,tr:null,dc:null,dcs:[],cage:null,nw:null,plano:null,stk:null,rep:null,cls:null,inv:null,dsc:null,sal:null,nm:{},sv:{},dict:[],meta:{}},R=[],F={c:'',l:'',t:'',s:'',q:''},LIM=600;
+var S={po:null,tr:null,pot:null,trt:null,dc:null,dcs:[],cage:null,nw:null,plano:null,stk:null,rep:null,cls:null,inv:null,dsc:null,sal:null,nm:{},sv:{},dict:[],meta:{}},R=[],F={c:'',l:'',t:'',s:'',q:''},LIM=600;
 function $(s){return document.querySelector(s)}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 function nf(n){return n.toLocaleString('id-ID')}
@@ -405,22 +405,22 @@ function dcFrom(r){
   S.dc=m;S.dcs=sites;
 }
 function trFrom(r){
-  var g={},m={},n=0;
+  var g={},m={},ms={},n=0,ns=0;
   r.rows.forEach(function(o){if(String(o['Status']||'').trim().toUpperCase()!=='RELEASED')return;var k=key(o['Item Code']),tr=String(o['Original TR No']||'').trim();if(!k||!tr)return;
-    var id=tr+'|'+k,e=g[id]||(g[id]={k:k,q:num(o['TR Quantity']),to:{}}),tn=String(o['TO No']||'').trim();if(tn)e.to[tn+'|'+String(o['GI No']||'')]=num(o['TO Quantity'])});
-  Object.keys(g).forEach(function(id){var e=g[id],t=0;Object.keys(e.to).forEach(function(x){t+=e.to[x]});var o=Math.max(0,e.q-t);if(o>0){m[e.k]=(m[e.k]||0)+o;n++}});
-  S.tr=m;S.meta.trN=n;
+    var id=tr+'|'+k,e=g[id]||(g[id]={k:k,q:num(o['TR Quantity']),to:{},sold:false}),tn=String(o['TO No']||'').trim();if(tn)e.to[tn+'|'+String(o['GI No']||'')]=num(o['TO Quantity']);if(String(o['Transfer To NP No']||'').trim())e.sold=true});
+  Object.keys(g).forEach(function(id){var e=g[id],t=0;Object.keys(e.to).forEach(function(x){t+=e.to[x]});var o=Math.max(0,e.q-t);if(o>0){if(e.sold){ms[e.k]=(ms[e.k]||0)+o;ns++}else{m[e.k]=(m[e.k]||0)+o;n++}}});
+  S.tr=m;S.trt=ms;S.meta.trN=n;S.meta.trtN=ns;
 }
 function poFrom(r){
-  var m={},n=0;
-  r.rows.forEach(function(o){if(String(o['Status']||'').trim().toUpperCase()!=='RELEASED'||/^y/i.test(String(o['Expired']||'').trim()))return;var k=key(o['Item No']),q=num(o['Outstanding Quantity']);if(!k||q<=0)return;m[k]=(m[k]||0)+q;n++});
-  S.po=m;S.meta.poN=n;
+  var m={},ms={},n=0,ns=0;
+  r.rows.forEach(function(o){if(String(o['Status']||'').trim().toUpperCase()!=='RELEASED'||/^y/i.test(String(o['Expired']||'').trim()))return;var k=key(o['Item No']),q=num(o['Outstanding Quantity']);if(!k||q<=0)return;if(String(o['NP No']||'').trim()){ms[k]=(ms[k]||0)+q;ns++}else{m[k]=(m[k]||0)+q;n++}});
+  S.po=m;S.pot=ms;S.meta.poN=n;S.meta.poNs=ns;
 }
 function labelFiles(){try{dcDot();if(!$('#tab-dc').classList.contains('hide'))renderDc();if(!$('#tab-min').classList.contains('hide'))renderMn();if(!$('#tab-ots').classList.contains('hide'))renderOts()}catch(e){}
   setTimeout(function(){try{dataSummary()}catch(e){}},0);
   [['dc','dc','Stok DC'],['po','po','PO'],['tr','tr','TR'],['plano','plano','ITEM PLANO'],['stk','stk','SQV'],['rep','rep','Replenishment'],['sal','sal','Penjualan'],['cls','cls','Class']].forEach(function(x){
     var ok=!!S[x[0]];$('#u-'+x[1]).className='up'+(ok?' ok':'');
-    $('#n-'+x[1]).textContent=ok?('✓ '+(S.meta[x[0]]||'tersimpan')+(x[0]==='rep'&&S.meta.repDate?' · tanggal '+S.meta.repDate:'')+(x[0]==='dc'&&S.meta.dcAt?' · diperbarui '+shStamp(S.meta.dcAt):'')+(x[0]==='po'&&S.meta.poN?' · '+nf(S.meta.poN)+' baris outstanding':'')+(x[0]==='tr'&&S.meta.trN?' · '+nf(S.meta.trN)+' baris outstanding':'')):(x[0]==='cls'||x[0]==='sal'||x[0]==='dc'||x[0]==='po'||x[0]==='tr'?'Belum ada file (opsional)':'Belum ada file');
+    $('#n-'+x[1]).textContent=ok?('✓ '+(S.meta[x[0]]||'tersimpan')+(x[0]==='rep'&&S.meta.repDate?' · tanggal '+S.meta.repDate:'')+(x[0]==='dc'&&S.meta.dcAt?' · diperbarui '+shStamp(S.meta.dcAt):'')+(x[0]==='po'&&S.meta.poN?' · stock '+nf(S.meta.poN)+' baris, terjual '+nf(S.meta.poNs||0)+' baris':'')+(x[0]==='tr'&&S.meta.trN?' · stock '+nf(S.meta.trN)+' baris, terjual '+nf(S.meta.trtN||0)+' baris':'')):(x[0]==='cls'||x[0]==='sal'||x[0]==='dc'||x[0]==='po'||x[0]==='tr'?'Belum ada file (opsional)':'Belum ada file');
   });
 }
 function onFiles(files){
@@ -436,8 +436,8 @@ function genInfo(){var n=PEND.length;$('#genBtn').disabled=!n;$('#genInfo').inne
 document.querySelectorAll('input[type=file]').forEach(function(i){i.addEventListener('change',function(){Array.prototype.slice.call(i.files).forEach(function(f){PEND=PEND.filter(function(p){return p.name!==f.name});PEND.push(f)});i.value='';genInfo()})});
 $('#genBtn').onclick=function(){if(!PEND.length)return;var l=PEND;PEND=[];genInfo();onFiles(l)};
 
-function persist(){try{localStorage.setItem(KEY,JSON.stringify({plano:S.plano,stk:S.stk,rep:S.rep,cls:S.cls,inv:S.inv,dsc:S.dsc,dc:S.dc,dcs:S.dcs,po:S.po,tr:S.tr,meta:S.meta}))}catch(e){say('Data tidak muat di penyimpanan browser (penuh). Simpan online dengan Login Editor supaya tidak hilang saat halaman ditutup.',1)}}
-function restore(){try{var d=JSON.parse(localStorage.getItem(KEY)||'null');if(d&&d.plano&&d.stk&&d.rep){S.plano=d.plano;S.stk=d.stk;S.rep=d.rep;S.cls=d.cls||null;S.inv=d.inv||null;S.dsc=d.dsc||null;S.dc=d.dc||null;S.dcs=d.dcs||[];S.po=d.po||null;S.tr=d.tr||null;S.meta=d.meta||{};restoreMv();labelFiles();build();say('Memakai data terakhir yang Anda unggah.');$('#dataBox').open=false}}catch(e){}}
+function persist(){try{localStorage.setItem(KEY,JSON.stringify({plano:S.plano,stk:S.stk,rep:S.rep,cls:S.cls,inv:S.inv,dsc:S.dsc,dc:S.dc,dcs:S.dcs,po:S.po,tr:S.tr,pot:S.pot,trt:S.trt,meta:S.meta}))}catch(e){say('Data tidak muat di penyimpanan browser (penuh). Simpan online dengan Login Editor supaya tidak hilang saat halaman ditutup.',1)}}
+function restore(){try{var d=JSON.parse(localStorage.getItem(KEY)||'null');if(d&&d.plano&&d.stk&&d.rep){S.plano=d.plano;S.stk=d.stk;S.rep=d.rep;S.cls=d.cls||null;S.inv=d.inv||null;S.dsc=d.dsc||null;S.dc=d.dc||null;S.dcs=d.dcs||[];S.po=d.po||null;S.tr=d.tr||null;S.pot=d.pot||null;S.trt=d.trt||null;S.meta=d.meta||{};restoreMv();labelFiles();build();say('Memakai data terakhir yang Anda unggah.');$('#dataBox').open=false}}catch(e){}}
 
 /* ---------- hitung ---------- */
 var CATS=[],CLS=[];
@@ -854,7 +854,7 @@ function renderDc(){
   var miss=[!S.sal?'file Penjualan per item':'',!S.stk?'SQV':'',!S.rep?'Replenishment':'',!S.plano?'ITEM PLANO':'',S.sal&&!DC.days?'periode penjualan (isi di tab Moving)':''].filter(Boolean);
   $('#dw').innerHTML=(rows.length>DLIM?'Layar menampilkan '+nf(DLIM)+' item pertama. Unduh Excel untuk semua '+nf(rows.length)+' item.':'')+(miss.length?'<br><b style="color:#b3261e">Belum lengkap: '+miss.join(', ')+'. Rekomendasi bisa meleset sampai data ini dimuat.</b>':'');
   if(miss.length){$('#dmsgc').classList.remove('hide');$('#dmsg').innerHTML='<b style="color:#b3261e">Jual / bulan kosong karena belum ada: '+miss.join(', ')+'.</b> Unggah atau isi lewat kotak Data di atas (periode penjualan diisi di tab Moving), lalu rekomendasi order ikut terhitung.'}else $('#dmsgc').classList.add('hide');
-  $('#dcn').innerHTML='<b>Cara membaca.</b> Daftar item dari file '+esc(S.meta.dc||'stok DC')+' (stok tersedia per DC). <b>Stok toko</b> dari SQV, <b>Jual / bulan</b> dari penjualan dibagi periode, <b>Cukup (hari)</b> = stok toko dibagi rata-rata jual per hari. <b>Capacity plano</b> = total Capacity item di semua lokasi plano. <b>Safety stock (hari)</b> = Capacity plano dibagi rata-rata jual per hari. <b>Min</b> dan <b>Max</b> = Minimum Stock dan Maximum Stock dari file Replenishment (kosong bila bukan repsys). <b>Target</b> = yang terbesar antara Max repsys dan total Capacity plano; kalau keduanya kosong, pakai penjualan satu bulan. Stok toko dianggap <b>kurang</b> bila nol, sudah di bawah Reorder Point, di bawah setengah Capacity plano, atau cukup kurang dari 14 hari. <b>Order</b>: item repsys atau ada di plano, laku, dan stok toko kurang. Qty order = Target dikurangi stok toko dan Outstanding PO/TR, tidak lebih dari total stok DC. <b>Sudah ada PO/TR</b>: stok toko kurang tetapi PO atau TR yang masih jalan sudah menutup Target. <b>Outstanding PO</b> = sisa qty PO berstatus Released yang belum expired. <b>Outstanding TR</b> = qty TR Released dikurangi qty TO yang sudah dikirim. <b>Order, non repsys</b>: laku dan stok kurang tetapi belum masuk repsys, jadi pertimbangkan dimasukkan. <b>Repsys, belum laku</b>: stok kurang tetapi tidak ada penjualan di periode ini. <b>Tidak perlu</b>: tidak repsys, tidak di plano, tidak laku.';
+  $('#dcn').innerHTML='<b>Cara membaca.</b> Daftar item dari file '+esc(S.meta.dc||'stok DC')+' (stok tersedia per DC). <b>Stok toko</b> dari SQV, <b>Jual / bulan</b> dari penjualan dibagi periode, <b>Cukup (hari)</b> = stok toko dibagi rata-rata jual per hari. <b>Capacity plano</b> = total Capacity item di semua lokasi plano. <b>Safety stock (hari)</b> = Capacity plano dibagi rata-rata jual per hari. <b>Min</b> dan <b>Max</b> = Minimum Stock dan Maximum Stock dari file Replenishment (kosong bila bukan repsys). <b>Target</b> = yang terbesar antara Max repsys dan total Capacity plano; kalau keduanya kosong, pakai penjualan satu bulan. Stok toko dianggap <b>kurang</b> bila nol, sudah di bawah Reorder Point, di bawah setengah Capacity plano, atau cukup kurang dari 14 hari. <b>Order</b>: item repsys atau ada di plano, laku, dan stok toko kurang. Qty order = Target dikurangi stok toko dan Outstanding PO/TR, tidak lebih dari total stok DC. <b>Sudah ada PO/TR</b>: stok toko kurang tetapi PO atau TR yang masih jalan sudah menutup Target. <b>Outstanding PO</b> = sisa qty PO Released yang belum expired, hanya PO stock (tanpa NP). <b>Outstanding TR</b> = qty TR Released dikurangi qty TO yang sudah dikirim, hanya TR stock (tanpa NP). Yang terjual dipisah di tab Kontrol OTS. <b>Order, non repsys</b>: laku dan stok kurang tetapi belum masuk repsys, jadi pertimbangkan dimasukkan. <b>Repsys, belum laku</b>: stok kurang tetapi tidak ada penjualan di periode ini. <b>Tidak perlu</b>: tidak repsys, tidak di plano, tidak laku.';
 }
 document.addEventListener('click',function(e){var th=e.target.closest&&e.target.closest('#dth th');if(th){var k=th.getAttribute('data-ds'),nw=Date.now();if(DLC.k===k&&nw-DLC.t<500){DLC={k:'',t:0};if(DH.indexOf(k)<0)DH.push(k);DS=DSB;renderDc();return}DLC={k:k,t:nw};DSB={k:DS.k,d:DS.d};if(DS.k===k)DS.d=-DS.d;else{DS.k=k;DS.d=/^(k|d|c|cl|t)$/.test(k)?1:-1}renderDc();return}var b=e.target.closest&&e.target.closest('#dkpi button[data-ds]');if(b){DF.s=[b.getAttribute('data-ds')];renderDc()}});
 document.addEventListener('change',function(e){var t=e.target;if(t.getAttribute&&t.getAttribute('data-mf')){var k=t.getAttribute('data-mf'),i=DF[k].indexOf(t.value);if(t.checked&&i<0)DF[k].push(t.value);if(!t.checked&&i>=0)DF[k].splice(i,1);renderDc()}});
@@ -977,17 +977,17 @@ var OF={c:[],cl:[],s:[],r:[],p:[],q:''},OS={k:'',d:1},OC=null,OLIM=500;
 function oCalc(){
   if(!S.po&&!S.tr)return null;
   var days=S.sal?mvDays():0,pn={},pc={},pcnt={},ks={};
-  Object.keys(S.po||{}).forEach(function(k){ks[k]=1});Object.keys(S.tr||{}).forEach(function(k){ks[k]=1});
+  Object.keys(S.po||{}).forEach(function(k){ks[k]=1});Object.keys(S.tr||{}).forEach(function(k){ks[k]=1});Object.keys(S.pot||{}).forEach(function(k){ks[k]=1});Object.keys(S.trt||{}).forEach(function(k){ks[k]=1});
   (S.plano||[]).forEach(function(x){if(x.k){if(x.d&&!pn[x.k])pn[x.k]=x.d;if(x.c&&!pc[x.k])pc[x.k]=x.c;pcnt[x.k]=1}});
   var dn=function(i){return S.dict&&i>=0&&S.dict[i]!==undefined?S.dict[i]:''},kc={};(S.dict||[]).forEach(function(v){if(v)kc[String(v).toUpperCase()]=1});(S.plano||[]).forEach(function(x){if(x.c)kc[x.c.toUpperCase()]=1});
   var fromD=function(d){var p=String(d||'').toUpperCase().split(',');for(var j=p.length-1;j>=0;j--){var t=p[j].trim();if(kc[t])return t}return ''};
   var items=Object.keys(ks).map(function(k){
-    var rp=S.rep&&S.rep[k],rs=!!rp,mx=rp?(rp[1]||0):0,mn=rp?(rp[0]||0):0,po=S.po&&S.po[k]||0,tr=S.tr&&S.tr[k]||0,ots=po+tr,st=S.stk&&S.stk[k]>0?S.stk[k]:0,
+    var rp=S.rep&&S.rep[k],rs=!!rp,mx=rp?(rp[1]||0):0,mn=rp?(rp[0]||0):0,po=S.po&&S.po[k]||0,tr=S.tr&&S.tr[k]||0,pot=S.pot&&S.pot[k]||0,trt=S.trt&&S.trt[k]||0,ots=po+tr,st=S.stk&&S.stk[k]>0?S.stk[k]:0,
       sl=S.sal&&S.sal[k],sv=S.sv&&S.sv[k],q=sl?sl[0]:0,dcE=S.dc&&S.dc[k],dsc=(S.dsc&&S.dsc[k])||(S.nm&&S.nm[k])||pn[k]||(dcE?dcE[0]:'')||'';
     var cat=(sv?dn(sv[1]):'')||pc[k]||(dcE?dcE[1]:'')||fromD(dsc)||'(tanpa info kategori)';
     var tot=st+ots,over=rs?Math.max(0,tot-mx):0,t=!rs?'non':(tot>mx?'lebih':'ok'),cut=t==='lebih'?Math.min(ots,over):0;
     var mo=days&&q>0?q/days*30:0,cv=days&&q>0?tot/(q/days):null;
-    return {k:k,d:dsc,c:String(cat).toUpperCase(),cl:S.cls?(S.cls[k]||'-'):'',rs:rs,pl:pcnt[k]?1:0,st:st,po:po,tr:tr,ots:ots,mx:rs?mx:null,mn:rs?mn:null,tot:tot,over:over,cut:cut,t:t,mo:mo,q:q,cv:cv}});
+    return {k:k,d:dsc,c:String(cat).toUpperCase(),cl:S.cls?(S.cls[k]||'-'):'',rs:rs,pl:pcnt[k]?1:0,st:st,po:po,tr:tr,pot:pot,trt:trt,ots:ots,mx:rs?mx:null,mn:rs?mn:null,tot:tot,over:over,cut:cut,t:t,mo:mo,q:q,cv:cv}});
   return {items:items,days:days}
 }
 function oFiltered(){
@@ -997,7 +997,7 @@ function oFiltered(){
   return r.sort(function(a,b){if(OS.k){var x=a[OS.k],y=b[OS.k];if(OS.k==='t'){x=ord[a.t];y=ord[b.t]}if(x===null)x=-1;if(y===null)y=-1;if(typeof x==='boolean'){x=+x;y=+y}return (typeof x==='string'?x.localeCompare(y):x-y)*OS.d}
     return (ord[a.t]-ord[b.t])||(b.cut-a.cut)||(b.ots-a.ots)})
 }
-function oCols(){return [['k','Item No'],['d','Deskripsi'],['c','Kategori'],['cl','Class'],['rs','Repsys'],['pl','Plano'],['t','Status'],['st','Stok toko'],['po','OTS PO'],['tr','OTS TR'],['ots','Total OTS'],['tot','Stok + OTS'],['mx','Max repsys'],['over','Lebih dari Max'],['cut','OTS bisa dikurangi'],['mo','Jual / bulan'],['cv','Cukup + OTS (hari)']]}
+function oCols(){return [['k','Item No'],['d','Deskripsi'],['c','Kategori'],['cl','Class'],['rs','Repsys'],['pl','Plano'],['t','Status'],['st','Stok toko'],['po','OTS PO'],['tr','OTS TR'],['ots','Total OTS stock'],['pot','PO terjual'],['trt','TR terjual'],['tot','Stok + OTS'],['mx','Max repsys'],['over','Lebih dari Max'],['cut','OTS bisa dikurangi'],['mo','Jual / bulan'],['cv','Cukup + OTS (hari)']]}
 function oMs(id,lbl,key,opts){
   var el=$('#'+id),sel=OF[key],o=el.open;
   el.innerHTML='<summary>'+lbl+(sel.length?' <b>('+sel.length+')</b>':'')+'</summary><div class="msb">'+opts.map(function(x){return '<label><input type="checkbox" data-of="'+key+'" value="'+esc(x[0])+'"'+(sel.indexOf(x[0])>=0?' checked':'')+'> '+esc(x[1])+'</label>'}).join('')+(sel.length?'<button type="button" data-oclr="'+key+'">Hapus pilihan</button>':'')+'</div>';
@@ -1012,6 +1012,8 @@ function oCell(i,c){switch(c){
   case 'st':return '<td class="n">'+(S.stk?nf(i.st):'–')+'</td>';
   case 'po':return '<td class="n">'+(S.po?(i.po?nf(i.po):'0'):'–')+'</td>';
   case 'tr':return '<td class="n">'+(S.tr?(i.tr?nf(i.tr):'0'):'–')+'</td>';
+  case 'pot':return '<td class="n" style="color:var(--mut)">'+(S.pot?(i.pot?nf(i.pot):'0'):'–')+'</td>';
+  case 'trt':return '<td class="n" style="color:var(--mut)">'+(S.trt?(i.trt?nf(i.trt):'0'):'–')+'</td>';
   case 'ots':case 'tot':return '<td class="n"><b>'+nf(i[c])+'</b></td>';
   case 'mx':return '<td class="n">'+(i.mx===null?'–':nf(i.mx))+'</td>';
   case 'over':return '<td class="n">'+(i.t==='lebih'?'<b style="color:#b3261e">'+nf(i.over)+'</b>':'–')+'</td>';
@@ -1022,22 +1024,22 @@ function renderOts(){
   OC=oCalc();
   if(!OC){['#okpi','#ocard'].forEach(function(x){$(x).classList.add('hide')});$('#omsgc').classList.remove('hide');$('#omsg').innerHTML='<b>File Outstanding PO atau TR belum dimuat.</b> Unggah file Outstanding PO dan/atau Outstanding TR (dan Replenishment untuk Max) lewat kotak Data di atas, lalu klik Generate.';return}
   $('#omsgc').classList.add('hide');$('#okpi').classList.remove('hide');$('#ocard').classList.remove('hide');
-  var g={lebih:0,ok:0,non:0},ex=0,cut=0,po=0,tr=0;OC.items.forEach(function(i){g[i.t]++;ex+=i.over;cut+=i.cut;po+=i.po;tr+=i.tr});
+  var g={lebih:0,ok:0,non:0},ex=0,cut=0,po=0,tr=0,pt=0,tt=0;OC.items.forEach(function(i){g[i.t]++;ex+=i.over;cut+=i.cut;po+=i.po;tr+=i.tr;pt+=i.pot;tt+=i.trt});
   var kb=function(l,n,s,c,y){return '<button type="button" data-os="'+c+'"><span class="l">'+l+'</span><span class="n'+(y?' y':'')+'">'+nf(n)+'</span><span class="s">'+s+'</span></button>'};
-  $('#okpi').innerHTML=kb('Item ber-OTS',OC.items.length,'OTS PO '+nf(po)+' · OTS TR '+nf(tr),'all')+kb(OST.lebih,g.lebih,'OTS bisa dikurangi '+nf(cut)+' qty','lebih',1)+kb(OST.ok,g.ok,'stok + OTS tidak lebih dari Max','ok')+kb(OST.non,g.non,'tidak ada Max untuk dibandingkan','non');
+  $('#okpi').innerHTML=kb('Item ber-OTS',OC.items.length,'stock: PO '+nf(po)+' · TR '+nf(tr)+' | terjual: PO '+nf(pt)+' · TR '+nf(tt),'all')+kb(OST.lebih,g.lebih,'OTS bisa dikurangi '+nf(cut)+' qty','lebih',1)+kb(OST.ok,g.ok,'stok + OTS tidak lebih dari Max','ok')+kb(OST.non,g.non,'tidak ada Max untuk dibandingkan','non');
   var cs=[],cls=[];OC.items.forEach(function(i){if(cs.indexOf(i.c)<0)cs.push(i.c);var v=i.cl==='-'?'Non Class':i.cl;if(v&&cls.indexOf(v)<0)cls.push(v)});cs.sort();cls.sort();
   oMs('ocat','Kategori','c',cs.map(function(c){return [c,c]}));oMs('ocl','Class','cl',cls.map(function(c){return [c,c]}));
   oMs('ost','Status','s',Object.keys(OST).map(function(k){return [k,OST[k]]}));
   oMs('orp','Repsys','r',[['Repsys','Repsys'],['Non Repsys','Non Repsys']]);oMs('opl','Plano','p',[['Plano','Plano'],['Non Plano','Non Plano']]);
   $('#oq').value=OF.q;var C=oCols();
-  $('#oth').innerHTML=C.map(function(c){var n=/^(st|po|tr|ots|tot|mx|over|cut|mo|cv)$/.test(c[0]);return '<th data-os="'+c[0]+'" style="user-select:none'+(n?';text-align:right':'')+'">'+c[1]+(OS.k===c[0]?(OS.d<0?' ▼':' ▲'):'')+'</th>'}).join('');
+  $('#oth').innerHTML=C.map(function(c){var n=/^(st|po|tr|pot|trt|ots|tot|mx|over|cut|mo|cv)$/.test(c[0]);return '<th data-os="'+c[0]+'" style="user-select:none'+(n?';text-align:right':'')+'">'+c[1]+(OS.k===c[0]?(OS.d<0?' ▼':' ▲'):'')+'</th>'}).join('');
   var rows=oFiltered(),h='';
   rows.slice(0,OLIM).forEach(function(i){h+='<tr>'+C.map(function(c){return oCell(i,c[0])}).join('')+'</tr>'});
   $('#obd').innerHTML=h||'<tr><td colspan="'+C.length+'" style="padding:18px;color:var(--mut)">Tidak ada item.</td></tr>';
   $('#ocount').textContent='· '+nf(rows.length)+' item';
   var miss=[!S.po?'file Outstanding PO':'',!S.tr?'file Outstanding TR':'',!S.rep?'Replenishment (Max)':'',!S.stk?'SQV (stok toko)':'',!S.sal?'file Penjualan per item':'',S.sal&&!OC.days?'periode penjualan (isi di tab Moving)':''].filter(Boolean);
   $('#ow').innerHTML=(rows.length>OLIM?'Layar menampilkan '+nf(OLIM)+' item pertama. Unduh Excel untuk semua '+nf(rows.length)+' item.':'')+(miss.length?'<br>Belum dimuat: '+miss.join(', ')+'. Kolom terkait menampilkan "–".':'');
-  $('#on').innerHTML='<b>Cara membaca.</b> Daftar item yang punya OTS PO (sisa PO Released yang belum expired) dan/atau OTS TR (qty TR Released dikurangi TO yang sudah dikirim). <b>Stok + OTS</b> = stok toko + OTS PO + OTS TR. <b>Max repsys</b> dari file Replenishment. <b>Melebihi Max</b>: Stok + OTS lebih besar dari Max repsys. <b>Lebih dari Max</b> = Stok + OTS dikurangi Max. <b>OTS bisa dikurangi</b> = bagian kelebihan itu yang berasal dari OTS (paling besar sebesar total OTS), yaitu qty PO atau TR yang bisa dibatalkan atau dikurangi. <b>Sesuai Max</b>: Stok + OTS tidak melebihi Max. <b>Non Repsys</b>: tidak ada Max untuk dibandingkan. <b>Plano</b> berarti item ada di file Item Plano.';
+  $('#on').innerHTML='<b>Cara membaca.</b> Daftar item yang punya OTS PO (sisa PO Released yang belum expired) dan/atau OTS TR (qty TR Released dikurangi TO yang sudah dikirim). <b>OTS PO dan OTS TR hanya yang untuk stock</b> (tidak terhubung ke Nota Penjualan). PO atau TR yang terhubung ke Nota Penjualan dianggap <b>terjual</b> (untuk pesanan customer), dipisah di kolom <b>PO terjual</b> dan <b>TR terjual</b>, dan tidak dihitung ke Stok + OTS maupun ke tindakan di tab lain. <b>Stok + OTS</b> = stok toko + OTS PO stock + OTS TR stock. <b>Max repsys</b> dari file Replenishment. <b>Melebihi Max</b>: Stok + OTS lebih besar dari Max repsys. <b>Lebih dari Max</b> = Stok + OTS dikurangi Max. <b>OTS bisa dikurangi</b> = bagian kelebihan itu yang berasal dari OTS (paling besar sebesar total OTS), yaitu qty PO atau TR yang bisa dibatalkan atau dikurangi. <b>Sesuai Max</b>: Stok + OTS tidak melebihi Max. <b>Non Repsys</b>: tidak ada Max untuk dibandingkan. <b>Plano</b> berarti item ada di file Item Plano.';
 }
 document.addEventListener('click',function(e){var th=e.target.closest&&e.target.closest('#oth th');if(th){var k=th.getAttribute('data-os');if(OS.k===k)OS.d=-OS.d;else{OS.k=k;OS.d=/^(k|d|c|cl|rs|pl|t)$/.test(k)?1:-1}renderOts();return}
   var b=e.target.closest&&e.target.closest('#okpi button[data-os]');if(b){var v=b.getAttribute('data-os');OF.s=v==='all'?[]:[v];renderOts();return}
@@ -1047,8 +1049,8 @@ var _oq;$('#oq').oninput=function(){var v=this.value;clearTimeout(_oq);_oq=setTi
 $('#obx').onclick=function(){
   if(!OC)return;var T=function(v,st){return {v:v,s:st}},rows=oFiltered(),C=oCols();
   var dr=[C.map(function(c){return T(c[1],1)})];
-  rows.forEach(function(i){dr.push([T(i.k,2),T(i.d,2),T(i.c,2),T(S.cls?(i.cl==='-'?'Non Class':i.cl):'',2),T(S.rep?(i.rs?'Repsys':'Non Repsys'):'',2),T(S.plano?(i.pl?'Plano':'Non Plano'):'',2),T(OST[i.t],2),T(i.st,3),S.po?T(i.po,3):'',S.tr?T(i.tr,3):'',T(i.ots,3),T(i.tot,3),i.mx===null?'':T(i.mx,3),i.t==='lebih'?T(i.over,3):'',i.t==='lebih'?T(i.cut,3):'',S.sal&&OC.days?Math.round(i.mo*10)/10:'',i.cv===null?'':T(Math.round(i.cv),3)])});
-  xsave(xbuild([{name:'Kontrol OTS PO TR',w:[13,46,24,10,12,12,22,11,11,11,11,12,12,14,17,12,17],fz:1,af:'A1:'+xcol(C.length)+dr.length,rows:dr,h:{0:30}}]),'Inventory_Kontrol_OTS_PO_TR_'+today()+'.xlsx');
+  rows.forEach(function(i){dr.push([T(i.k,2),T(i.d,2),T(i.c,2),T(S.cls?(i.cl==='-'?'Non Class':i.cl):'',2),T(S.rep?(i.rs?'Repsys':'Non Repsys'):'',2),T(S.plano?(i.pl?'Plano':'Non Plano'):'',2),T(OST[i.t],2),T(i.st,3),S.po?T(i.po,3):'',S.tr?T(i.tr,3):'',T(i.ots,3),S.pot?T(i.pot,3):'',S.trt?T(i.trt,3):'',T(i.tot,3),i.mx===null?'':T(i.mx,3),i.t==='lebih'?T(i.over,3):'',i.t==='lebih'?T(i.cut,3):'',S.sal&&OC.days?Math.round(i.mo*10)/10:'',i.cv===null?'':T(Math.round(i.cv),3)])});
+  xsave(xbuild([{name:'Kontrol OTS PO TR',w:[13,46,24,10,12,12,22,11,11,11,13,12,12,12,12,14,17,12,17],fz:1,af:'A1:'+xcol(C.length)+dr.length,rows:dr,h:{0:30}}]),'Inventory_Kontrol_OTS_PO_TR_'+today()+'.xlsx');
   say('✔ Excel diunduh ('+nf(rows.length)+' item sesuai filter).');
 };
 /* ---------- Excel berstyle ---------- */
@@ -1233,7 +1235,7 @@ async function shLoad(){
     if(!r.ok)throw new Error('Data tidak dapat dimuat ('+r.status+').');
     var sh=await r.json(),d=sh&&sh.data;
     if(!d||!Array.isArray(d.plano)||!d.plano.length||!d.stk||!d.rep)return;
-    S.plano=d.plano;S.stk=d.stk;S.rep=d.rep;S.cls=d.cls||null;S.inv=d.inv||null;S.dsc=d.dsc||null;S.dc=d.dc||null;S.dcs=d.dcs||[];S.po=d.po||null;S.tr=d.tr||null;var ml=S.meta;applyCage(d);if(d.sal){S.sal=d.sal;S.nm=d.nm||{};S.sv=d.sv||{};S.dict=d.dict||[];DI=null}S.meta=d.meta||{};['sal','salFrom','salTo'].forEach(function(k){if(!S.meta[k]&&ml[k])S.meta[k]=ml[k]});if(d.sal||d.cage)persistMv();S.meta.savedAt=sh.savedAt;S.meta.by=sh.by||'';
+    S.plano=d.plano;S.stk=d.stk;S.rep=d.rep;S.cls=d.cls||null;S.inv=d.inv||null;S.dsc=d.dsc||null;S.dc=d.dc||null;S.dcs=d.dcs||[];S.po=d.po||null;S.tr=d.tr||null;S.pot=d.pot||null;S.trt=d.trt||null;var ml=S.meta;applyCage(d);if(d.sal){S.sal=d.sal;S.nm=d.nm||{};S.sv=d.sv||{};S.dict=d.dict||[];DI=null}S.meta=d.meta||{};['sal','salFrom','salTo'].forEach(function(k){if(!S.meta[k]&&ml[k])S.meta[k]=ml[k]});if(d.sal||d.cage)persistMv();S.meta.savedAt=sh.savedAt;S.meta.by=sh.by||'';
     labelFiles();build();persist();$('#dataBox').open=false;
     say('Data terakhir disimpan: '+shStamp(sh.savedAt)+(sh.by?' oleh '+String(sh.by).split('@')[0]:'')+'. Semua pengguna melihat data ini.');
   }catch(e){say((e&&e.message)||'Data online belum tersedia.',1)}
@@ -1243,7 +1245,7 @@ function shSave(){
   if(typeof CompressionStream==='undefined'){say('Browser ini belum mendukung simpan online. Gunakan Chrome atau Edge terbaru.',1);return}
   var run=function(tok){
     say('Menyimpan data untuk semua pengguna...');
-    var stream=new Blob([JSON.stringify({plano:S.plano,stk:S.stk,rep:S.rep,cls:S.cls,inv:S.inv,dsc:S.dsc,dc:S.dc,dcs:S.dcs,po:S.po,tr:S.tr,sal:S.sal,nw:S.nw,cage:S.cage,nm:S.nm,sv:S.sv,dict:S.dict,meta:S.meta,uploadedAt:new Date().toISOString()})]).stream().pipeThrough(new CompressionStream('gzip'));
+    var stream=new Blob([JSON.stringify({plano:S.plano,stk:S.stk,rep:S.rep,cls:S.cls,inv:S.inv,dsc:S.dsc,dc:S.dc,dcs:S.dcs,po:S.po,tr:S.tr,pot:S.pot,trt:S.trt,sal:S.sal,nw:S.nw,cage:S.cage,nm:S.nm,sv:S.sv,dict:S.dict,meta:S.meta,uploadedAt:new Date().toISOString()})]).stream().pipeThrough(new CompressionStream('gzip'));
     new Response(stream).arrayBuffer().then(function(body){return fetch(SHURL,{method:'PUT',headers:{'Content-Type':'application/gzip','Authorization':'Bearer '+tok},body:body})})
      .then(function(r){return r.json().catch(function(){return {}}).then(function(j){if(!r.ok)throw new Error(j.error||('Simpan gagal ('+r.status+').'));say('✔ Data tersimpan untuk semua pengguna ('+shStamp(j.savedAt)+').')})})
      .catch(function(e){say((e&&e.message)||'Data gagal disimpan.',1)});
