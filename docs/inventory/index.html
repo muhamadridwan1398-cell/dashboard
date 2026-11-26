@@ -332,7 +332,7 @@ table.dd td.n{text-align:right}
 
 <script>
 var KEY='qbig_inv_v1',H2C_URL='https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
-var S={po:null,tr:null,pot:null,trt:null,dc:null,dcs:[],cage:null,nw:null,plano:null,stk:null,rep:null,cls:null,inv:null,dsc:null,sal:null,nm:{},sv:{},dict:[],meta:{}},R=[],F={c:'',l:'',t:'',s:'',q:''},LIM=600;
+var S={po:null,tr:null,pot:null,trt:null,pod:null,trd:null,dc:null,dcs:[],cage:null,nw:null,plano:null,stk:null,rep:null,cls:null,inv:null,dsc:null,sal:null,nm:{},sv:{},dict:[],meta:{}},R=[],F={c:'',l:'',t:'',s:'',q:''},LIM=600;
 function $(s){return document.querySelector(s)}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 function nf(n){return n.toLocaleString('id-ID')}
@@ -405,16 +405,16 @@ function dcFrom(r){
   S.dc=m;S.dcs=sites;
 }
 function trFrom(r){
-  var g={},m={},ms={},n=0,ns=0;
+  var g={},m={},ms={},n=0,ns=0,dd={};
   r.rows.forEach(function(o){if(String(o['Status']||'').trim().toUpperCase()!=='RELEASED')return;var k=key(o['Item Code']),tr=String(o['Original TR No']||'').trim();if(!k||!tr)return;
-    var id=tr+'|'+k,e=g[id]||(g[id]={k:k,q:num(o['TR Quantity']),to:{},sold:false}),tn=String(o['TO No']||'').trim();if(tn)e.to[tn+'|'+String(o['GI No']||'')]=num(o['TO Quantity']);if(String(o['Transfer To NP No']||'').trim())e.sold=true});
-  Object.keys(g).forEach(function(id){var e=g[id],t=0;Object.keys(e.to).forEach(function(x){t+=e.to[x]});var o=Math.max(0,e.q-t);if(o>0){if(e.sold){ms[e.k]=(ms[e.k]||0)+o;ns++}else{m[e.k]=(m[e.k]||0)+o;n++}}});
-  S.tr=m;S.trt=ms;S.meta.trN=n;S.meta.trtN=ns;
+    var id=tr+'|'+k,e=g[id]||(g[id]={k:k,tr:tr,q:num(o['TR Quantity']),to:{},sold:false,dt:parseDate(o['Sent Request Date']),ds:String(o['Transfer To Name']||'').trim(),np:''}),tn=String(o['TO No']||'').trim();if(tn)e.to[tn+'|'+String(o['GI No']||'')]=num(o['TO Quantity']);if(String(o['Transfer To NP No']||'').trim()){e.sold=true;e.np=String(o['Transfer To NP No']).trim()}});
+  Object.keys(g).forEach(function(id){var e=g[id],t=0;Object.keys(e.to).forEach(function(x){t+=e.to[x]});var o=Math.max(0,e.q-t);if(o>0){(dd[e.k]||(dd[e.k]=[])).push([e.tr,e.dt,e.ds,e.np,e.q,t,o]);if(e.sold){ms[e.k]=(ms[e.k]||0)+o;ns++}else{m[e.k]=(m[e.k]||0)+o;n++}}});
+  S.tr=m;S.trt=ms;S.trd=dd;S.meta.trN=n;S.meta.trtN=ns;
 }
 function poFrom(r){
-  var m={},ms={},n=0,ns=0;
-  r.rows.forEach(function(o){if(String(o['Status']||'').trim().toUpperCase()!=='RELEASED'||/^y/i.test(String(o['Expired']||'').trim()))return;var k=key(o['Item No']),q=num(o['Outstanding Quantity']);if(!k||q<=0)return;if(String(o['NP No']||'').trim()){ms[k]=(ms[k]||0)+q;ns++}else{m[k]=(m[k]||0)+q;n++}});
-  S.po=m;S.pot=ms;S.meta.poN=n;S.meta.poNs=ns;
+  var m={},ms={},n=0,ns=0,dd={};
+  r.rows.forEach(function(o){if(String(o['Status']||'').trim().toUpperCase()!=='RELEASED'||/^y/i.test(String(o['Expired']||'').trim()))return;var k=key(o['Item No']),q=num(o['Outstanding Quantity']);if(!k||q<=0)return;(dd[k]||(dd[k]=[])).push([String(o['PO No']||'').trim(),parseDate(o['Order Date']),String(o['Buy from Vendor Name']||'').trim(),String(o['NP No']||'').trim(),num(o['Ordered Qty']),num(o['Received Qty']),q]);if(String(o['NP No']||'').trim()){ms[k]=(ms[k]||0)+q;ns++}else{m[k]=(m[k]||0)+q;n++}});
+  S.po=m;S.pot=ms;S.pod=dd;S.meta.poN=n;S.meta.poNs=ns;
 }
 function labelFiles(){try{dcDot();if(!$('#tab-dc').classList.contains('hide'))renderDc();if(!$('#tab-min').classList.contains('hide'))renderMn();if(!$('#tab-ots').classList.contains('hide'))renderOts()}catch(e){}
   setTimeout(function(){try{dataSummary()}catch(e){}},0);
@@ -436,8 +436,8 @@ function genInfo(){var n=PEND.length;$('#genBtn').disabled=!n;$('#genInfo').inne
 document.querySelectorAll('input[type=file]').forEach(function(i){i.addEventListener('change',function(){Array.prototype.slice.call(i.files).forEach(function(f){PEND=PEND.filter(function(p){return p.name!==f.name});PEND.push(f)});i.value='';genInfo()})});
 $('#genBtn').onclick=function(){if(!PEND.length)return;var l=PEND;PEND=[];genInfo();onFiles(l)};
 
-function persist(){try{localStorage.setItem(KEY,JSON.stringify({plano:S.plano,stk:S.stk,rep:S.rep,cls:S.cls,inv:S.inv,dsc:S.dsc,dc:S.dc,dcs:S.dcs,po:S.po,tr:S.tr,pot:S.pot,trt:S.trt,meta:S.meta}))}catch(e){say('Data tidak muat di penyimpanan browser (penuh). Simpan online dengan Login Editor supaya tidak hilang saat halaman ditutup.',1)}}
-function restore(){try{var d=JSON.parse(localStorage.getItem(KEY)||'null');if(d&&d.plano&&d.stk&&d.rep){S.plano=d.plano;S.stk=d.stk;S.rep=d.rep;S.cls=d.cls||null;S.inv=d.inv||null;S.dsc=d.dsc||null;S.dc=d.dc||null;S.dcs=d.dcs||[];S.po=d.po||null;S.tr=d.tr||null;S.pot=d.pot||null;S.trt=d.trt||null;S.meta=d.meta||{};restoreMv();labelFiles();build();say('Memakai data terakhir yang Anda unggah.');$('#dataBox').open=false}}catch(e){}}
+function persist(){try{localStorage.setItem(KEY,JSON.stringify({plano:S.plano,stk:S.stk,rep:S.rep,cls:S.cls,inv:S.inv,dsc:S.dsc,dc:S.dc,dcs:S.dcs,po:S.po,tr:S.tr,pot:S.pot,trt:S.trt,pod:S.pod,trd:S.trd,meta:S.meta}))}catch(e){say('Data tidak muat di penyimpanan browser (penuh). Simpan online dengan Login Editor supaya tidak hilang saat halaman ditutup.',1)}}
+function restore(){try{var d=JSON.parse(localStorage.getItem(KEY)||'null');if(d&&d.plano&&d.stk&&d.rep){S.plano=d.plano;S.stk=d.stk;S.rep=d.rep;S.cls=d.cls||null;S.inv=d.inv||null;S.dsc=d.dsc||null;S.dc=d.dc||null;S.dcs=d.dcs||[];S.po=d.po||null;S.tr=d.tr||null;S.pot=d.pot||null;S.trt=d.trt||null;S.pod=d.pod||null;S.trd=d.trd||null;S.meta=d.meta||{};restoreMv();labelFiles();build();say('Memakai data terakhir yang Anda unggah.');$('#dataBox').open=false}}catch(e){}}
 
 /* ---------- hitung ---------- */
 var CATS=[],CLS=[];
@@ -973,6 +973,14 @@ $('#nbx').onclick=function(){if(!NC)return;var rows=nFiltered();xsave(nBuild(row
 
 /* ---------- kontrol OTS PO dan TR terhadap Max repsys ---------- */
 var OST={lebih:'Melebihi Max',ok:'Sesuai Max',non:'Non Repsys (tanpa Max)'},OCL={lebih:'#b3261e',ok:'#1e7a4a',non:'#7a5b00'};
+var OX={};function oDetail(k){var th='<th style="text-align:left;padding:4px 10px">',tn='<th style="text-align:right;padding:4px 10px">',td='<td style="padding:4px 10px">',tr_='<td class="n" style="padding:4px 10px">',o='';
+  var P=(S.pod&&S.pod[k])||[],T=(S.trd&&S.trd[k])||[];
+  var tag=function(np){return np?'<span style="color:#7a5b00">Terjual (NP '+esc(np)+')</span>':'Stock'};
+  o+='<div style="font-weight:600;margin-bottom:4px">Outstanding PO'+(S.pod?'':' <span style="font-weight:400;color:var(--mut)">(upload ulang file PO untuk melihat detail)</span>')+'</div>';
+  if(P.length){o+='<table class="dd" style="margin-bottom:10px"><thead><tr>'+th+'No PO</th>'+th+'Tgl order</th>'+th+'Vendor</th>'+th+'Jenis</th>'+tn+'Qty base (ordered)</th>'+tn+'Sudah diterima</th>'+tn+'Sisa OTS</th></tr></thead><tbody>';P.forEach(function(p){o+='<tr>'+td+esc(p[0])+'</td>'+td+esc(p[1])+'</td>'+td+esc(p[2])+'</td>'+td+tag(p[3])+'</td>'+tr_+nf(p[4])+'</td>'+tr_+nf(p[5])+'</td>'+tr_+'<b>'+nf(p[6])+'</b></td></tr>'});o+='</tbody></table>'}else if(S.pod)o+='<div style="color:var(--mut);margin-bottom:10px">Tidak ada PO outstanding.</div>';
+  o+='<div style="font-weight:600;margin-bottom:4px">Outstanding TR'+(S.trd?'':' <span style="font-weight:400;color:var(--mut)">(upload ulang file TR untuk melihat detail)</span>')+'</div>';
+  if(T.length){o+='<table class="dd"><thead><tr>'+th+'No TR</th>'+th+'Tgl request</th>'+th+'Tujuan</th>'+th+'Jenis</th>'+tn+'Qty base (TR)</th>'+tn+'Sudah dikirim (TO)</th>'+tn+'Sisa OTS</th></tr></thead><tbody>';T.forEach(function(p){o+='<tr>'+td+esc(p[0])+'</td>'+td+esc(p[1])+'</td>'+td+esc(p[2])+'</td>'+td+tag(p[3])+'</td>'+tr_+nf(p[4])+'</td>'+tr_+nf(p[5])+'</td>'+tr_+'<b>'+nf(p[6])+'</b></td></tr>'});o+='</tbody></table>'}else if(S.trd)o+='<div style="color:var(--mut)">Tidak ada TR outstanding.</div>';
+  return o}
 var OF={c:[],cl:[],s:[],r:[],p:[],q:''},OS={k:'',d:1},OC=null,OLIM=500;
 function oCalc(){
   if(!S.po&&!S.tr)return null;
@@ -1034,7 +1042,7 @@ function renderOts(){
   $('#oq').value=OF.q;var C=oCols();
   $('#oth').innerHTML=C.map(function(c){var n=/^(st|po|tr|pot|trt|ots|tot|mx|over|cut|mo|cv)$/.test(c[0]);return '<th data-os="'+c[0]+'" style="user-select:none'+(n?';text-align:right':'')+'">'+c[1]+(OS.k===c[0]?(OS.d<0?' ▼':' ▲'):'')+'</th>'}).join('');
   var rows=oFiltered(),h='';
-  rows.slice(0,OLIM).forEach(function(i){h+='<tr>'+C.map(function(c){return oCell(i,c[0])}).join('')+'</tr>'});
+  rows.slice(0,OLIM).forEach(function(i){var op=!!OX[i.k];h+='<tr data-ok="'+esc(i.k)+'" style="cursor:pointer" title="Klik untuk lihat detail PO / TR"'+(op?' class="cc"':'')+'>'+C.map(function(c,x){var t=oCell(i,c[0]);return x===0?t.replace('<td>','<td>'+(op?'▾ ':'▸ ')):t}).join('')+'</tr>';if(op)h+='<tr class="ci"><td colspan="'+C.length+'" style="white-space:normal;padding:10px 14px">'+oDetail(i.k)+'</td></tr>'});
   $('#obd').innerHTML=h||'<tr><td colspan="'+C.length+'" style="padding:18px;color:var(--mut)">Tidak ada item.</td></tr>';
   $('#ocount').textContent='· '+nf(rows.length)+' item';
   var miss=[!S.po?'file Outstanding PO':'',!S.tr?'file Outstanding TR':'',!S.rep?'Replenishment (Max)':'',!S.stk?'SQV (stok toko)':'',!S.sal?'file Penjualan per item':'',S.sal&&!OC.days?'periode penjualan (isi di tab Moving)':''].filter(Boolean);
@@ -1042,6 +1050,7 @@ function renderOts(){
   $('#on').innerHTML='<b>Cara membaca.</b> Daftar item yang punya OTS PO (sisa PO Released yang belum expired) dan/atau OTS TR (qty TR Released dikurangi TO yang sudah dikirim). <b>OTS PO dan OTS TR hanya yang untuk stock</b> (tidak terhubung ke Nota Penjualan). PO atau TR yang terhubung ke Nota Penjualan dianggap <b>terjual</b> (untuk pesanan customer), dipisah di kolom <b>PO terjual</b> dan <b>TR terjual</b>, dan tidak dihitung ke Stok + OTS maupun ke tindakan di tab lain. <b>Stok + OTS</b> = stok toko + OTS PO stock + OTS TR stock. <b>Max repsys</b> dari file Replenishment. <b>Melebihi Max</b>: Stok + OTS lebih besar dari Max repsys. <b>Lebih dari Max</b> = Stok + OTS dikurangi Max. <b>OTS bisa dikurangi</b> = bagian kelebihan itu yang berasal dari OTS (paling besar sebesar total OTS), yaitu qty PO atau TR yang bisa dibatalkan atau dikurangi. <b>Sesuai Max</b>: Stok + OTS tidak melebihi Max. <b>Non Repsys</b>: tidak ada Max untuk dibandingkan. <b>Plano</b> berarti item ada di file Item Plano.';
 }
 document.addEventListener('click',function(e){var th=e.target.closest&&e.target.closest('#oth th');if(th){var k=th.getAttribute('data-os');if(OS.k===k)OS.d=-OS.d;else{OS.k=k;OS.d=/^(k|d|c|cl|rs|pl|t)$/.test(k)?1:-1}renderOts();return}
+  var orw=e.target.closest&&e.target.closest('#obd tr[data-ok]');if(orw&&!e.target.closest('a,button,input')){var ok=orw.getAttribute('data-ok');if(OX[ok])delete OX[ok];else OX[ok]=1;renderOts();return}
   var b=e.target.closest&&e.target.closest('#okpi button[data-os]');if(b){var v=b.getAttribute('data-os');OF.s=v==='all'?[]:[v];renderOts();return}
   var cl=e.target.closest&&e.target.closest('[data-oclr]');if(cl){OF[cl.getAttribute('data-oclr')]=[];renderOts()}});
 document.addEventListener('change',function(e){var t=e.target;if(t.getAttribute&&t.getAttribute('data-of')){var k=t.getAttribute('data-of'),i=OF[k].indexOf(t.value);if(t.checked&&i<0)OF[k].push(t.value);if(!t.checked&&i>=0)OF[k].splice(i,1);renderOts()}});
@@ -1235,7 +1244,7 @@ async function shLoad(){
     if(!r.ok)throw new Error('Data tidak dapat dimuat ('+r.status+').');
     var sh=await r.json(),d=sh&&sh.data;
     if(!d||!Array.isArray(d.plano)||!d.plano.length||!d.stk||!d.rep)return;
-    S.plano=d.plano;S.stk=d.stk;S.rep=d.rep;S.cls=d.cls||null;S.inv=d.inv||null;S.dsc=d.dsc||null;S.dc=d.dc||null;S.dcs=d.dcs||[];S.po=d.po||null;S.tr=d.tr||null;S.pot=d.pot||null;S.trt=d.trt||null;var ml=S.meta;applyCage(d);if(d.sal){S.sal=d.sal;S.nm=d.nm||{};S.sv=d.sv||{};S.dict=d.dict||[];DI=null}S.meta=d.meta||{};['sal','salFrom','salTo'].forEach(function(k){if(!S.meta[k]&&ml[k])S.meta[k]=ml[k]});if(d.sal||d.cage)persistMv();S.meta.savedAt=sh.savedAt;S.meta.by=sh.by||'';
+    S.plano=d.plano;S.stk=d.stk;S.rep=d.rep;S.cls=d.cls||null;S.inv=d.inv||null;S.dsc=d.dsc||null;S.dc=d.dc||null;S.dcs=d.dcs||[];S.po=d.po||null;S.tr=d.tr||null;S.pot=d.pot||null;S.trt=d.trt||null;S.pod=d.pod||null;S.trd=d.trd||null;var ml=S.meta;applyCage(d);if(d.sal){S.sal=d.sal;S.nm=d.nm||{};S.sv=d.sv||{};S.dict=d.dict||[];DI=null}S.meta=d.meta||{};['sal','salFrom','salTo'].forEach(function(k){if(!S.meta[k]&&ml[k])S.meta[k]=ml[k]});if(d.sal||d.cage)persistMv();S.meta.savedAt=sh.savedAt;S.meta.by=sh.by||'';
     labelFiles();build();persist();$('#dataBox').open=false;
     say('Data terakhir disimpan: '+shStamp(sh.savedAt)+(sh.by?' oleh '+String(sh.by).split('@')[0]:'')+'. Semua pengguna melihat data ini.');
   }catch(e){say((e&&e.message)||'Data online belum tersedia.',1)}
@@ -1245,7 +1254,7 @@ function shSave(){
   if(typeof CompressionStream==='undefined'){say('Browser ini belum mendukung simpan online. Gunakan Chrome atau Edge terbaru.',1);return}
   var run=function(tok){
     say('Menyimpan data untuk semua pengguna...');
-    var stream=new Blob([JSON.stringify({plano:S.plano,stk:S.stk,rep:S.rep,cls:S.cls,inv:S.inv,dsc:S.dsc,dc:S.dc,dcs:S.dcs,po:S.po,tr:S.tr,pot:S.pot,trt:S.trt,sal:S.sal,nw:S.nw,cage:S.cage,nm:S.nm,sv:S.sv,dict:S.dict,meta:S.meta,uploadedAt:new Date().toISOString()})]).stream().pipeThrough(new CompressionStream('gzip'));
+    var stream=new Blob([JSON.stringify({plano:S.plano,stk:S.stk,rep:S.rep,cls:S.cls,inv:S.inv,dsc:S.dsc,dc:S.dc,dcs:S.dcs,po:S.po,tr:S.tr,pot:S.pot,trt:S.trt,pod:S.pod,trd:S.trd,sal:S.sal,nw:S.nw,cage:S.cage,nm:S.nm,sv:S.sv,dict:S.dict,meta:S.meta,uploadedAt:new Date().toISOString()})]).stream().pipeThrough(new CompressionStream('gzip'));
     new Response(stream).arrayBuffer().then(function(body){return fetch(SHURL,{method:'PUT',headers:{'Content-Type':'application/gzip','Authorization':'Bearer '+tok},body:body})})
      .then(function(r){return r.json().catch(function(){return {}}).then(function(j){if(!r.ok)throw new Error(j.error||('Simpan gagal ('+r.status+').'));say('✔ Data tersimpan untuk semua pengguna ('+shStamp(j.savedAt)+').')})})
      .catch(function(e){say((e&&e.message)||'Data gagal disimpan.',1)});
