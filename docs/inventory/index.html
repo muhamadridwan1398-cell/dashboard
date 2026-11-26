@@ -416,7 +416,10 @@ function poFrom(r){
   r.rows.forEach(function(o){var bk=key(o['Item No']),bn=String(o['Master Brand']||'').trim();if(bk&&bn)mb[bk]=bn;if(String(o['Status']||'').trim().toUpperCase()!=='RELEASED')return;var epd=parseDate(o['Expired PO Date']),ex=/^y/i.test(String(o['Expired']||'').trim())||(epd&&epd<new Date().toISOString().slice(0,10)),k=key(o['Item No']),q=num(o['Outstanding Quantity']);if(!k||q<=0)return;if(ex)return;(dd[k]||(dd[k]=[])).push([String(o['PO No']||'').trim(),parseDate(o['Order Date']),String(o['Buy from Vendor Name']||'').trim(),String(o['NP No']||'').trim(),num(o['Ordered Qty']),num(o['Received Qty']),q,0,epd]);if(String(o['NP No']||'').trim()){ms[k]=(ms[k]||0)+q;ns++}else{m[k]=(m[k]||0)+q;n++}});
   S.po=m;S.pot=ms;S.pod=dd;S.mb=mb;S.meta.poN=n;S.meta.poNs=ns;
 }
-function labelFiles(){try{dcDot();if(!$('#tab-dc').classList.contains('hide'))renderDc();if(!$('#tab-min').classList.contains('hide'))renderMn();if(!$('#tab-ots').classList.contains('hide'))renderOts()}catch(e){}
+function pruneExp(){var t=new Date().toISOString().slice(0,10),ch=0;
+  var go=function(det,ix,mS,mT){if(!det)return;Object.keys(det).forEach(function(k){var keep=[];det[k].forEach(function(p){if(p[ix]&&p[ix]<t){var m=p[3]?mT:mS;if(m&&m[k]!=null){m[k]=Math.max(0,m[k]-p[6]);if(!m[k])delete m[k]}ch++}else keep.push(p)});if(keep.length)det[k]=keep;else delete det[k]})};
+  go(S.pod,8,S.po,S.pot);go(S.trd,7,S.tr,S.trt);return ch}
+function labelFiles(){try{pruneExp()}catch(e){}try{dcDot();if(!$('#tab-dc').classList.contains('hide'))renderDc();if(!$('#tab-min').classList.contains('hide'))renderMn();if(!$('#tab-ots').classList.contains('hide'))renderOts()}catch(e){}
   setTimeout(function(){try{dataSummary()}catch(e){}},0);
   [['dc','dc','Stok DC'],['po','po','PO'],['tr','tr','TR'],['plano','plano','ITEM PLANO'],['stk','stk','SQV'],['rep','rep','Replenishment'],['sal','sal','Penjualan'],['cls','cls','Class']].forEach(function(x){
     var ok=!!S[x[0]];$('#u-'+x[1]).className='up'+(ok?' ok':'');
