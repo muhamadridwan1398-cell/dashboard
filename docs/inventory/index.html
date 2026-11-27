@@ -1004,14 +1004,14 @@ function oCalc(){
     var cat=(sv?dn(sv[1]):'')||pc[k]||(dcE?dcE[1]:'')||(S.icat&&S.icat[k])||fromD(dsc)||'(tanpa info kategori)';
     var tot=st+ots,over=rs?Math.max(0,tot-mx):0,t=!rs?'non':(tot>mx?'lebih':'ok'),cut=t==='lebih'?Math.min(ots,over):0;
     var mo=days&&q>0?q/days*30:0,cv=days&&q>0?tot/(q/days):null,ssd=days&&q>0?st/(q/days):null;
-    return {k:k,ssd:ssd,d:dName(dsc),c:String(cat).toUpperCase(),mb:(S.mb&&S.mb[k])||'',nw:!!(S.nw&&S.nw[k]),sa:S.cage&&S.cage[k]?S.cage[k][0]:-1,pe:dMin(S.pod&&S.pod[k],8),te:dMin(S.trd&&S.trd[k],7),cl:S.cls?(S.cls[k]||'-'):'',rs:rs,pl:pcnt[k]?1:0,st:st,po:po,tr:tr,pot:pot,trt:trt,ots:ots,mx:rs?mx:null,mn:rs?mn:null,tot:tot,over:over,cut:cut,t:t,mo:mo,q:q,cv:cv}});
+    return {k:k,ssd:ssd,d:dName(dsc),c:String(cat).toUpperCase(),mb:(S.mb&&S.mb[k])||'',nw:!!(S.nw&&S.nw[k]),ab:!!((S.cage&&S.cage[k])||(S.cls&&S.cls[k])),sa:S.cage&&S.cage[k]?S.cage[k][0]:-1,pe:dMin(S.pod&&S.pod[k],8),te:dMin(S.trd&&S.trd[k],7),cl:S.cls?(S.cls[k]||'-'):'',rs:rs,pl:pcnt[k]?1:0,st:st,po:po,tr:tr,pot:pot,trt:trt,ots:ots,mx:rs?mx:null,mn:rs?mn:null,tot:tot,over:over,cut:cut,t:t,mo:mo,q:q,cv:cv}});
   return {items:items,days:days}
 }
 function oExB(i){var d=[i.pe,i.te].filter(Boolean).sort()[0];if(!d)return 'none';var n=Math.round((new Date(d+'T00:00:00')-new Date(new Date().toISOString().slice(0,10)+'T00:00:00'))/864e5);return n<0?'lewat':n<=7?'7':n<=30?'30':'jauh'}
 var OJN=[['po','OTS PO stock'],['tr','OTS TR stock'],['pot','PO terjual'],['trt','TR terjual']],OEX=[['lewat','Sudah lewat'],['7','Expired ≤ 7 hari'],['30','Expired 8–30 hari'],['jauh','Expired > 30 hari'],['none','Tanpa tanggal expired']];
 function oFiltered(){
   if(!OC)return [];var q=OF.q.toLowerCase();
-  var r=OC.items.filter(function(i){var cl=i.cl==='-'?'Non Class':i.cl,rv=i.rs?'Repsys':'Non Repsys',pv=i.pl?'Plano':'Non Plano';if(OF.c.length&&OF.c.indexOf(i.c)<0)return false;if(OF.cl.length&&OF.cl.indexOf(cl)<0)return false;if(OF.s.length&&OF.s.indexOf(i.t)<0)return false;if(OF.r.length&&OF.r.indexOf(rv)<0)return false;if(OF.p.length&&OF.p.indexOf(pv)<0)return false;if(OF.b.length&&OF.b.indexOf(i.mb||'(tanpa brand)')<0)return false;if(OF.j.length&&!OF.j.some(function(x){return i[x]>0}))return false;if(OF.e.length&&OF.e.indexOf(oExB(i))<0)return false;if(OF.n.length&&OF.n.indexOf(i.nw?'Y':'N')<0)return false;if(OF.a.length){var a=i.sa,bk=a<0?'x':a<=30?'0':a<=90?'1':a<=180?'2':a<=365?'3':'4';if(OF.a.indexOf(bk)<0)return false}if(q&&(i.k+' '+i.d+' '+(i.mb||'')).toLowerCase().indexOf(q)<0)return false;return true});
+  var r=OC.items.filter(function(i){var cl=i.cl==='-'?'Non Class':i.cl,rv=i.rs?'Repsys':'Non Repsys',pv=i.pl?'Plano':'Non Plano';if(OF.c.length&&OF.c.indexOf(i.c)<0)return false;if(OF.cl.length&&OF.cl.indexOf(cl)<0)return false;if(OF.s.length&&OF.s.indexOf(i.t)<0)return false;if(OF.r.length&&OF.r.indexOf(rv)<0)return false;if(OF.p.length&&OF.p.indexOf(pv)<0)return false;if(OF.b.length&&OF.b.indexOf(i.mb||'(tanpa brand)')<0)return false;if(OF.j.length&&!OF.j.some(function(x){return i[x]>0}))return false;if(OF.e.length&&OF.e.indexOf(oExB(i))<0)return false;if(OF.n.length&&OF.n.indexOf(!i.ab?'X':i.nw?'Y':'N')<0)return false;if(OF.a.length){var a=i.sa,bk=a<0?'x':a<=30?'0':a<=90?'1':a<=180?'2':a<=365?'3':'4';if(OF.a.indexOf(bk)<0)return false}if(q&&(i.k+' '+i.d+' '+(i.mb||'')).toLowerCase().indexOf(q)<0)return false;return true});
   var ord={lebih:0,ok:1,non:2};
   return r.sort(function(a,b){if(OS.k){var x=a[OS.k],y=b[OS.k];if(OS.k==='t'){x=ord[a.t];y=ord[b.t]}if(x===null)x=-1;if(y===null)y=-1;if(typeof x==='boolean'){x=+x;y=+y}return (typeof x==='string'?x.localeCompare(y):x-y)*OS.d}
     return (ord[a.t]-ord[b.t])||(b.cut-a.cut)||(b.ots-a.ots)})
@@ -1033,7 +1033,7 @@ function oCell(i,c){switch(c){
   case 'st':return '<td class="n">'+(S.stk?nf(i.st):'–')+'</td>';
   case 'po':return '<td class="n">'+(S.po?(i.po?nf(i.po):'0'):'–')+'</td>';
   case 'tr':return '<td class="n">'+(S.tr?(i.tr?nf(i.tr):'0'):'–')+'</td>';
-  case 'nw':return '<td>'+(S.nw?(i.nw?'<b>New item</b>':'Non'):'–')+'</td>';
+  case 'nw':return '<td>'+(S.nw&&i.ab?(i.nw?'<b>New item</b>':'Non'):'–')+'</td>';
   case 'sa':return '<td class="n">'+(S.cage&&i.sa>=0?nf(i.sa)+' hari':'–')+'</td>';
   case 'pe':return '<td>'+(S.pod?(i.pe?(i.pe<new Date().toISOString().slice(0,10)?'<span style="color:#a33">'+esc(dLeft(i.pe))+'</span>':esc(dLeft(i.pe))):'–'):'–')+'</td>';
   case 'te':return '<td>'+(S.trd?(i.te?(i.te<new Date().toISOString().slice(0,10)?'<span style="color:#a33">'+esc(dLeft(i.te))+'</span>':esc(dLeft(i.te))):'–'):'–')+'</td>';
@@ -1056,7 +1056,7 @@ function renderOts(){
   var cs=[],cls=[];OC.items.forEach(function(i){if(cs.indexOf(i.c)<0)cs.push(i.c);var v=i.cl==='-'?'Non Class':i.cl;if(v&&cls.indexOf(v)<0)cls.push(v)});cs.sort();cls.sort();
   oMs('ocat','Kategori','c',cs.map(function(c){return [c,c]}));oMs('ocl','Class','cl',cls.map(function(c){return [c,c]}));
   oMs('ost','Status','s',Object.keys(OST).map(function(k){return [k,OST[k]]}));
-  var bs=[];OC.items.forEach(function(i){var v=i.mb||'(tanpa brand)';if(bs.indexOf(v)<0)bs.push(v)});bs.sort();oMs('omb','Master Brand','b',bs.map(function(b){return [b,b]}));oMs('ojn','Jenis OTS','j',OJN);oMs('onw','New item','n',[['Y','New item'],['N','Non']]);oMs('oag','Stock age','a',MOPT.a);oMs('oex','Expired','e',OEX);
+  var bs=[];OC.items.forEach(function(i){var v=i.mb||'(tanpa brand)';if(bs.indexOf(v)<0)bs.push(v)});bs.sort();oMs('omb','Master Brand','b',bs.map(function(b){return [b,b]}));oMs('ojn','Jenis OTS','j',OJN);oMs('onw','New item','n',[['Y','New item'],['N','Non'],['X','Tidak ada di ABCD Class']]);oMs('oag','Stock age','a',MOPT.a);oMs('oex','Expired','e',OEX);
   oMs('orp','Repsys','r',[['Repsys','Repsys'],['Non Repsys','Non Repsys']]);oMs('opl','Plano','p',[['Plano','Plano'],['Non Plano','Non Plano']]);
   $('#oq').value=OF.q;var C=oCols();
   $('#oth').innerHTML=C.map(function(c){var n=/^(st|po|tr|pot|trt|ots|tot|mx|over|cut|mo|cv|sa|ssd)$/.test(c[0]);return '<th data-os="'+c[0]+'" style="user-select:none'+(n?';text-align:right':'')+'">'+c[1]+(OS.k===c[0]?(OS.d<0?' ▼':' ▲'):'')+'</th>'}).join('');
@@ -1079,7 +1079,7 @@ var _oq;$('#oq').oninput=function(){var v=this.value;clearTimeout(_oq);_oq=setTi
 $('#obx').onclick=function(){
   if(!OC)return;var T=function(v,st){return {v:v,s:st}},rows=oFiltered(),C=oCols();
   var dr=[C.map(function(c){return T(c[1],1)})];
-  rows.forEach(function(i){dr.push([T(i.k,2),T(i.d,2),T(i.c,2),T(i.mb,2),T(S.cls?(i.cl==='-'?'Non Class':i.cl):'',2),T(S.rep?(i.rs?'Repsys':'Non Repsys'):'',2),T(S.plano?(i.pl?'Plano':'Non Plano'):'',2),T(S.nw?(i.nw?'New item':'Non'):'',2),S.cage&&i.sa>=0?T(i.sa,3):'',T(OST[i.t],2),T(i.st,3),S.po?T(i.po,3):'',S.tr?T(i.tr,3):'',T(i.ots,3),S.pot?T(i.pot,3):'',S.trt?T(i.trt,3):'',T(i.pe?dLeft(i.pe):'',2),T(i.te?dLeft(i.te):'',2),T(i.tot,3),i.mx===null?'':T(i.mx,3),i.t==='lebih'?T(i.over,3):'',i.t==='lebih'?T(i.cut,3):'',S.sal&&OC.days?Math.round(i.mo*10)/10:'',i.ssd===null?'':T(Math.round(i.ssd),3),i.cv===null?'':T(Math.round(i.cv),3)])});
+  rows.forEach(function(i){dr.push([T(i.k,2),T(i.d,2),T(i.c,2),T(i.mb,2),T(S.cls?(i.cl==='-'?'Non Class':i.cl):'',2),T(S.rep?(i.rs?'Repsys':'Non Repsys'):'',2),T(S.plano?(i.pl?'Plano':'Non Plano'):'',2),T(S.nw&&i.ab?(i.nw?'New item':'Non'):'',2),S.cage&&i.sa>=0?T(i.sa,3):'',T(OST[i.t],2),T(i.st,3),S.po?T(i.po,3):'',S.tr?T(i.tr,3):'',T(i.ots,3),S.pot?T(i.pot,3):'',S.trt?T(i.trt,3):'',T(i.pe?dLeft(i.pe):'',2),T(i.te?dLeft(i.te):'',2),T(i.tot,3),i.mx===null?'':T(i.mx,3),i.t==='lebih'?T(i.over,3):'',i.t==='lebih'?T(i.cut,3):'',S.sal&&OC.days?Math.round(i.mo*10)/10:'',i.ssd===null?'':T(Math.round(i.ssd),3),i.cv===null?'':T(Math.round(i.cv),3)])});
   var pr=[['Item No','Deskripsi','Master Brand','Status item','No PO','Tgl order','Tgl expired','Sisa hari','Vendor','Jenis','No NP (terjual)','Qty base (ordered)','Sudah diterima','Sisa OTS','Comment PO'].map(function(x){return T(x,1)})],tr2=[['Item No','Deskripsi','Master Brand','Status item','No TR','Tgl request','Tgl expired','Sisa hari','Tujuan','Jenis','No NP (terjual)','Qty base (TR)','Sudah dikirim (TO)','Sisa OTS','Comment TR'].map(function(x){return T(x,1)})];
   var dl=function(d){return d?Math.round((new Date(d+'T00:00:00')-new Date(new Date().toISOString().slice(0,10)+'T00:00:00'))/864e5):''};
   rows.forEach(function(i){var h0=[T(i.k,2),T(i.d,2),T(i.mb,2),T(OST[i.t],2)];
